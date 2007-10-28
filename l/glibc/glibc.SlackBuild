@@ -27,7 +27,7 @@ TARGET32=${TARGET32:-i486} # only needed on multilib
 
 DISTRO=${DISTRO:-slamd64}
 
-BUILD=${BUILD:-5}
+BUILD=${BUILD:-6}
 
 # Automatically work out our libdir
 if [ $DISTRO = slamd64 ]; then
