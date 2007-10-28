@@ -1,0 +1,52 @@
+#!/bin/sh
+# Set initial variables:
+PKGNAM=gimp-print
+VERSION=4.2.7
+BUILD=2
+
+. /etc/pkghelpers
+pkghelpers_env
+
+# Let GIMP use the plug-in it comes with or it's a messy dependancy.
+# This comes with some ghostscript patches that already seem to be
+# built into ghostscript now :-)
+
+cd $TMP
+rm -rf gimp-print-${VERSION}
+tar xjvf $CWD/gimp-print-${VERSION}.tar.bz2
+cd gimp-print-${VERSION}
+chown -R root.root .
+find . -perm 777 -exec chmod 755 {} \;
+CFLAGS="$SLKCFLAGS" \
+./configure --prefix=/usr \
+  --libdir=/usr/lib$LIBSUFFIX \
+  --infodir=/usr/info \
+  --with-ijs \
+  --with-cups \
+  --without-gimp \
+  --without-samples \
+  --without-user-guide \
+  --enable-escputil \
+  --disable-static \
+  --disable-nls \
+  --libdir=/usr/lib$LIBSUFFIX \
+  $ARCH-$DISTRO-linux
+make -j12 || exit 1
+make install DESTDIR=$PKG
+chown -R root:root $PKG/usr/bin
+
+rm -rf $PKG/usr/lib$LIBSUFFIX/gimp
+
+mkdir -p $PKG/usr/doc/gimp-print-${VERSION}
+cp -a \
+  ABOUT-NLS AUTHORS COPYING NEWS README \
+  $PKG/usr/doc/gimp-print-${VERSION}
+cp -a src/ghost/README $PKG/usr/doc/gimp-print-${VERSION}/README.ghostscript
+rmdir $PKG/usr/share/gimp-print/samples/
+rmdir $PKG/usr/share/gimp-print/
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+
+cd $PKG
+pkghelpers_fixup
+pkghelpers_makepkg

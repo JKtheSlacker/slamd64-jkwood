@@ -1,0 +1,3 @@
+scsi/scsi.h
+scsi/scsi_ioctl.h
+scsi/sg.h

@@ -1,0 +1,47 @@
+#!/bin/sh
+# Set initial variables:
+PKGNAM=rdist
+VERSION=6.1.5
+BUILD=2
+
+. /etc/pkghelpers
+pkghelpers_env
+
+if [ ! -d $PKG ]; then
+  mkdir -p $PKG # place for the package to be built
+fi
+
+# Explode the package framework:
+cd $PKG
+explodepkg $CWD/_rdist.tar.gz
+
+echo "+=============+"
+echo "| rdist-$VERSION |"
+echo "+=============+"
+cd $TMP
+tar xzvf $CWD/rdist-$VERSION.tar.gz
+cd rdist-$VERSION
+# Patch rdist just enough to allow it to build cleanly on Slamd64 & GCC 3.4
+zcat $CWD/rdist-6.1.5-bison.patch.gz | patch -p1 # Patch from Red Hat
+zcat $CWD/rdist-6.1.5-cleanup.patch.gz | patch -p1 # Patch from Red Hat
+zcat $CWD/rdist-6.1.5-varargs.patch.gz | patch -p1 # Patch from Red Hat
+mkdir -p $PKG/usr/doc/rdist-$VERSION
+cp -a README $PKG/usr/doc/rdist-$VERSION
+chown root:root $PKG/usr/doc/rdist-$VERSION/*
+chmod 644 $PKG/usr/doc/rdist-$VERSION/*
+zcat $CWD/rdist-$VERSION.diff.gz | patch -p1 --backup
+make -j12 || exit 1
+cd src
+strip rdist rdistd
+cat rdist > $PKG/usr/bin/rdist
+cat rdistd > $PKG/usr/bin/rdistd
+cd ../doc
+cat rdist.man | gzip -9c > $PKG/usr/man/man1/rdist.1.gz
+cat rdistd.man | gzip -9c > $PKG/usr/man/man1/rdistd.1.gz
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+
+# Build the package:
+cd $PKG
+pkghelpers_fixup
+pkghelpers_makepkg

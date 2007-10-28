@@ -1,0 +1,50 @@
+#!/bin/sh
+CWD=`pwd`
+PKG=/tmp/package-xine-ui
+rm -rf $PKG
+mkdir -p $PKG/usr
+
+VERSION=0.99.5
+# I would use "-march=i486 -mcpu=i686" here as usual, but with XINE it's all or nothing.
+# I'd rather have it work well for the i686/Athlon crowd than suck for everyone.
+ARCH=${ARCH:-x86_64}
+TARGET=${TARGET:-$ARCH-pc-linux-gnu}
+BUILD=${BUILD:-1}
+
+cd /tmp
+tar xjvf $CWD/xine-ui-$VERSION.tar.bz2
+cd xine-ui-$VERSION
+chown -R root.root .
+find . -perm 664 -exec chmod 644 {} \;
+find . -perm 777 -exec chmod 755 {} \;
+
+XINE_BUILD=$TARGET \
+LDFLAGS=-L/usr/lib64 \
+CFLAGS="-O2 -fPIC" \
+./configure --prefix=/usr --libdir=/usr/lib64
+make -j10
+make install DESTDIR=$PKG
+mkdir -p $PKG/usr/share/applications
+zcat $CWD/xine.desktop.gz > $PKG/usr/share/applications/xine.desktop
+( cd $PKG
+  find . | xargs file | grep ELF | cut -f 1 -d : | xargs strip --strip-unneeded
+)
+( cd $PKG/usr/man
+  find . -name "*.?" | xargs gzip -9
+)
+mkdir -p $PKG/usr/doc/xine-ui-$VERSION
+cp -a \
+  ABOUT-NLS AUTHORS COPYING NEWS README \
+  doc/README* \
+  $PKG/usr/doc/xine-ui-$VERSION
+cp -a \
+  src/xitk/xine-toolkit/README
+  $PKG/usr/doc/xine-ui-$VERSION/README.xitk
+# redundant
+rm -rf $PKG/usr/share/doc
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+
+cd /tmp/package-xine-ui
+makepkg -l y -c n ../xine-ui-$VERSION-${ARCH}_slamd64-$BUILD.tgz
+

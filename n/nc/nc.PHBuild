@@ -1,0 +1,40 @@
+#!/bin/sh
+# Set initial variables:
+PKGNAM=nc
+VERSION=1.10
+BUILD=3
+
+. /etc/pkghelpers
+pkghelpers_env
+
+if [ ! -d $PKG ]; then
+  mkdir -p $PKG # place for the package to be built
+fi
+
+echo "+=========+"
+echo "| nc-1.10 |"
+echo "+=========+"
+cd $TMP
+rm -rf nc-110
+mkdir nc-110
+cd nc-110
+tar xzvf $CWD/nc110.tgz
+chown -R root:root .
+zcat $CWD/nc-110-21.diff.gz | patch -p1
+zcat $CWD/nc.diff.gz | patch -p1
+make linux CFLAGS=-O # otherwise tries to build a 32-bit version
+strip nc
+mkdir -p $PKG/usr/bin
+cat nc > $PKG/usr/bin/nc
+chmod 755 $PKG/usr/bin/nc
+mkdir -p $PKG/usr/man/man1
+cat debian/nc.1 | gzip -9c > $PKG/usr/man/man1/nc.1.gz
+mkdir -p $PKG/usr/doc/nc-1.10
+cp -a Changelog README data netcat.blurb scripts $PKG/usr/doc/nc-1.10
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+
+# Build the package:
+cd $PKG
+pkghelpers_fixup
+pkghelpers_makepkg

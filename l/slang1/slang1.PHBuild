@@ -1,0 +1,43 @@
+#!/bin/sh
+PKGNAM=slang1
+VERSION=1.4.9
+DOCV=1.4.8
+BUILD=2
+
+. /etc/pkghelpers
+pkghelpers_env
+
+rm -rf $PKG
+mkdir -p $PKG
+
+cd $TMP
+rm -rf slang-$VERSION
+tar xjvf $CWD/slang-$VERSION.tar.bz2
+cd slang-$VERSION
+chown -R root.root .
+CFLAGS="$SLKCFLAGS" \
+  ./configure \
+  --prefix=/usr \
+  --libdir=/usr/lib$LIBSUFFIX \
+  --includedir=/usr/include/slang1
+make -j12 || exit 1
+make install DESTDIR=$PKG
+make elf -j12 || exit 1
+make install-elf DESTDIR=$PKG
+rm -r $PKG/usr/doc/slang
+mkdir -p $PKG/usr/doc/slang-$VERSION
+cp -a COPY* README UPGRADE.txt changes.txt doc/text $PKG/usr/doc/slang-$VERSION
+chmod 755 $PKG/usr/lib$LIBSUFFIX/libslang.so.$VERSION
+strip --strip-unneeded $PKG/usr/lib$LIBSUFFIX/libslang.so.$VERSION
+( cd $PKG/usr/lib$LIBSUFFIX ; ldconfig . )
+(cd $PKG/usr/lib$LIBSUFFIX ; mv libslang.so libslang1.so ) # letting slang2 be the new default
+# ADD OLD DOX:
+tar xjvf $CWD/slang-$DOCV-doc.tar.bz2
+chown -R root.root doc
+cp -a doc/html $PKG/usr/doc/slang-$VERSION
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+
+cd $PKG
+pkghelpers_fixup
+pkghelpers_makepkg

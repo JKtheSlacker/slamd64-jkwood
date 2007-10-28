@@ -1,0 +1,94 @@
+#!/bin/sh
+PKGNAM=lynx
+SRCVER=2.8.6rel.5
+PKGVER=2.8.6rel.5
+BUILD=1
+
+if [ ! -e /etc/pkghelpers ]; then
+	echo "Requires pkghelpers."
+	exit 1
+fi
+
+. /etc/pkghelpers
+
+pkghelpers_env
+
+rm -rf $PKG
+mkdir -p $PKG
+# Add libdir to package:
+mkdir -p $PKG/usr/lib$LIBSUFFIX/lynx
+
+cd /tmp
+rm -rf lynx2-8-6
+tar xjvf $CWD/lynx${SRCVER}.tar.bz2
+cd lynx2-8-6
+# Fix /usr/local paths:
+zcat $CWD/lynx.path.diff.gz | sed "s#usr/lib/#usr/lib$LIBSUFFIX/#g" | patch -p1 --verbose || exit
+# Apply recolorizing patch:
+zcat $CWD/lynx.cfg.diff.gz | patch -p1 --verbose --backup || exit
+
+## Apply official patches:
+#zcat $CWD/2.8.5rel.4.patch.gz | patch -p1 --verbose || exit
+#zcat $CWD/2.8.5rel.5.patch.gz | patch -p1 --verbose || exit
+
+find . -name "*~" | xargs rm
+chown -R root:root .
+./configure \
+  --prefix=/usr \
+  --sysconfdir=/etc \
+  --libdir=/usr/lib$LIBSUFFIX/lynx \
+  --datadir=/usr/share/lynx \
+  --enable-default-colors \
+  --with-screen=ncurses \
+  --enable-gzip-help \
+  --with-zlib \
+  --enable-read-eta \
+  --enable-scrollbar \
+  --with-ssl \
+  --enable-color-style \
+  --enable-prettysrc \
+  --enable-source-cache \
+  --enable-nsl-fork \
+  --enable-nls \
+  --enable-persistent-cookies \
+  --enable-vertrace \
+  --disable-full-paths \
+  --enable-addrlist-page \
+  --enable-charset-choice \
+  --enable-cjk \
+  --enable-htmlized-cfg \
+  --enable-justify-elts \
+  --enable-locale-charset \
+  --enable-externs \
+  --enable-cgi-links \
+  --enable-change-exec \
+  --enable-exec-links \
+  --enable-exec-scripts \
+  --enable-internal-links \
+  --with-bzlib
+
+make -j10 || exit 1
+make install DESTDIR=$PKG
+make install-help DESTDIR=$PKG
+make install-doc DESTDIR=$PKG
+
+# Correct $DESTDIR brokenness:
+( cd $PKG/usr/share/lynx/lynx_help
+  rm -f COPYHEADER COPYING
+  ln -sf ../lynx_doc/COPYHEADER .
+  ln -sf ../lynx_doc/COPYING .
+)
+# Add documentation symlinks:
+( mkdir -p $PKG/usr/doc/lynx-$PKGVER
+  cd $PKG/usr/doc/lynx-$PKGVER
+  ln -sf /usr/share/lynx/lynx_doc .
+  ln -sf /usr/share/lynx/lynx_help .
+)
+
+
+cd $PKG
+pkghelpers_fixup
+mkdir -p install
+cat $CWD/slack-desc > install/slack-desc
+pkghelpers_makepkg
+

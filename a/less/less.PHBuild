@@ -1,0 +1,64 @@
+#!/bin/sh
+PKGNAM=less
+VERSION=${VERSION:-394}
+BUILD=${BUILD:-2}
+
+. /etc/pkghelpers
+pkghelpers_env
+
+if [ ! -d $TMP ]; then
+  mkdir -p $TMP # location to build the source
+fi
+rm -rf $PKG
+mkdir -p $PKG
+
+cd $TMP
+rm -rf less-$VERSION
+tar xzvf $CWD/less-$VERSION.tar.gz
+cd less-$VERSION
+zcat $CWD/less.sysconfdir.diff.gz | patch -p1 --verbose || exit 1
+
+chown -R root:root .
+find . -perm 666 -exec chmod 644 {} \;
+find . -perm 664 -exec chmod 644 {} \;
+find . -perm 600 -exec chmod 644 {} \;
+find . -perm 444 -exec chmod 644 {} \;
+find . -perm 400 -exec chmod 644 {} \;
+find . -perm 440 -exec chmod 644 {} \;
+find . -perm 777 -exec chmod 755 {} \;
+find . -perm 775 -exec chmod 755 {} \;
+find . -perm 511 -exec chmod 755 {} \;
+find . -perm 711 -exec chmod 755 {} \;
+find . -perm 555 -exec chmod 755 {} \;
+
+CFLAGS="$SLKCFLAGS" \
+./configure \
+  --prefix=/usr \
+  --sysconfdir=/etc
+
+make -j12 || exit 1
+
+mkdir -p $PKG/usr/bin
+cat less > $PKG/usr/bin/less
+cat lesskey > $PKG/usr/bin/lesskey
+cat lessecho > $PKG/usr/bin/lessecho
+zcat $CWD/lesspipe.sh.gz > $PKG/usr/bin/lesspipe.sh
+chmod 755 $PKG/usr/bin/*
+
+mkdir -p $PKG/usr/doc/less-$VERSION
+cp -a \
+  COPYING LICENSE README NEWS \
+  $PKG/usr/doc/less-$VERSION
+
+mkdir -p $PKG/usr/man/man1
+for page in less.nro lesskey.nro ; do
+  cat $page | gzip -9c > $PKG/usr/man/man1/`basename $page .nro`.1.gz
+done
+
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+
+# Build the package:
+cd $PKG
+pkghelpers_fixup
+pkghelpers_makepkg

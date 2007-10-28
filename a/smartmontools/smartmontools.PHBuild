@@ -1,0 +1,38 @@
+#!/bin/sh
+PKGNAM=smartmontools
+VERSION=5.36
+BUILD=2
+
+. /etc/pkghelpers
+pkghelpers_env
+
+rm -rf $PKG
+mkdir -p $PKG
+
+cd $TMP
+rm -rf smartmontools-$VERSION
+tar xzvf $CWD/smartmontools-$VERSION.tar.gz
+cd smartmontools-$VERSION
+chown -R root.root .
+./configure \
+  --prefix=/usr \
+  --libdir=/usr/lib$LIBSUFFIX \
+  --sysconfdir=/etc
+make -j12
+make install DESTDIR=$PKG
+# Not used on Slackware:
+rm -rf $PKG/etc/rc.d
+mv $PKG/etc/smartd.conf $PKG/etc/smartd.conf.new
+chown -R root:root $PKG/usr/sbin
+mv $PKG/usr/share/doc $PKG/usr
+rmdir $PKG/usr/share
+rm -f $PKG/usr/doc/smartmontools-$VERSION/CHANGELOG \
+      $PKG/usr/doc/smartmontools-$VERSION/smartd.conf
+mkdir -p $PKG/install
+zcat $CWD/doinst.sh.gz > $PKG/install/doinst.sh
+cat $CWD/slack-desc > $PKG/install/slack-desc
+
+# Build the package:
+cd $PKG
+pkghelpers_fixup
+pkghelpers_makepkg

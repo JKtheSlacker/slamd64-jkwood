@@ -1,0 +1,44 @@
+#!/bin/sh
+# Set initial variables:
+PKGNAM=uucp
+VERSION=1.07
+BUILD=2
+
+. /etc/pkghelpers
+pkghelpers_env
+
+if [ ! -d $PKG ]; then
+  mkdir -p $PKG # place for the package to be built
+fi
+
+# Explode the package framework:
+cd $PKG
+explodepkg $CWD/_uucp.tar.gz
+
+cd $TMP
+tar xzvf $CWD/uucp-$VERSION.tar.gz
+cd uucp-$VERSION
+zcat $CWD/policy.h.diff.gz | patch -p1 --verbose
+CFLAGS="$SLKCFLAGS" ./configure \
+  --prefix=/usr \
+  --with-oldconfigdir=/etc/uucp/oldconfig \
+  --with-newconfigdir=/etc/uucp
+make || exit 1
+make install DESTDIR=$PKG
+strip --strip-unneeded $PKG/usr/bin/* $PKG/usr/sbin/*
+rm -f $PKG/usr/info/dir.gz
+# Setuid uucp binaries may only be run by members of the uucp group:
+( cd $PKG/usr/bin
+  chgrp uucp cu uucp uuname uustat uux
+  chmod 4554 cu uucp uuname uustat uux
+  cd ../sbin
+  chgrp uucp uucico uuxqt
+  chmod 4554 uucico uuxqt
+)
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+
+# Build the package:
+cd $PKG
+pkghelpers_fixup
+pkghelpers_makepkg

@@ -1,0 +1,23 @@
+#!/usr/bin/perl
+
+system("/usr/bin/install", @ARGV); # sorry, still polute /
+
+$t = 0;
+@out = ();
+for(@ARGV) {
+	if ($t == 1) {
+		push @out, "$ENV{DESTDIR}/$_";
+		$t = -1;
+	} elsif ($_ eq '-t') {
+		$t = 1;
+		push @out, $_;
+	} else {
+		push @out, $_;
+	}
+}
+
+if ($t == 0) {
+	$out[$#out] = "$ENV{DESTDIR}/$out[$#out]";
+}
+
+system("/usr/bin/install", @out);

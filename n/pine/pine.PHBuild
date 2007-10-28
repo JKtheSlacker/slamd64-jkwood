@@ -1,0 +1,141 @@
+#!/bin/sh
+# Set initial variables:
+
+PKG1NAM=pine
+PKG2NAM=imapd
+
+VERSION=4.64
+PINEBUILD=2
+IMAPDBUILD=3
+
+. /etc/pkghelpers
+pkghelpers_env
+
+PKG1=$TMP/package-pine
+PKG2=$TMP/package-imapd
+
+PINEPGP=0.18.0
+
+rm -rf $PKG1 $PKG2
+mkdir -p $PKG1 $PKG2
+
+# Explode the package framework:
+cd $PKG1
+explodepkg $CWD/_pine.tar.gz
+cd $PKG2
+explodepkg $CWD/_imapd.tar.gz
+
+echo "+==========+"
+echo "| pine$VERSION |"
+echo "+==========+"
+cd $TMP
+rm -rf pine$VERSION
+tar xjvf $CWD/pine$VERSION.tar.bz2
+cd pine$VERSION
+
+# Make sure ownerships and permissions are sane:
+chown -R root:root .
+find . -perm 664 -exec chmod 644 {} \;
+find . -perm 600 -exec chmod 644 {} \;
+find . -perm 444 -exec chmod 644 {} \;
+find . -perm 400 -exec chmod 644 {} \;
+find . -perm 440 -exec chmod 644 {} \;
+find . -perm 777 -exec chmod 755 {} \;
+find . -perm 775 -exec chmod 755 {} \;
+find . -perm 511 -exec chmod 755 {} \;
+find . -perm 711 -exec chmod 755 {} \;
+find . -perm 555 -exec chmod 755 {} \;
+
+( cd imap/src/osdep/unix; zcat $CWD/fpic.diff.gz | patch -p0 --verbose -E || exit )
+zcat $CWD/pine-slackware.config.diff.gz | patch -p1 --backup --verbose -E || exit
+# Set default debug level to 0:
+zcat $CWD/pine.debug.diff.gz | patch -p1 --backup --verbose -E || exit
+echo "#define PASSFILE        \".pine.pwd\"" >> pine/osdep/os-lnx.h
+# Remove ~ files:
+find . -name "*~" | xargs rm --verbose
+
+mkdir $PKG1/usr/doc/pine$VERSION
+cp -a README CPYRIGHT $PKG1/usr/doc/pine$VERSION
+( cd doc ; cp -a * $PKG1/usr/doc/pine$VERSION )
+( cd $PKG1/usr/doc/pine$VERSION ; rm *.1 tech-notes.txt )
+( cd $PKG1/usr/doc/pine$VERSION ; chown -R root.root * )
+
+mkdir -p $PKG2/usr/doc/pine$VERSION
+cp -a README CPYRIGHT $PKG2/usr/doc/pine$VERSION
+
+./build slx SSLLIB=/usr/lib$LIBSUFFIX SSLDIR=/etc/ssl SSLCERTS=/etc/ssl/certs SSLINCLUDE=/usr/include/openssl SSLTYPE=unix OPTIMIZE="-O2" DEBUG=-O2 'LDAPLIBS=-lldap -llber' 'LDAPCFLAGS=-DENABLE_LDAP' CC="gcc -fPIC" || exit 1
+#( cd imap ; make clean )
+#( cd imap ; make slx )
+for file in doc/pico.1 doc/pilot.1 doc/pine.1 ; do
+  cat $file > $PKG1/usr/man/man1/`basename $file`
+done
+for file in imap/src/imapd/imapd.8 imap/src/ipopd/ipopd.8 ; do
+  cat $file > $PKG2/usr/man/man8/`basename $file`
+done
+
+cd imap/imapd
+cat imapd > $PKG2/usr/sbin/imapd
+cd ../ipopd
+cat ipop3d > $PKG2/usr/sbin/ipop3d
+cd ../../bin
+
+cat pico > $PKG1/usr/bin/pico
+cat pilot > $PKG1/usr/bin/pilot
+cat pine > $PKG1/usr/bin/pine
+# Add a default system-wide config file:
+$PKG1/usr/bin/pine -conf > $PKG1/etc/pine.conf
+
+# Add slack-desc files:
+mkdir -p $PKG1/install
+cat $CWD/slack-desc.pine > $PKG1/install/slack-desc
+mkdir -p $PKG2/install
+cat $CWD/slack-desc.imapd > $PKG2/install/slack-desc
+
+# Add pinepgp support:
+cd $TMP
+rm -rf pinepgp-$PINEPGP
+tar xzvf $CWD/pinepgp-$PINEPGP.tar.gz
+cd pinepgp-$PINEPGP
+
+# Make sure ownerships and permissions are sane:
+chown -R root:root .
+find . -perm 664 -exec chmod 644 {} \;
+find . -perm 600 -exec chmod 644 {} \;
+find . -perm 444 -exec chmod 644 {} \;
+find . -perm 400 -exec chmod 644 {} \;
+find . -perm 440 -exec chmod 644 {} \;
+find . -perm 777 -exec chmod 755 {} \;
+find . -perm 775 -exec chmod 755 {} \;
+find . -perm 511 -exec chmod 755 {} \;
+find . -perm 711 -exec chmod 755 {} \;
+find . -perm 555 -exec chmod 755 {} \;
+
+# Patch from Gentoo
+zcat $CWD/pinepgp-0.18.0-makefile-sed-fix.patch.gz | patch -p1 --verbose || exit 1
+
+./configure --prefix=/usr
+make || exit 1
+make install DESTDIR=$PKG1 || exit 1
+
+mkdir -p $PKG1/usr/doc/pinepgp-$PINEPGP
+cp -a COPYING README $PKG1/usr/doc/pinepgp-$PINEPGP
+
+# Build the package:
+cd $PKG1
+PKGNAM=$PKG1NAM
+BUILD=$PINEBUILD
+pkghelpers_fixup
+pkghelpers_makepkg
+
+cd $PKG2
+PKGNAM=$PKG2NAM
+BUILD=$IMAPDBUILD
+pkghelpers_fixup
+pkghelpers_makepkg
+
+if [ "$1" = "--cleanup" ]; then
+  rm -rf $TMP/pine$VERSION
+  rm -rf $TMP/pinepgp-$PINEPGP
+  rm -rf $PKG1
+  rm -rf $PKG2
+fi

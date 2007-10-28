@@ -1,0 +1,41 @@
+#!/bin/sh
+PKGNAM=bin86
+VERSION=0.16.15
+BUILD=2
+
+. /etc/pkghelpers
+pkghelpers_env
+
+rm -rf $PKG
+mkdir -p $PKG/usr/bin
+
+cd /tmp
+tar xjvf $CWD/bin86-$VERSION.tar.bz2
+cd bin86-$VERSION
+zcat $CWD/bin86.diff.gz | patch -p1
+mkdir -p /usr/doc/bin86-$VERSION
+cp -a ChangeLog README README-0.4 as/TODO as/COPYING /usr/doc/bin86-$VERSION
+chmod 644 /usr/doc/bin86-$VERSION/*
+chown root.root /usr/doc/bin86-$VERSION/*
+cd ld 
+zcat $CWD/bin86-x86_64.diff.gz | patch -p0 --verbose
+cd ..
+make
+strip as/as86 ld/ld86 ld/objdump86
+cat as/as86 > $PKG/usr/bin/as86
+cat as/as86_encap > $PKG/usr/bin/as86_encap
+cat ld/ld86 > $PKG/usr/bin/ld86
+cat ld/objdump86> $PKG/usr/bin/objdump86
+chmod 755 $PKG/usr/bin/as86 $PKG/usr/bin/as86_encap $PKG/usr/bin/ld86 $PKG/usr/bin/objdump86
+( rm -f $PKG/usr/bin/nm86 $PKG/usr/bin/size86 ; cd $PKG/usr/bin ; ln -sf objdump86 nm86 ; ln -sf objdump86 size86 )
+mkdir -p $PKG/usr/man/man1
+cat man/as86.1 | gzip -9c > $PKG/usr/man/man1/as86.1.gz
+cat man/ld86.1 | gzip -9c > $PKG/usr/man/man1/ld86.1.gz
+( rm -f $PKG/usr/man/man1/as86_encap.1.gz ; cd $PKG/usr/man/man1 ; ln -sf as86.1.gz as86_encap.1.gz )
+
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+
+cd $PKG
+pkghelpers_fixup
+pkghelpers_makepkg

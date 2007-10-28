@@ -1,0 +1,59 @@
+#!/bin/sh
+CWD=`pwd`
+PKG=/tmp/package-aspell
+rm -rf $PKG
+mkdir -p $PKG/usr
+
+VERSION=0.60.5
+ARCH=${ARCH:-x86_64}
+BUILD=1
+
+if [ "$ARCH" = "i386" ]; then
+  SLKCFLAGS="-O2 -march=i386 -mcpu=i686"
+elif [ "$ARCH" = "i486" ]; then
+  SLKCFLAGS="-O2 -march=i486 -mtune=i686"
+elif [ "$ARCH" = "s390" ]; then
+  SLKCFLAGS="-O2"
+elif [ "$ARCH" = "x86_64" ]; then
+  SLKCFLAGS="-O2 -fPIC"
+fi
+
+cd /tmp
+rm -rf aspell-$VERSION
+tar xjvf $CWD/aspell-$VERSION.tar.bz2
+cd aspell-$VERSION
+chown -R root:root .
+find . -perm 664 -exec chmod 644 {} \;
+CFLAGS="$SLKCFLAGS" \
+CXXFLAGS="$SLKCFLAGS" \
+./configure \
+  --prefix=/usr \
+	--libdir=/usr/lib64 \
+  --enable-pkgdatadir=/usr/lib64/aspell \
+  --enable-data-dir=/usr/lib64/aspell \
+  --enable-pkglibdir=/usr/lib64/aspell \
+  --enable-dict-dir=/usr/lib64/aspell
+make -j 10
+make install
+ldconfig
+make install DESTDIR=$PKG
+( cd $PKG
+  find . | xargs file | grep ELF | cut -f 1 -d : | xargs strip --strip-unneeded
+)
+rm $PKG/usr/info/dir
+## This looks like crap clutter to me
+## ... turns out to be required.  How ugly...
+#rm -f $PKG/usr/bin/pre*
+gzip -9 $PKG/usr/info/*
+gzip -9 $PKG/usr/man/man?/*.?
+mkdir -p $PKG/usr/doc/aspell-$VERSION
+cp -a \
+  COPYING README TODO \
+  $PKG/usr/doc/aspell-$VERSION
+mv $PKG/usr/share/doc/aspell/*html $PKG/usr/doc/aspell-$VERSION
+rm -rf $PKG/usr/share/doc
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+
+cd /tmp/package-aspell
+makepkg -l y -c n ../aspell-$VERSION-${ARCH}_slamd64-$BUILD.tgz

@@ -1,0 +1,63 @@
+#!/bin/sh
+# Set initial variables:
+PKGNAM=tcpdump
+VERSION=3.9.7
+LIBVER=0.9.7
+BUILD=2
+
+. /etc/pkghelpers
+pkghelpers_env
+
+rm -rf $PKG
+mkdir -p $PKG
+
+echo "+================+"
+echo "| libpcap-$LIBVER |"
+echo "+================+"
+cd $TMP
+rm -rf libpcap-$LIBVER
+tar xzvf $CWD/libpcap-$LIBVER.tar.gz
+cd libpcap-$LIBVER
+find . -type d -name CVS -exec rm -rf {} \;
+chown -R root:root .
+CFLAGS="`getconf LFS_CFLAGS`" \
+./configure \
+  --prefix=/usr \
+	--libdir=/usr/lib$LIBSUFFIX \
+  --enable-ipv6 \
+  $ARCH-$DISTRO-linux
+make -j 10 || exit 1
+make install DESTDIR=$PKG
+mkdir -p $PKG/usr/doc/libpcap-$LIBVER
+cp -a \
+  CHANGES CREDITS FILES INSTALL.txt LICENSE README README.aix README.linux README.tru64 SUNOS4 TODO VERSION \
+  $PKG/usr/doc/libpcap-$LIBVER
+
+echo "+================+"
+echo "| tcpdump-$VERSION |"
+echo "+================+"
+cd $TMP
+rm -rf tcpdump-$VERSION
+tar xzvf $CWD/tcpdump-$VERSION.tar.gz
+cd tcpdump-$VERSION
+find . -type d -name CVS -exec rm -rf {} \;
+chown -R root:root .
+./configure \
+  --prefix=/usr \
+	--libdir=/usr/lib$LIBSUFFIX \
+  --enable-ipv6 \
+  $ARCH-$DISTRO-linux
+make -j 10 || exit 1
+make install DESTDIR=$PKG
+mkdir -p $PKG/usr/doc/tcpdump-$VERSION
+cp -a \
+  CHANGES FILES INSTALL README \
+  $PKG/usr/doc/tcpdump-$VERSION
+
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+
+# Build the package:
+cd $PKG
+pkghelpers_fixup
+pkghelpers_makepkg

@@ -1,0 +1,43 @@
+#!/bin/sh
+# Set initial variables:
+PKGNAM=netpipes
+VERSION=4.2
+BUILD=2
+
+. /etc/pkghelpers
+pkghelpers_env
+
+if [ ! -d $PKG ]; then
+  mkdir -p $PKG # place for the package to be built
+fi
+
+# Explode the package framework:
+cd $PKG
+explodepkg $CWD/_netpipes.tar.gz
+
+echo "+==============+"
+echo "| netpipes-4.2 |"
+echo "+==============+"
+cd $TMP
+tar xzvf $CWD/netpipes-4.2-export.tar.gz
+cd netpipes-4.2-export
+mkdir -p $PKG/usr/doc/netpipes-4.2-export
+cp -a COPYING README *.html $PKG/usr/doc/netpipes-4.2-export
+chown root:root $PKG/usr/doc/netpipes-4.2-export/*
+chmod 644 $PKG/usr/doc/netpipes-4.2-export/*
+make
+strip encapsulate faucet getpeername hose sockdown timelimit
+for file in encapsulate faucet getpeername hose sockdown timelimit ; do
+  cat $file > $PKG/usr/bin/$file
+done
+mkdir -p $PKG/usr/man/man1
+for file in encapsulate faucet getpeername hose sockdown timelimit ; do
+  cat $file.1 | gzip -9c > $PKG/usr/man/man1/$file.1.gz
+done
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+
+# Build the package:
+cd $PKG
+pkghelpers_fixup
+pkghelpers_makepkg

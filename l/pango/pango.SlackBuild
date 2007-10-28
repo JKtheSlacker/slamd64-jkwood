@@ -1,0 +1,80 @@
+#!/bin/sh
+CWD=`pwd`
+TMP=/tmp
+PKG=$TMP/package-pango
+rm -rf $PKG
+mkdir -p $PKG/usr
+
+VERSION=1.16.4
+ARCH=${ARCH:-x86_64}
+BUILD=1
+DISTRO=${DISTRO:-slamd64}
+
+if [ $DISTRO = slackware ]; then
+	PKGARCH=$ARCH
+else
+	PKGARCH=${ARCH}_${DISTRO}
+fi
+
+if [ $DISTRO = slamd64 ]; then
+	LIBSUFFIX=64
+else
+	LIBSUFFIX=
+fi
+
+if [ "$ARCH" = "i386" ]; then
+  SLKCFLAGS="-O2 -march=i386 -mcpu=i686"
+elif [ "$ARCH" = "i486" ]; then
+  SLKCFLAGS="-O2 -march=i486 -mtune=i686"
+elif [ "$ARCH" = "s390" ]; then
+  SLKCFLAGS="-O2"
+elif [ "$ARCH" = "x86_64" ]; then
+  SLKCFLAGS="-O2 -fPIC"
+fi
+
+cd $TMP
+rm -rf pango-$VERSION
+tar xjvf $CWD/pango-$VERSION.tar.bz2
+cd pango-$VERSION
+chown -R root:root .
+find . -perm 664 -exec chmod 644 {} \;
+if [ "x$LIBSUFFIX" != "x" ]; then
+	# Thanks to http://cblfs.cross-lfs.org/index.php/Pango for original patch
+	zcat $CWD/pango-$VERSION-multilib-1.diff.gz | patch -p1 --verbose || exit 1
+	sed -i "s/BUILDENV/64/" pango/pango-utils.c \
+    modules/Makefile.am modules/Makefile.in \
+    pango/Makefile.am pango/Makefile.in || exit 1
+fi
+	
+CFLAGS="$SLKCFLAGS" \
+./configure --prefix=/usr \
+						--libdir=/usr/lib$LIBSUFFIX \
+            --sysconfdir=/etc
+						--$ARCH-$DISTRO-linux
+make -j10 || exit 1
+make install DESTDIR=$PKG
+# Spamming your root partition:
+make install
+
+if [ "x$LIBSUFFIX" = "x64" ]; then
+	EXTRAETC=-64
+else
+	EXTRAETC=
+fi
+mkdir -p $PKG/etc/pango$EXTRAETC
+cp -a /etc/pango$EXTRAETC/* $PKG/etc/pango$EXTRAETC
+
+strip $PKG/usr/bin/*
+( cd $PKG
+  find . -type f | xargs file | grep ELF | cut -f 1 -d : | xargs strip --strip-unneeded
+)
+gzip -9 $PKG/usr/man/man?/*
+mkdir -p $PKG/usr/doc/pango-$VERSION
+cp -a \
+  AUTHORS COPYING ChangeLog NEWS README TODO \
+  $PKG/usr/doc/pango-$VERSION
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+
+cd $TMP/package-pango
+makepkg -l y -c n ../pango-$VERSION-$PKGARCH-$BUILD.tgz

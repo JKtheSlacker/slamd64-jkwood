@@ -1,0 +1,118 @@
+#!/bin/sh
+
+PKGNAM=metamail
+VERSION=2.7
+BUILD=${BUILD:-2}
+
+. /etc/pkghelpers
+pkghelpers_env
+
+rm -rf $PKG
+mkdir -p $PKG
+
+cd $TMP
+rm -rf $PKGNAM-$VERSION
+tar xzvf $CWD/$PKGNAM-$VERSION.tar.gz
+cd $PKGNAM-$VERSION
+
+# Make sure ownerships and permissions are sane:
+chown -R root:root .
+find . -perm 664 -exec chmod 644 {} \;
+find . -perm 600 -exec chmod 644 {} \;
+find . -perm 444 -exec chmod 644 {} \;
+find . -perm 400 -exec chmod 644 {} \;
+find . -perm 440 -exec chmod 644 {} \;
+find . -perm 777 -exec chmod 755 {} \;
+find . -perm 775 -exec chmod 755 {} \;
+find . -perm 511 -exec chmod 755 {} \;
+find . -perm 711 -exec chmod 755 {} \;
+find . -perm 555 -exec chmod 755 {} \;
+
+zcat $CWD/metamail_2.7-43.diff.gz | patch -p1 || exit 1
+zcat $CWD/metamail.fmtbuf.diff.gz | patch -p1 || exit 1
+( cd bin
+  cat showexternal | perl -pi -e 's|sensible-pager|more|' > se
+  chmod 755 se ; mv se showexternal
+  cat sun-message | perl -pi -e 's|sensible-pager|more|' > sm
+  chmod 755 sm ; mv sm sun-message )
+( cd src/metamail
+  cat mailto.c | perl -pi -e 's|sensible-pager|more|' > m.c
+  mv m.c mailto.c )
+
+# Configure:
+if [ ! -r configure ]; then
+  sh autogen.sh
+fi
+chmod +x configure
+CFLAGS="-O2" \
+./configure \
+  --prefix=/usr \
+  --libdir=/usr/lib${LIBSUFFIX} \
+  --program-prefix="" \
+  --program-suffix="" \
+  --build=$ARCH-$DISTRO-linux
+
+sed -i 's#--tag=CC##g' {replace,metamail}/Makefile*
+# Build and install:
+make || exit 1
+( cd bin
+  cat mailto-hebrew | perl -pi -e 's|/usr/lib/X11/fonts/misc|/usr/lib/metamail/fonts|' > mh
+  chmod 755 mh ; mv mh mailto-hebrew )
+make install DESTDIR=$PKG || exit 1
+
+if [ "$LIBSUFFIX" != "" ]; then
+  ( cd $PKG/usr/bin
+    sed -i s%/usr/lib/%/usr/lib$LIBSUFFIX/% *
+  )
+fi
+
+# Install man pages
+( cd man
+  mkdir -p $PKG/usr/man/man1
+  for file in *.1 ; do
+    cat $file > $PKG/usr/man/man1/$file
+  done
+  #mkdir -p $PKG/usr/man/man4
+  #for file in *.4 ; do
+  #  cat $file > /usr/man/man4/$file
+  #done
+  mkdir -p $PKG/usr/man/man5
+  for file in *.5 ; do
+    cat $file > $PKG/usr/man/man5/$file
+  done )
+
+# Install fonts
+( cd fonts
+  make
+  mkdir -p $PKG/usr/lib$LIBSUFFIX/metamail/fonts
+  for file in *.pcf ; do
+    cat $file > $PKG/usr/lib$LIBSUFFIX/metamail/fonts/$file
+  done
+  cat fonts.alias > $PKG/usr/lib$LIBSUFFIX/metamail/fonts/fonts.alias
+  cat fonts.dir > $PKG/usr/lib$LIBSUFFIX/metamail/fonts/fonts.dir )
+
+(cd $PKG
+# These are obsolete, broken, and/or undocumented.
+# The Slackware build file is the definitive guide of whether Slamd64 includes them or not, so
+# if Slackware -current also doesn't ship it, complain to volkerdi@slackware.com if you miss any of them...
+for file in \
+  mailserver rcvAppSingle richtoatk sndAppSingle sun-audio-file sun-message sun-to-mime sun2mime \
+  rcvAppleSingle sndAppleSingle sun-message.csh \
+  ; do
+  rm -f $PKG/usr/bin/$file
+  rm -f $PKG/usr/man/man1/$file.1
+done
+)
+
+# Add a documentation directory:
+mkdir -p $PKG/usr/doc/$PKGNAM-$VERSION
+cp -a \
+  CREDITS README mailcap \
+$PKG/usr/doc/$PKGNAM-$VERSION
+
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+
+cd $PKG
+pkghelpers_fixup
+pkghelpers_makepkg

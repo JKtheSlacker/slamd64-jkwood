@@ -1,0 +1,32 @@
+#!/bin/sh
+PKGNAM=libid3tag
+VERSION=0.15.1b
+BUILD=2
+
+. /etc/pkghelpers
+pkghelpers_env
+
+cd /tmp
+rm -rf libid3tag-$VERSION
+tar xzvf $CWD/libid3tag-$VERSION.tar.gz
+cd libid3tag-$VERSION
+chown -R root.root .
+find . -perm 664 -exec chmod 644 {} \;
+CFLAGS="$SLKCFLAGS" \
+./configure \
+  --prefix=/usr \
+  --libdir=/usr/lib$LIBSUFFIX \
+  --disable-debugging \
+  $ARCH-$DISTRO-linux 
+make -j12 || exit 1
+make install DESTDIR=$PKG
+mkdir -p $PKG/usr/doc/libid3tag-$VERSION
+cp -a \
+  CHANGES COPYING COPYRIGHT CREDITS README TODO VERSION \
+  $PKG/usr/doc/libid3tag-$VERSION
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+
+cd $PKG
+pkghelpers_fixup
+pkghelpers_makepkg

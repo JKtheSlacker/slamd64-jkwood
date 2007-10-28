@@ -1,0 +1,61 @@
+#!/bin/sh
+# Ported from Slackware .build
+
+# Set initial variables:
+PKGNAM=aalib
+VERSION=${VERSION:-1.4rc5} # We can use a release candidate for this lib because it's not all that mission-critial anyway.
+AALIB_VERSION=${AALIB_VERSION:-1.4.0}
+BUILD=${BUILD:-3}
+
+. /etc/pkghelpers
+pkghelpers_env
+
+rm -rf $PKG
+mkdir -p $PKG
+
+cd /tmp
+tar xzvf $CWD/$PKGNAM-$VERSION.tar.gz
+cd ${PKGNAM}-${AALIB_VERSION}
+
+if [ $ARCH = "x86_64" ]; then
+  zcat $CWD/$PKGNAM-x86_64.diff.gz | patch -p1 --verbose || exit 1
+fi
+
+# Make sure ownerships and permissions are sane:
+chown -R root:root .
+find . -perm 666 -exec chmod 644 {} \;
+find . -perm 664 -exec chmod 644 {} \;
+find . -perm 600 -exec chmod 644 {} \;
+find . -perm 444 -exec chmod 644 {} \;
+find . -perm 400 -exec chmod 644 {} \;
+find . -perm 440 -exec chmod 644 {} \;
+find . -perm 777 -exec chmod 755 {} \;
+find . -perm 775 -exec chmod 755 {} \;
+find . -perm 511 -exec chmod 755 {} \;
+find . -perm 711 -exec chmod 755 {} \;
+find . -perm 555 -exec chmod 755 {} \;
+
+# Configure:
+CFLAGS="$SLKCFLAGS" \
+CXXFLAGS="$SLKCFLAGS" \
+./configure \
+  --prefix=/usr \
+  --libdir=/usr/lib$LIBSUFFIX \
+  --sysconfdir=/etc \
+  $ARCH-$DISTRO-linux
+
+# Build and install:
+make -j12 || exit 1
+make install DESTDIR=$PKG || exit 1
+
+# Install documentation:
+mkdir -p $PKG/usr/doc/$PKGNAM-$VERSION
+cp -a \
+  ANNOUNCE AUTHORS COPYING ChangeLog INSTALL NEWS README README.OS2 \
+  $PKG/usr/doc/$PKGNAM-$VERSION
+
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+cd $PKG
+pkghelpers_fixup
+pkghelpers_makepkg

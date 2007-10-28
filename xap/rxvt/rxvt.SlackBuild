@@ -1,0 +1,87 @@
+#!/bin/sh
+TMP=/tmp
+CWD=`pwd`
+PKG=$TMP/package-rxvt
+rm -rf $PKG
+mkdir -p $PKG
+
+VERSION=2.7.10
+ARCH=${ARCH:-x86_64}
+BUILD=2
+DISTRO=${DISTRO:-slamd64}
+
+if [ $DISTRO = slackware ]; then
+	PKGARCH=$ARCH
+else
+	PKGARCH=${ARCH}_${DISTRO}
+fi
+
+if [ $DISTRO = slamd64 ]; then
+	LIBSUFFIX=64
+	SLKLDFLAGS="-L/usr/lib64"
+else
+	LIBSUFFIX=
+	SLKLDFLAGS=
+fi
+
+if [ "$ARCH" = "i386" ]; then
+  SLKCFLAGS="-O2 -march=i386 -mcpu=i686"
+elif [ "$ARCH" = "i486" ]; then
+  SLKCFLAGS="-O2 -march=i486 -mtune=i686"
+elif [ "$ARCH" = "s390" ]; then
+  SLKCFLAGS="-O2"
+elif [ "$ARCH" = "x86_64" ]; then
+  SLKCFLAGS="-O2 -fPIC"
+fi
+
+cd $TMP
+rm -rf rxvt-$VERSION
+tar xjvf $CWD/rxvt-$VERSION.tar.bz2
+cd rxvt-$VERSION
+chown -R root:root .
+zcat $CWD/rxvt.utempter.diff.gz | patch -p1 --verbose --backup --suffix=.orig 
+zcat $CWD/rxvt-2.7.10-asneeded.diff.gz | patch -p1 --verbose --backup --suffix=.orig 
+LDFLAGS="$SLKLDFLAGS" \
+CFLAGS="$SLKCFLAGS" \
+./configure \
+--prefix=/usr \
+--enable-languages \
+--enable-utmp \
+--enable-wtmp \
+--enable-xpm-background \
+--enable-transparency \
+--enable-menubar \
+--enable-graphics \
+--enable-rxvt-scroll \
+--enable-next-scroll \
+--enable-xterm-scroll \
+--enable-xim \
+--enable-frills \
+--enable-linespace \
+--enable-24bit \
+--enable-keepscrolling \
+--enable-mousewheel \
+--enable-slipwheeling \
+--enable-xgetdefault \
+--enable-old-selection \
+$ARCH-$DISTRO-linux
+make -j10
+make install DESTDIR=$PKG
+( cd $PKG
+  find . | xargs file | grep "executable" | grep ELF | cut -f 1 -d : | xargs strip --strip-unneeded 2> /dev/null
+  find . | xargs file | grep "shared object" | grep ELF | cut -f 1 -d : | xargs strip --strip-unneeded 2> /dev/null
+)
+rmdir $PKG/usr/lib $PKG/usr/include
+rm $PKG/usr/bin/rxvt-$VERSION
+mkdir -p $PKG/usr/doc/rxvt-$VERSION
+cp -a \
+  rxvt-$VERSION.lsm doc rclock/rclock.html \
+  $PKG/usr/doc/rxvt-$VERSION
+rm -r $PKG/usr/doc/rxvt-$VERSION/doc/yodl
+gzip -9 $PKG/usr/man/man1/*
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+
+cd $PKG
+makepkg -l y -c n $TMP/rxvt-$VERSION-$PKGARCH-$BUILD.tgz
+

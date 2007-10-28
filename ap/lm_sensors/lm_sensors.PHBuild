@@ -1,0 +1,107 @@
+#!/bin/sh
+# Copyright 2006  Patrick J. Volkerding, Sebeka, MN, USA
+# Copyright 2007  Frederick Emmott <mail@fredemmott.co.uk>
+# All rights reserved.
+#
+# Redistribution and use of this script, with or without modification, is
+# permitted provided that the following conditions are met:
+#
+# 1. Redistributions of this script must retain the above copyright
+#    notice, this list of conditions and the following disclaimer.
+#
+#  THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR IMPLIED
+#  WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+#  MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.  IN NO
+#  EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+#  SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+#  PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+#  OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+#  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+#  OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+#  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+
+PKGNAM=lm_sensors
+PKGVER=2.10.3
+BUILD=1
+
+. /etc/pkghelpers
+
+pkghelpers_env
+
+
+rm -rf $PKG
+mkdir -p $PKG
+
+cd $TMP
+rm -rf ${PKGNAM}-${VERSION}
+tar xjvf $CWD/${PKGNAM}-$VERSION.tar.bz2 || exit 1
+cd ${PKGNAM}-$VERSION
+
+# Make sure ownerships and permissions are sane:
+chown -R root:root .
+find . -perm 666 -exec chmod 644 {} \;
+find . -perm 664 -exec chmod 644 {} \;
+find . -perm 600 -exec chmod 644 {} \;
+find . -perm 444 -exec chmod 644 {} \;
+find . -perm 400 -exec chmod 644 {} \;
+find . -perm 440 -exec chmod 644 {} \;
+find . -perm 777 -exec chmod 755 {} \;
+find . -perm 775 -exec chmod 755 {} \;
+find . -perm 511 -exec chmod 755 {} \;
+find . -perm 711 -exec chmod 755 {} \;
+find . -perm 555 -exec chmod 755 {} \;
+
+# Configure:
+zcat $CWD/lm_sensors.makefile.diff.gz | patch -p1 --verbose || exit 1
+
+# This is needed because /usr/local is hardcoded in a few places in
+# sensor-detect.  A little better searching by that program (like
+# perhaps checking $PATH) would be nice, but for now we'll just
+# commit the same error by hardcoding the path like we want it.  ;-)
+zcat $CWD/lm_sensors.prefix.usr.diff.gz | patch -p1 --verbose || exit 1
+
+make user LIBDIR=/usr/lib$LIBSUFFIX || exit 1
+make user_install LIBDIR=/usr/lib$LIBSUFFIX || exit 1
+
+# Nope.
+rm -f $PKG/usr/lib$LIBSUFFIX/*.a
+
+# Nope.
+rm -rf $PKG/usr/include/linux
+
+# Do the .new thing with the config file:
+mv $PKG/etc/sensors.conf $PKG/etc/sensors.conf.new
+
+# Add a documentation directory:
+mkdir -p $PKG/usr/doc/${PKGNAM}-$VERSION
+cp -a \
+  BACKGROUND BUGS CHANGES CONTRIBUTORS COPYING INSTALL QUICKSTART README* TODO lm_sensors.lsm \
+  $PKG/usr/doc/${PKGNAM}-$VERSION
+mkdir -p $PKG/usr/doc/${PKGNAM}-$VERSION/doc
+cd doc
+cp -a \
+  FAQ cvs donations fan-divisors fancontrol.txt mkpatch modules progs temperature-sensors version-2 vid \
+  $PKG/usr/doc/${PKGNAM}-$VERSION/doc
+
+cd $PKG
+pkghelpers_fixup
+mkdir -p install
+cat $CWD/slack-desc > install/slack-desc
+cat << EOF > install/doinst.sh
+#!/bin/sh
+config() {
+  NEW="\$1"
+  OLD="\$(dirname \$NEW)/\$(basename \$NEW .new)"
+  # If there's no config file by that name, mv it over:
+  if [ ! -r \$OLD ]; then
+    mv \$NEW \$OLD
+  elif [ "\$(cat \$OLD | md5sum)" = "\$(cat \$NEW | md5sum)" ]; then # toss the redundant copy
+    rm \$NEW
+  fi
+  # Otherwise, we leave the .new copy for the admin to consider...
+}
+config etc/sensors.conf.new
+EOF
+
+pkghelpers_makepkg

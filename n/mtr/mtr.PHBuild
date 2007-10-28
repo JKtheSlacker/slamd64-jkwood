@@ -1,0 +1,44 @@
+#!/bin/sh
+# $Id: mtr.SlackBuild,v 1.2 2006/07/28 21:40:22 root Exp root $
+# Copyright (c) 2006 Eric Hameleers <alien@slackware.com>
+# Copyright (c) 2007 Frederick Emmott <mail@fredemmott.co.uk> 
+# Distributed under the terms of the GNU General Public License, Version 2
+
+PKGNAM=mtr
+VERSION=0.72
+BUILD=1
+
+. /etc/pkghelpers
+pkghelpers_env
+
+rm -rf $PKG
+mkdir -p $PKG
+
+cd $TMP
+
+tar xjvf $CWD/${PKGNAM}-${VERSION}.tar.bz2 || exit 1
+cd ${PKGNAM}-${VERSION}
+chown -R root.root *
+CFLAGS="$SLKCFLAGS" \
+./configure --prefix=/usr \
+            --localstatedir=/var \
+            --sysconfdir=/etc \
+            --build=$ARCH-$DISTRO-linux
+make -j10 || exit 1
+make DESTDIR=$PKG install || exit 1
+
+chmod -s $PKG/usr/sbin/mtr
+DOCS="AUTHORS COPYING FORMATS INSTALL NEWS README SECURITY TODO "
+mkdir -p $PKG/usr/doc/$PKGNAM-$VERSION
+cp -a $DOCS \
+      $PKG/usr/doc/$PKGNAM-$VERSION
+
+chmod -R a-w $PKG/usr/doc/$PKGNAM-$VERSION/*
+chmod -R o-w $PKG
+
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+
+cd $PKG
+pkghelpers_fixup
+pkghelpers_makepkg

@@ -1,0 +1,47 @@
+#!/bin/sh
+# Set initial variables:
+PKGNAM=distcc
+VERSION=2.18.3
+BUILD=3
+
+. /etc/pkghelpers
+pkghelpers_env
+
+rm -rf $PKG
+mkdir -p $PKG
+
+cd $TMP
+rm -rf distcc-$VERSION
+tar xjvf $CWD/distcc-$VERSION.tar.bz2
+cd distcc-$VERSION
+chown -R root.root .
+./configure \
+  --prefix=/usr \
+  --datadir=/usr/share \
+  --sysconfdir=/etc \
+  --with-gtk \
+  --without-gnome \
+  $ARCH-$DISTRO-linux
+make -j12 || exit 1
+make install DESTDIR=$PKG docdir=/usr/doc/distcc-$VERSION
+# pkgdocdir=/usr/doc/distcc-$VERSION
+mkdir -p $PKG/usr/share/applications
+( cd $PKG/usr/share/applications
+  ln -sf /usr/share/distcc/distccmon-gnome.desktop .
+)
+# Restore original timestamps on the doc files:
+for file in * ; do
+  if [ -f $file ]; then
+    if [ -r $PKG/usr/doc/distcc-$VERSION/$file ]; then
+      cp -a $file $PKG/usr/doc/distcc-$VERSION/$file
+      chmod 644 $PKG/usr/doc/distcc-$VERSION/$file
+    fi
+  fi
+done
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+
+# Build the package:
+cd $PKG
+pkghelpers_fixup
+pkghelpers_makepkg

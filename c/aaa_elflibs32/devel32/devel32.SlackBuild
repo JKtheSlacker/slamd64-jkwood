@@ -1,0 +1,31 @@
+#!/bin/sh
+VERSION=1.0
+ARCH=x86_64
+BUILD=2
+DISTRO=${DISTRO:-slamd64}
+
+CWD=`pwd`
+
+PKG=/tmp/package-aaa_elflibs32
+PKGTMP=/tmp/devel32-tmp
+
+rm -rf $PKGTMP
+mkdir -p $PKGTMP
+cd $PKGTMP
+
+tar --wildcards -xvf $CWD/devel32-$VERSION-${ARCH}_${DISTRO}-$BUILD.tgz \
+	lib/lib{z,bz2,termcap}.so* \
+	usr/lib/lib{png12,png,jpeg,crypto,ssl,mng}.so.* \
+	usr/lib/mysql/libmysqlclient.so.*
+
+mv usr/lib/mysql/* usr/lib/
+rmdir usr/lib/mysql
+for dir in lib usr/lib; do
+	(
+		cd $dir
+		ldconfig -n . # Recreate symlinks
+
+		mkdir -p $PKG/$dir
+		cp -a * $PKG/$dir
+	)
+done

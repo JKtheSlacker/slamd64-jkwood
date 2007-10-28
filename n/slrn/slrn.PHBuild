@@ -1,0 +1,58 @@
+#!/bin/sh
+
+#######################################################################
+########################### BIG FAT REMINDER ##########################
+#######################################################################
+# If the "slang" package (slang2, as opposed to the slang1 package) is
+# installed, slrn will fail to build with a load of weird errors.
+PKGNAM=slrn
+VERSION=0.9.8.1
+BUILD=${BUILD:-2}
+
+. /etc/pkghelpers
+pkghelpers_env
+
+rm -rf $PKG
+mkdir -p $PKG
+
+cd $TMP
+rm -rf slrn-$VERSION
+tar xjvf $CWD/slrn-$VERSION.tar.bz2
+cd slrn-$VERSION
+chown -R root.root .
+zcat $CWD/slrn.slrnfeat.diff.gz | patch -p1
+CFLAGS="$SLKCFLAGS" \
+  ./configure \
+  --prefix=/usr \
+  --libdir=/usr/lib$LIBSUFFIX \
+  --sysconfdir=/etc \
+  --with-ssl \
+  --with-slrnpull \
+  --enable-setgid-code \
+  --with-server-file=/etc/nntpserver \
+	--with-slang-includes=/usr/include/slang1
+make || exit 1
+make install DESTDIR=$PKG
+chown root.news $PKG/usr/bin/slrnpull
+mkdir -p $PKG/usr/doc
+mv $PKG/usr/share/doc/slrn $PKG/usr/doc/slrn-$VERSION
+# big
+rm -f $PKG/usr/doc/slrn-$VERSION/changes
+chmod 2750 $PKG/usr/bin/slrnpull
+mkdir -p $PKG/var/spool/slrnpull/data
+mkdir -p $PKG/var/spool/slrnpull/news
+mkdir -p $PKG/var/spool/slrnpull/out.going
+mkdir -p $PKG/var/spool/slrnpull/out.going/rejects
+cp -a $PKG/usr/doc/slrn-$VERSION/slrnpull/slrnpull.conf $PKG/var/spool/slrnpull
+chown -R news.news $PKG/var/spool/slrnpull
+chmod 3777 $PKG/var/spool/slrnpull/out.going $PKG/var/spool/slrnpull/out.going/rejects
+mkdir -p $PKG/etc
+cp -a $PKG/usr/doc/slrn-$VERSION/slrn.rc $PKG/etc/slrn.rc
+gzip -9 $PKG/usr/man/man1/*
+rmdir $PKG/usr/share/doc
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+
+cd $PKG
+pkghelpers_fixup
+pkghelpers_makepkg

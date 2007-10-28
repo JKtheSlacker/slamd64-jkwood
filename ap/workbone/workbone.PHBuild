@@ -1,0 +1,37 @@
+#!/bin/sh
+# Set initial variables:
+PKGNAM=workbone
+VERSION=2.40
+BUILD=2
+
+. /etc/pkghelpers
+pkghelpers_env
+
+if [ ! -d $PKG ]; then
+  mkdir -p $PKG # place for the package to be built
+fi
+
+cd $TMP
+tar xzvf $CWD/workbone_$VERSION.orig.tar.gz
+cd workbone-2.4
+chown -R root.root .
+zcat $CWD/workbone_$VERSION-3.diff.gz | patch -p1 --verbose
+zcat $CWD/workbone.1.diff.gz | patch -p1 --verbose
+zcat $CWD/workbone-linux26.diff.gz | patch -p0 --verbose
+make -j12 || exit 1
+strip workbone
+mkdir -p $PKG/usr/bin
+cat workbone > $PKG/usr/bin/workbone
+chmod 755 $PKG/usr/bin/workbone
+mkdir -p $PKG/usr/man/man1
+cat workbone.1 | gzip -9c > $PKG/usr/man/man1/workbone.1.gz
+mkdir -p $PKG/usr/doc/workbone-$VERSION
+cp -a README $PKG/usr/doc/workbone-$VERSION
+chmod 644 $PKG/usr/doc/workbone-$VERSION/README
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+
+# Build the package:
+cd $PKG
+pkghelpers_fixup
+pkghelpers_makepkg

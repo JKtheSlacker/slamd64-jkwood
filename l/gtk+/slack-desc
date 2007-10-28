@@ -1,0 +1,19 @@
+# HOW TO EDIT THIS FILE:
+# The "handy ruler" below makes it easier to edit a package description.  Line
+# up the first '|' above the ':' following the base package name, and the '|'
+# on the right side marks the last column you can put a character in.  You must
+# make exactly 11 lines for the formatting to be correct.  It's also
+# customary to leave one space after the ':'.
+
+    |-----handy-ruler------------------------------------------------------|
+gtk+: gtk+ (graphical user interface toolkit)
+gtk+:
+gtk+: GTK+, which stands for the Gimp ToolKit, is a library for creating
+gtk+: graphical user interfaces for the X Window System.  This library is
+gtk+: needed for GIMP (the GNU Image Manipulation Program), Mozilla, and
+gtk+: many other X programs, including most of the programs from the GNOME
+gtk+: project.
+gtk+:
+gtk+:
+gtk+:
+gtk+:

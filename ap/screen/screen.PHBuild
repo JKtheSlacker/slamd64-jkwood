@@ -1,0 +1,55 @@
+#!/bin/sh
+# Build GNU screen for Slackware 
+# <volkerdi@slackware.com>
+PKGNAM=screen
+VERSION=4.0.3
+BUILD=2
+
+. /etc/pkghelpers
+pkghelpers_env
+
+rm -rf $PKG
+mkdir -p $PKG
+cd $TMP
+rm -rf screen-$VERSION
+tar xjvf $CWD/screen-$VERSION.tar.bz2
+
+cd screen-$VERSION
+chown -R root.root .
+CFLAGS="$SLKCFLAGS" ./configure --prefix=/usr \
+        --with-sys-screenrc=/etc/screenrc \
+        --with-pty-mode=0620 \
+        --with-pty-group=5 \
+        --enable-telnet \
+        --disable-socket-dir \
+        --enable-locale \
+        --enable-colors256 \
+        --enable-rxvt_osc \
+        $ARCH-$DISTRO-linux
+
+# Substitutions:
+perl -pi -e 's|.*#undef HAVE_BRAILLE.*|#define HAVE_BRAILLE 1|' config.h
+perl -pi -e 's|/usr/local/etc/screenrc|/etc/screenrc|' etc/etcscreenrc doc/*
+perl -pi -e 's|/local/etc/screenrc|/etc/screenrc|' doc/*
+
+# Build screen:
+make -j12 || exit 1
+make install DESTDIR=$PKG
+
+# Prepare package:
+strip --strip-unneeded $PKG/usr/bin/screen
+chmod 755 $PKG/usr/bin/screen-$VERSION
+mkdir -p $PKG/etc/skel
+cat etc/etcscreenrc > $PKG/etc/screenrc
+cat etc/screenrc > $PKG/etc/skel/.screenrc
+mkdir -p $PKG/usr/doc/screen-$VERSION
+cp -a COPYING ChangeLog INSTALL NEWS README TODO \
+  doc/FAQ doc/README.DOTSCREEN \
+  $PKG/usr/doc/screen-$VERSION
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+
+# Build package:
+cd $PKG
+pkghelpers_fixup
+pkghelpers_makepkg

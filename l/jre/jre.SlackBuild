@@ -1,0 +1,41 @@
+#!/bin/sh
+CWD=`pwd`
+PKG=/tmp/package-jre
+rm -rf $PKG
+mkdir -p $PKG
+
+VERSION=6u2
+DVER=1.6.0_02
+ARCH=x86_64
+JARCH=amd64
+BUILD=1
+
+cd $PKG
+mkdir -p usr/lib64
+cd usr/lib64
+sh $CWD/jre-${VERSION}-linux-${JARCH}.bin || exit 1
+mkdir -p $PKG/etc/profile.d
+cp -a $CWD/profile.d/* $PKG/etc/profile.d
+chown -R root:root $PKG
+( cd $PKG
+find . -perm 664 -exec chmod 644 {} \;
+find . -perm 600 -exec chmod 644 {} \;
+find . -perm 444 -exec chmod 644 {} \;
+find . -perm 400 -exec chmod 644 {} \;
+find . -perm 440 -exec chmod 644 {} \;
+find . -perm 777 -exec chmod 755 {} \;
+find . -perm 775 -exec chmod 755 {} \;
+find . -perm 511 -exec chmod 755 {} \;
+find . -perm 711 -exec chmod 755 {} \;
+find . -perm 555 -exec chmod 755 {} \;
+)
+chmod 755 $PKG/etc/profile.d/*
+( cd $PKG/usr/lib64
+  ln -sf jre${DVER} java
+)
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+
+cd $PKG
+makepkg -l y -c n /tmp/jre-$VERSION-${ARCH}_slamd64-$BUILD.tgz
+

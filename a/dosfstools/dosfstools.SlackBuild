@@ -1,0 +1,64 @@
+#!/bin/sh
+# Set initial variables:
+CWD=`pwd`
+if [ "$TMP" = "" ]; then
+  TMP=/tmp
+fi
+PKG=$TMP/package-dosfstools
+
+VERSION=2.11
+ARCH=${ARCH:-x86_64}
+BUILD=1
+DISTRO=${DISTRO:-slamd64}
+
+if [ $DISTRO = slackware ]; then
+	PKGARCH=$ARCH
+else
+	PKGARCH=${ARCH}_${DISTRO}
+fi
+
+if [ ! -d $TMP ]; then
+  mkdir -p $TMP # location to build the source
+fi
+rm -rf $PKG
+mkdir -p $PKG
+
+cd $TMP
+rm -rf dosfstools-$VERSION
+tar xzvf $CWD/dosfstools-$VERSION.src.tar.gz
+cd dosfstools-$VERSION
+chown -R root:root .
+make -j6 || exit 1
+
+cd mkdosfs
+mkdir -p $PKG/sbin
+cat mkdosfs > $PKG/sbin/mkdosfs
+chmod 755 $PKG/sbin/mkdosfs
+mkdir -p $PKG/usr/man/man8
+cat mkdosfs.8 | gzip -9c > $PKG/usr/man/man8/mkdosfs.8.gz
+cd ../dosfsck
+cat dosfsck > $PKG/sbin/dosfsck
+chmod 755 $PKG/sbin/dosfsck
+cat dosfsck.8 | gzip -9c > $PKG/usr/man/man8/dosfsck.8.gz
+
+mkdir -p $PKG/usr/doc/dosfstools-$VERSION
+cp -a \
+  CHANGES README.Atari TODO \
+  $PKG/usr/doc/dosfstools-$VERSION
+mkdir -p $PKG/usr/doc/dosfstools-$VERSION/mkdosfs
+( cd mkdosfs ; cp -a ANNOUNCE COPYING README mkdosfs-ygg-0.3b.lsm $PKG/usr/doc/dosfstools-$VERSION/mkdosfs )
+mkdir -p $PKG/usr/doc/dosfstools-$VERSION/dosfsck
+( cd dosfsck ; cp -a CHANGES COPYING README $PKG/usr/doc/dosfstools-$VERSION/dosfsck )
+
+( cd $PKG
+  find . | xargs file | grep "executable" | grep ELF | cut -f 1 -d : | xargs strip --strip-unneeded 2> /dev/null
+  find . | xargs file | grep "shared object" | grep ELF | cut -f 1 -d : | xargs strip --strip-unneeded 2> /dev/null
+)
+
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+
+# Build the package:
+cd $PKG
+makepkg -l y -c n $TMP/dosfstools-$VERSION-$PKGARCH-$BUILD.tgz
+

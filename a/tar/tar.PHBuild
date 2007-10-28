@@ -1,0 +1,89 @@
+#!/bin/sh
+# Set initial variables:
+PKGNAM=tar
+VERSION=1.16.1
+BUILD=${BUILD:-1}
+
+. /etc/pkghelpers
+pkghelpers_env
+
+rm -rf $PKG
+mkdir -p $PKG
+
+# This old version is the only one that won't clobber synlinks, e.g.:
+# someone moves /opt to /usr/opt and makes a symlink.  With newer
+# versions of tar, installing any new package will remove the /opt
+# symlink and plop down a new directory there.
+# Well, there's a lot of other bugs (the remote stuff particularly I'm
+# told is flaky) in tar-1.13, so it'll only be here now for use by the
+# Slackware package utils.  And, we'll even let people remove it and
+# the pkgutils will still try to work (but eventually they'll pay the
+# price :)
+cd $TMP
+rm -rf tar-1.13
+tar xvzf $CWD/tar-1.13.tar.gz
+cd tar-1.13
+zcat $CWD/tar-1.13.bzip2.diff.gz | patch -p1 --verbose || exit 1
+chown -R root:root .
+CFLAGS="$SLKCFLAGS" \
+./configure \
+  --prefix=/usr \
+  --disable-nls \
+  $ARCH-$DISTRO-linux
+make -j12
+mkdir -p $PKG/bin
+cat src/tar > $PKG/bin/tar-1.13
+chmod 755 $PKG/bin/tar-1.13
+
+cd $TMP
+rm -rf tar-$VERSION
+tar xjvf $CWD/tar-$VERSION.tar.bz2
+cd tar-$VERSION
+zcat $CWD/tar.nolonezero.diff.gz | patch -p1 --verbose || exit 1
+
+chown -R root:root .
+find . -perm 666 -exec chmod 644 {} \;
+find . -perm 600 -exec chmod 644 {} \;
+find . -perm 444 -exec chmod 644 {} \;
+find . -perm 400 -exec chmod 644 {} \;
+find . -perm 440 -exec chmod 644 {} \;
+find . -perm 777 -exec chmod 755 {} \;
+find . -perm 775 -exec chmod 755 {} \;
+find . -perm 511 -exec chmod 755 {} \;
+find . -perm 711 -exec chmod 755 {} \;
+find . -perm 555 -exec chmod 755 {} \;
+
+CFLAGS="$SLKCFLAGS" \
+./configure \
+  --prefix=/usr \
+  --enable-backup-scripts \
+  $ARCH-$DISTRO-linux
+
+make -j12 || exit 1
+make install DESTDIR=$PKG || exit 1
+mv $PKG/usr/bin/tar $PKG/bin
+( cd $PKG/usr/bin ; ln -sf /bin/tar . )
+( cd $PKG/bin ; ln -sf tar tar-$VERSION )
+# Support "historic" rmt locations:
+( mkdir $PKG/etc
+  cd $PKG/etc
+  ln -sf /usr/libexec/rmt .
+)
+( mkdir -p $PKG/sbin
+  cd $PKG/sbin
+  ln -sf /usr/libexec/rmt .
+)
+mkdir -p $PKG/usr/doc/tar-$VERSION
+cp -a \
+  ABOUT-NLS AUTHORS COPYING NEWS PORTS README THANKS TODO \
+  $PKG/usr/doc/tar-$VERSION
+mkdir -p $PKG/usr/man/man{1,8}
+cat $CWD/tar.1.gz > $PKG/usr/man/man1/tar.1.gz
+cat $CWD/rmt.8.gz > $PKG/usr/man/man8/rmt.8.gz
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+
+# Build the package:
+cd $PKG
+pkghelpers_fixup
+pkghelpers_makepkg

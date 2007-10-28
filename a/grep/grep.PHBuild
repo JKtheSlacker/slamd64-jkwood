@@ -1,0 +1,105 @@
+#!/bin/sh
+# Set initial variables:
+PKGNAM=grep
+VERSION=${VERSION:-2.5}
+ARCH=${ARCH:-x86_64}
+BUILD=${BUILD:-4}
+
+. /etc/pkghelpers
+pkghelpers_env
+
+rm -rf $PKG
+mkdir -p $PKG
+
+# @#$%...  We don't want grep to depend on a shared PCRE:
+if [ -r /usr/lib$LIBSUFFIX/libpcre.la ]; then #$%@
+  mv /usr/lib$LIBSUFFIX/libpcre.so $TMP
+  mv /usr/lib$LIBSUFFIX/libpcre.la $TMP
+fi
+
+cd $TMP
+rm -rf grep-$VERSION
+tar xjvf $CWD/grep-$VERSION.tar.bz2
+cd grep-$VERSION
+
+chown -R root:root .
+find . -perm 666 -exec chmod 644 {} \;
+find . -perm 664 -exec chmod 644 {} \;
+find . -perm 600 -exec chmod 644 {} \;
+find . -perm 444 -exec chmod 644 {} \;
+find . -perm 400 -exec chmod 644 {} \;
+find . -perm 440 -exec chmod 644 {} \;
+find . -perm 777 -exec chmod 755 {} \;
+find . -perm 775 -exec chmod 755 {} \;
+find . -perm 511 -exec chmod 755 {} \;
+find . -perm 711 -exec chmod 755 {} \;
+find . -perm 555 -exec chmod 755 {} \;
+
+# Static to avoid dependency on libgcc_s.so - check this is needed
+CFLAGS="$SLKCFLAGS -static" \
+./configure \
+  --prefix=/usr \
+  --bindir=/bin \
+  --mandir=/usr/man \
+  --infodir=/usr/info
+
+make -j12 || exit 1
+
+# Install the binary:
+mkdir -p $PKG/bin
+cat src/grep > $PKG/bin/grep
+chmod 755 $PKG/bin/grep
+
+# Make symlinks in /bin:
+( cd $PKG/bin
+  ln -sf grep egrep
+  ln -sf grep fgrep
+)
+
+# Make symlinks in /usr/bin:
+mkdir -p $PKG/usr/bin
+( cd $PKG/usr/bin
+  ln -sf ../../bin/grep .
+  ln -sf ../../bin/egrep .
+  ln -sf ../../bin/fgrep .
+)
+
+# Install man and info pages:
+mkdir -p $PKG/usr/man/man1
+( cd doc
+  cat grep.1 | gzip -9c > $PKG/usr/man/man1/grep.1.gz
+  cat egrep.1 | gzip -9c > $PKG/usr/man/man1/egrep.1.gz
+  cat fgrep.1 | gzip -9c > $PKG/usr/man/man1/fgrep.1.gz
+  mkdir -p $PKG/usr/info
+  for file in *.info* ; do
+    cat $file | gzip -9c > $PKG/usr/info/$file.gz
+  done
+)
+
+# Install NLS files:
+( cd po
+  for file in *.gmo ; do
+    LOC=`basename $file .gmo`
+    mkdir -p $PKG/usr/share/locale/$LOC/LC_MESSAGES
+    cat $file > $PKG/usr/share/locale/$LOC/LC_MESSAGES/grep.mo
+  done
+)
+
+mkdir -p $PKG/usr/doc/grep-$VERSION
+cp -a \
+  ABOUT-NLS AUTHORS COPYING ChangeLog INSTALL NEWS README README-alpha README.DOS THANKS TODO \
+  $PKG/usr/doc/grep-$VERSION
+
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+
+# @#$%...  Put back the shared PCRE:
+if [ -r $TMP/libpcre.la ]; then
+  mv $TMP/libpcre.so /usr/lib$LIBSUFFIX
+  mv $TMP/libpcre.la /usr/lib$LIBSUFFIX
+fi
+
+# Build the package:
+cd $PKG
+pkghelpers_fixup
+pkghelpers_makepkg

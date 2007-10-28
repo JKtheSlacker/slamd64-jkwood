@@ -1,0 +1,47 @@
+#!/bin/sh
+# Set initial variables:
+
+PKGNAM=bison
+VERSION=2.3
+BUILD=${BUILD:-1}
+
+. /etc/pkghelpers
+pkghelpers_env
+
+rm -rf $PKG
+mkdir -p $PKG
+
+cd $TMP
+rm -rf bison-$VERSION
+tar xjvf $CWD/bison-$VERSION.tar.bz2
+cd bison-$VERSION
+chown -R root:root .
+find . -perm 664 -exec chmod 644 {} \;
+find . -perm 600 -exec chmod 644 {} \;
+find . -perm 444 -exec chmod 644 {} \;
+find . -perm 400 -exec chmod 644 {} \;
+find . -perm 440 -exec chmod 644 {} \;
+find . -perm 777 -exec chmod 755 {} \;
+find . -perm 775 -exec chmod 755 {} \;
+find . -perm 511 -exec chmod 755 {} \;
+find . -perm 711 -exec chmod 755 {} \;
+find . -perm 555 -exec chmod 755 {} \;
+CFLAGS="$SLKCFLAGS" \
+./configure \
+  --prefix=/usr \
+	--libdir=/usr/lib$LIBSUFFIX
+make -j10 || exit 1
+make install DESTDIR=$PKG
+
+rm -f $PKG/usr/info/dir
+mkdir -p $PKG/usr/doc/bison-$VERSION
+cp -a \
+  ABOUT-NLS AUTHORS COPYING INSTALL NEWS README REFERENCES THANKS doc/FAQ \
+  $PKG/usr/doc/bison-$VERSION
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+
+# Build the package:
+cd $PKG
+pkghelpers_fixup
+pkghelpers_makepkg

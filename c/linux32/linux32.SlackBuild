@@ -1,0 +1,27 @@
+#!/bin/sh
+# Copyright (c) 2005-2007 Frederick Emmott
+CWD=`pwd`
+
+ARCH=${ARCH:-x86_64}
+VERSION=${VERSION:-1.0}
+BUILD=${BUILD:-4}
+DISTRO=slamd64
+
+rm -rf /tmp/package-linux32
+
+mkdir -p /tmp/package-linux32/usr/{bin,man/man1}
+
+cd /tmp/package-linux32/usr/bin
+gcc $CWD/linux32.c -o linux32
+strip --strip-unneeded linux32
+ln -s linux32 linux64
+
+cd /tmp/package-linux32/usr/man/man1
+cat $CWD/linux32.1 > linux32.1
+gzip -9 linux32.1
+ln -s linux32.1.gz linux64.1.gz
+
+cd /tmp/package-linux32/
+mkdir install
+cat $CWD/slack-desc > install/slack-desc
+makepkg -l y -c n ../linux32-$VERSION-${ARCH}_${DISTRO}-$BUILD.tgz

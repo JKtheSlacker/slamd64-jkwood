@@ -1,0 +1,52 @@
+#!/bin/sh
+# Set initial variables:
+PKGNAM=pidentd
+VERSION=3.0.19
+BUILD=2
+
+. /etc/pkghelpers
+pkghelpers_env
+
+rm -rf $PKG
+mkdir -p $PKG
+cd $TMP
+rm -rf pidentd-$VERSION
+tar xzvf $CWD/pidentd-$VERSION.tar.gz
+cd pidentd-$VERSION
+chown -R root:root .
+zcat $CWD/pidentd.conf.diff.gz | patch -p1 --backup --verbose || exit
+mkdir -p $PKG/usr/doc/pidentd-$VERSION
+cp -a BUGS ChangeLog FAQ INSTALL README Y2K doc/rfc* $PKG/usr/doc/pidentd-$VERSION
+chown -R root:root $PKG/usr/doc/pidentd-$VERSION
+chmod 644 $PKG/usr/doc/pidentd-$VERSION/*
+CFLAGS=-O2 \
+./configure \
+  --prefix=/usr \
+  --sysconfdir=/etc \
+  --with-des-includes=/usr/include/openssl \
+  $ARCH-$DISTRO-linux
+make -j12 || exit 1
+mkdir -p $PKG/usr/sbin
+cat src/identd > $PKG/usr/sbin/in.identd
+cat src/ibench > $PKG/usr/sbin/ibench
+cat src/idecrypt > $PKG/usr/sbin/idecrypt
+cat src/ikeygen > $PKG/usr/sbin/ikeygen
+chmod 755 $PKG/usr/sbin/*
+mkdir -p $PKG/etc
+cat etc/identd.conf > $PKG/etc/identd.conf.new
+mkdir -p $PKG/usr/man/man8
+cat doc/identd.8 | gzip -9c > $PKG/usr/man/man8/identd.8.gz
+echo ".so man8/identd.8" | gzip -9c > $PKG/usr/man/man8/in.identd.8.gz
+mkdir -p $PKG/usr/doc/pidentd-$VERSION
+cp -a \
+  BUGS ChangeLog FAQ INSTALL README Y2K doc/rfc* \
+  $PKG/usr/doc/pidentd-$VERSION
+chmod 644 $PKG/usr/doc/pidentd-$VERSION/*
+mkdir -p $PKG/install
+zcat $CWD/doinst.sh.gz > $PKG/install/doinst.sh
+cat $CWD/slack-desc > $PKG/install/slack-desc
+
+# Build the package:
+cd $PKG
+pkghelpers_fixup
+pkghelpers_makepkg

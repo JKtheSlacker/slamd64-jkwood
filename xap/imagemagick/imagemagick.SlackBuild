@@ -1,0 +1,98 @@
+#!/bin/sh
+CWD=`pwd`
+PKG=/tmp/package-imagemagick
+rm -rf $PKG
+mkdir -p $PKG
+
+# NOTE:  This is to cope with ImageMagick version numbers such as 5.4.7-4,
+# which occur fairly often (but not always).  If these numbers are all the same,
+# then this is not one of those versions.
+
+# This is a bit messy, so we'll explain it well.  :-)
+
+# This is the base version number, which is needed to cd into the source tree
+BASEVER=6.3.3
+
+# This is the version number used in the source tarball filename
+FILEVER=6.3.3-9
+
+# This is the version number used in the package, where a version number cannot
+# contain a '-'
+PKGVER=6.3.3_9
+
+ARCH=${ARCH:-x86_64}
+BUILD=1
+
+LIBDIR=lib
+if [ "$ARCH" = "i386" ]; then
+  SLKCFLAGS="-O2 -march=i386 -mcpu=i686"
+elif [ "$ARCH" = "i486" ]; then
+  SLKCFLAGS="-O2 -march=i486 -mcpu=i686"
+elif [ "$ARCH" = "s390" ]; then
+  SLKCFLAGS="-O2"
+elif [ "$ARCH" = "x86_64" ]; then
+  SLKCFLAGS="-O2 -fPIC"
+	LIBDIR=lib64
+fi
+
+# --with-x or not --with-x, that is the question.  It seems many other
+# distributions don't compile with X support, but it's been traditional
+# here.  I am moving the prefix to /usr (instead of /usr/X11R6) though,
+# because many X-linked things are put into /usr now (like GNOME), and
+# I've heard a few reports of compile failures when this isn't in /usr.
+# Everyone else does it -- time to follow the path of least resistance.
+
+cd /tmp
+rm -rf ImageMagick-$BASEVER
+tar xjvf $CWD/ImageMagick-$FILEVER.tar.bz2
+cd ImageMagick-$BASEVER
+chown -R root.root .
+find . -perm 777 -exec chmod 755 {} \;
+find . -perm 666 -exec chmod 644 {} \;
+zcat $CWD/libpng_mmx_patch_x86_64.patch.gz | patch -p1 --verbose
+LDFLAGS=-L/usr/$LIBDIR \
+CFLAGS="$SLKCFLAGS" \
+CXXFLAGS="$SLKCFLAGS" \
+./configure --prefix=/usr \
+            --libdir=/usr/$LIBDIR \
+            --program-prefix= \
+            --enable-16bit-pixel \
+            --with-x \
+            --with-frozenpaths=no \
+            --enable-static=no \
+            --enable-shared \
+            --with-perl \
+            $ARCH-slamd64-linux
+make -j12
+make install DESTDIR=$PKG
+
+# Lately ImageMagick has been smoking crack:
+rm -f $PKG/usr/$LIBDIR/libltdl.*
+
+( cd $PKG
+  # Nothing but a perl upgrade should replace this (and maybe not even that)
+  find . -name perllocal.pod | xargs rm -f
+)
+
+# DESTDIR is still broken about this, but works well enough otherwise:
+chmod 644 $PKG/usr/share/man/man3/*
+mv $PKG/usr/share/man/man3 $PKG/usr/man
+rmdir $PKG/usr/share/man
+
+( cd $PKG/usr/$LIBDIR/perl5
+  # Ditch empty dirs:
+  rmdir */* 2> /dev/null
+  rmdir * 2> /dev/null
+)
+
+gzip -9 $PKG/usr/man/man?/*.?
+
+mkdir -p $PKG/usr/doc/ImageMagick-$FILEVER
+cp -a www/* $PKG/usr/doc/ImageMagick-$FILEVER
+cp -a *.txt $PKG/usr/doc/ImageMagick-$FILEVER
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+
+cd $PKG
+makepkg -l y -c n ../imagemagick-$PKGVER-${ARCH}_slamd64-$BUILD.tgz
+

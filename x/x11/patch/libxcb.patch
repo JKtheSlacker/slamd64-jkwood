@@ -1,0 +1,1 @@
+zcat $CWD/patch/libxcb/libxcb-no-assert-on-lock.diff.gz | patch -p1 --verbose || exit 1

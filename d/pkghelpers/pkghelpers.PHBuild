@@ -1,0 +1,27 @@
+#!/bin/sh
+if [ ! -e /etc/pkghelpers ]; then
+	echo "Sorry, you must manually install pkghelpers before packaging it; packaging it requires it."
+	exit 1
+fi
+
+. /etc/pkghelpers
+
+PKGNAM=pkghelpers
+PKGVER=12.0.4
+ARCH=noarch # don't set this normally
+BUILD=1
+
+pkghelpers_env
+
+rm -rf $PKG
+mkdir -p $PKG/etc
+
+cd $PKG/etc
+cp -R $CWD/scripts/* .
+chown -R root:root .
+
+cd $PKG
+mkdir install
+cat $CWD/slack-desc > install/slack-desc
+
+pkghelpers_makepkg

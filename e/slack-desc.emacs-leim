@@ -1,0 +1,12 @@
+          |-----handy-ruler------------------------------------------------------|
+emacs-leim: emacs-leim (Library of Emacs Input Method)
+emacs-leim:
+emacs-leim: The leim package for Emacs provides input methods for many languages
+emacs-leim: including Chinese, Tibetan, Vietnamese, Thai, Korean, and more.  It
+emacs-leim: also provides improved handling of many non-US keyboard layouts.
+emacs-leim:
+emacs-leim:
+emacs-leim:
+emacs-leim:
+emacs-leim:
+emacs-leim:

@@ -1,0 +1,141 @@
+#!/bin/sh
+# Set initial variables:
+PKGNAM=shadow
+VERSION=4.0.6
+ARCH=${ARCH:-x86_64}
+BUILD=4
+
+. /etc/pkghelpers
+pkghelpers_env
+
+rm -rf $PKG
+mkdir -p $PKG
+
+# Explode the package framework:
+cd $PKG
+explodepkg $CWD/_shadow.tar.gz
+
+cd $TMP
+rm -rf shadow-$VERSION
+tar xjvf $CWD/shadow-$VERSION.tar.bz2
+cd shadow-$VERSION
+chown -R root.root .
+
+## No longer supporting shadowconfig in version 4.0.6
+#zcat $CWD/shadow.shadowconfig.diff.gz | patch -p1 --verbose --backup
+## No longer supporting dpasswd in version 4.0.6
+#zcat $CWD/shadow.newgrp.nopam.gz | patch -p0 --verbose --backup
+zcat $CWD/shadow.login.defs.diff.gz | patch -p0 --verbose --backup
+zcat $CWD/shadow.newgrp.getlogin.gz | patch -p1 --verbose --backup
+zcat $CWD/shadow.audiovideocdrom.diff.gz | patch -p1 --verbose --backup
+./configure --prefix=/usr \
+            --disable-shared \
+            --disable-desrpc \
+            $ARCH-$DISTRO-linux
+make -j12
+cat etc/login.defs.linux > $PKG/etc/login.defs.new
+cat etc/login.access > $PKG/etc/login.access.new
+cat $CWD/adduser > $PKG/usr/sbin/adduser
+
+# These things aren't needed when using glibc, as it
+# supplies its own shadow functions:
+#cat lib/libshadow.a > $PKG/usr/lib/libshadow.a
+#cp -a lib/pwauth.h $PKG/usr/include/shadow/pwauth.h
+#cp -a lib/shadow_.h $PKG/usr/include/shadow/shadow.h
+#chmod 644 $PKG/usr/include/shadow/*
+#chown root.root $PKG/usr/include/shadow/*
+
+cd po
+for file in *.gmo ; do
+  mkdir -p $PKG/usr/share/locale/`basename $file .gmo`/LC_MESSAGES
+  cat $file > $PKG/usr/share/locale/`basename $file .gmo`/LC_MESSAGES/shadow.mo
+done
+cd ../src
+cat login > $PKG/bin/login
+cat su > $PKG/bin/su
+cat sulogin > $PKG/sbin/sulogin
+## No longer included in version 4.0.6.
+#cat ../debian/shadowconfig.sh > $PKG/usr/sbin/shadowconfig
+
+## Removed dpasswd in this list as it's no longer included with 4.0.6.
+for file in chpasswd faillog groupadd groupdel groupmod grpck \
+lastlog logoutd mkpasswd newusers pwck useradd userdel usermod \
+pwconv pwunconv grpconv grpunconv vipw ; do
+  cat $file > $PKG/usr/sbin/$file
+done
+for file in chage chfn chsh expiry gpasswd newgrp passwd ; do
+  cat $file > $PKG/usr/bin/$file
+done
+cd ..
+cp contrib/adduser.sh /sbin/adduser
+mkdir -p $PKG/usr/doc/shadow-$VERSION
+cp -a \
+  ABOUT-NLS ChangeLog NEWS README TODO doc/* \
+  $PKG/usr/doc/shadow-$VERSION
+chmod 644 $PKG/usr/doc/shadow-$VERSION/*
+
+install_man_pages() {
+for file in chage.1 chfn.1 chsh.1 gpasswd.1 groups.1 id.1 login.1 newgrp.1 \
+passwd.1 su.1 ; do
+  if [ -r $file ]; then
+    mkdir -p $1/man1
+    gzip -9c $file > $1/man1/$file.gz
+  fi
+done
+for file in pw_auth.3 shadow.3 ; do
+  if [ -r $file ]; then
+    mkdir -p $1/man3
+    gzip -9c $file > $1/man3/$file.gz
+  fi
+done
+for file in faillog.5 limits.5 login.access.5 login.defs.5 passwd.5 \
+porttime.5 shadow.5 suauth.5 ; do
+  if [ -r $file ]; then
+    mkdir -p $1/man5
+    gzip -9c $file > $1/man5/$file.gz
+  fi
+done
+
+## Removed shadowconfig.8 and dpasswd.8
+for file in chpasswd.8 faillog.8 groupadd.8 groupdel.8 groupmod.8 \
+grpck.8 lastlog.8 logoutd.8 mkpasswd.8 newusers.8 pwauth.8 pwck.8 pwconv.8 \
+sulogin.8 useradd.8 userdel.8 usermod.8 vipw.8 ; do
+  if [ -r $file ]; then
+    mkdir -p $1/man8
+    gzip -9c $file > $1/man8/$file.gz
+  fi
+done
+}
+
+
+cd man
+  install_man_pages $PKG/usr/man
+  for dir in * ; do
+    if [ -d $dir ] ; then
+      ( cd $dir ; install_man_pages $PKG/usr/man/$dir )
+    fi
+  done
+cd ..
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+
+# Build the package:
+cd $PKG
+echo "Removing shadowconfig and dpasswd empty files."
+rm usr/sbin/shadowconfig
+rm usr/sbin/dpasswd
+
+# Pat didn't do this, but stripping the binaries here stops chkrootkit from hitting on /bin/login.
+echo "Stripping the binaries."
+strip bin/*
+strip usr/bin/*
+strip sbin/*
+strip usr/sbin/*
+
+# Fix the user's /etc/login.defs to remove a harmless error message.
+# DIALUPS_CHECK_ENAB is not supported in this package. For those of you using
+# it, I'm sorry. :^(  - Alan Hicks
+echo "sed -i -e s/DIALUPS_CHECK_ENAB/#DIALUPS_CHECK_ENAB/ /etc/login.defs" >> install/doinst.sh
+
+pkghelpers_fixup
+pkghelpers_makepkg

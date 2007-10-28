@@ -1,0 +1,39 @@
+#!/bin/sh
+# Set initial variables:
+PKGNAM=newspost
+VERSION=2.1.1
+BUILD=2
+
+. /etc/pkghelpers
+pkghelpers_env
+
+rm -rf $PKG
+mkdir -p $PKG # place for the package to be built
+
+# Explode the package framework:
+cd $PKG
+explodepkg $CWD/_newspost.tar.gz
+
+cd $TMP
+rm -rf newspost-$VERSION
+tar xzvf $CWD/newspost-$VERSION.tar.gz
+cd newspost-$VERSION
+chown -R root:root .
+make || exit 1
+mkdir -p $PKG/usr/bin
+strip newspost
+cat newspost > $PKG/usr/bin/newspost
+chmod 755 $PKG/usr/bin/newspost
+mkdir -p $PKG/usr/man/man1
+cat man/man1/newspost.1 | gzip -9c > $PKG/usr/man/man1/newspost.1.gz
+mkdir -p $PKG/usr/doc/newspost-$VERSION
+cp -a \
+  CHANGES COPYING README \
+  $PKG/usr/doc/newspost-$VERSION
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+
+# Build the package:
+cd $PKG
+pkghelpers_fixup
+pkghelpers_makepkg

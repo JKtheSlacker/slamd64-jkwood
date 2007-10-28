@@ -1,0 +1,41 @@
+#!/bin/sh
+# espgs.fixup by <volkerdi@slackware.com>
+
+# Sanity check/usage:
+if [ ! -r usr/bin/gs ]; then
+cat << EOF
+This script is run in the root dir of an extacted build to
+fix up permissions, man pages, and a couple other things
+before it can be packaged up with 'makepkg'.
+
+FATAL: No usr/bin/gs found from package root.
+EOF
+fi
+
+# What are these doing in here?
+rm -f usr/man/man1/ansi2knr.1.gz
+rm -f usr/man/de/man1/ansi2knr.1.gz
+rm -rf usr/share/libtool
+
+# Might as well correct other manpage issues:
+( cd usr/man/man1
+  rm -f *.1
+  ln -sf ps2ps.1.gz eps2eps.1.gz
+  ln -sf gslp.1.gz gsbj.1.gz
+  ln -sf gslp.1.gz gsdj.1.gz
+  ln -sf gslp.1.gz gsdj500.1.gz
+  ln -sf gslp.1.gz gslj.1.gz
+  ln -sf ps2pdf.1.gz ps2pdf12.1.gz
+  ln -sf ps2pdf.1.gz ps2pdf13.1.gz
+)
+( cd usr/man/de/man1
+  rm -f *.1
+  ln -sf ps2ps.1.gz eps2eps.1.gz
+  ln -sf ps2pdf.1.gz ps2pdf12.1.gz
+  ln -sf ps2pdf.1.gz ps2pdf13.1.gz
+)
+
+# Whatever you're using to extract should strip everything.
+
+# OK, that should about cover it.  :-)
+

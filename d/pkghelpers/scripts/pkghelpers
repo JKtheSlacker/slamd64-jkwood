@@ -1,0 +1,9 @@
+#!/bin/sh
+# Copyright 2007 Frederick Emmott <mail@fredemmott.co.uk>
+# Distributed under the GNU General Public License, version 2,
+# as published by the Free Software foundation, NOT any other
+# version.
+
+for file in /etc/pkghelpers.d/*; do
+	. $file
+done

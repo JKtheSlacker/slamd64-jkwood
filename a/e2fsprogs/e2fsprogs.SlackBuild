@@ -1,0 +1,159 @@
+#!/bin/sh
+# Set initial variables:
+CWD=`pwd`
+if [ "$TMP" = "" ]; then
+  TMP=/tmp
+fi
+
+VERSION=${VERSION:-1.39}
+ARCH=${ARCH:-x86_64}
+BUILD=${BUILD:-1}
+DISTRO=${DISTRO:-slamd64}
+
+if [ $DISTRO = slackware ]; then
+	PKGARCH=$ARCH
+else
+	PKGARCH=${ARCH}_${DISTRO}
+fi
+
+if [ $DISTRO = slamd64 ]; then
+	LIBSUFFIX=${LIBSUFFIX:-64}
+fi
+
+if [ "$ARCH" = "i386" ]; then
+  SLKCFLAGS="-O2 -march=i386 -mcpu=i686"
+elif [ "$ARCH" = "i486" ]; then
+  SLKCFLAGS="-O2 -march=i486 -mtune=i686"
+elif [ "$ARCH" = "s390" ]; then
+  SLKCFLAGS="-O2"
+elif [ "$ARCH" = "x86_64" ]; then
+  SLKCFLAGS="-O2 -fPIC"
+fi
+
+PKG=$TMP/package-e2fsprogs
+
+if [ ! -d $TMP ]; then
+  mkdir -p $TMP # location to build the source
+fi
+rm -rf $PKG
+mkdir -p $PKG
+
+cd $TMP
+rm -rf e2fsprogs-$VERSION
+tar xjvf $CWD/e2fsprogs-$VERSION.tar.bz2
+cd e2fsprogs-$VERSION
+
+chown -R root:root .
+find . -perm 666 -exec chmod 644 {} \;
+find . -perm 664 -exec chmod 644 {} \;
+find . -perm 600 -exec chmod 644 {} \;
+find . -perm 444 -exec chmod 644 {} \;
+find . -perm 400 -exec chmod 644 {} \;
+find . -perm 440 -exec chmod 644 {} \;
+find . -perm 777 -exec chmod 755 {} \;
+find . -perm 775 -exec chmod 755 {} \;
+find . -perm 511 -exec chmod 755 {} \;
+find . -perm 711 -exec chmod 755 {} \;
+find . -perm 555 -exec chmod 755 {} \;
+
+CFLAGS="$SLKCFLAGS" \
+./configure \
+  --prefix= \
+	--libdir=/lib$LIBSUFFIX \
+  --datadir=/usr/share \
+  --enable-elf-shlibs \
+  --enable-dynamic-e2fsck \
+  $ARCH-$DISTRO-linux
+make -j6 || exit 1
+make install DESTDIR=$PKG
+make install-libs DESTDIR=$PKG
+# Fix up package:
+mkdir -p $PKG/usr/lib$LIBSUFFIX/pkgconfig
+mv $PKG/lib$LIBSUFFIX/pkgconfig/* $PKG/usr/lib$LIBSUFFIX/pkgconfig
+rmdir $PKG/lib$LIBSUFFIX/pkgconfig
+( cd $PKG
+  find . | xargs file | grep "executable" | grep ELF | cut -f 1 -d : | xargs strip --strip-unneeded 2> /dev/null
+  find . | xargs file | grep "shared object" | grep ELF | cut -f 1 -d : | xargs strip --strip-unneeded 2> /dev/null
+)
+( cd $PKG
+  rm -f man/man1/compile_et.1 man/man3/uuid_generate_random.3 man/man3/uuid_generate_time.3 man/man8/fsck.ext2.8 man/man8/fsck.ext3.8 man/man8/mkfs.ext2.8 man/man8/mkfs.ext3.8
+  gzip -9 man/man?/*
+  ( cd man/man3
+    ln -sf uuid_generate.3.gz uuid_generate_random.3.gz
+    ln -sf uuid_generate.3.gz uuid_generate_time.3.gz 
+  )
+  ( cd man/man8
+    ln -sf e2fsck.8.gz fsck.ext2.8.gz
+    ln -sf e2fsck.8.gz fsck.ext3.8.gz
+    ln -sf mke2fs.8.gz mkfs.ext2.8.gz
+    ln -sf mke2fs.8.gz mkfs.ext3.8.gz
+  )
+  mkdir usr
+  mv bin include info man usr
+  mkdir usr/lib$LIBSUFFIX
+  mv lib$LIBSUFFIX/*.so lib$LIBSUFFIX/*.a usr/lib$LIBSUFFIX
+)
+# Junk removal
+rm -f $PKG/usr/bin/compile_et $PKG/usr/bin/mk_cmds $PKG/usr/man/man1/compile_et.1.gz $PKG/usr/man/man8/fsck.ext2.8 $PKG/usr/man/man8/fsck.ext3.8 $PKG/usr/man/man8/mkfs.ext2.8 $PKG/usr/man/man8/mkfs.ext3.8
+## Anyone care for these?  I don't. [NOTE:  XFS utils link with libuuid.a]
+##rm -f $PKG/usr/lib/*.a
+( cd $PKG/sbin
+  rm -f mkfs.ext2 mkfs.ext3 fsck.ext2 fsck.ext3 e2label findfs
+  ln -sf mke2fs mkfs.ext2
+  ln -sf mke2fs mkfs.ext3
+  ln -sf tune2fs e2label
+  ln -sf tune2fs findfs
+  cat << EOF > fsck.ext2
+#!/bin/sh
+exec /sbin/e2fsck -C 0 \$*
+EOF
+  cat << EOF > fsck.ext3
+#!/bin/sh
+exec /sbin/e2fsck -C 0 \$*
+EOF
+  chmod 755 fsck.ext2 fsck.ext3
+)
+mkdir -p $PKG/usr/doc/e2fsprogs-$VERSION
+cp -a \
+  COPYING INSTALL INSTALL.elfbin README RELEASE-NOTES SHLIBS \
+  $PKG/usr/doc/e2fsprogs-$VERSION
+chmod 644 $PKG/usr/doc/e2fsprogs-$VERSION/*
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+
+# I guess Ted would rather not have this included, so we won't.
+# ( cd misc 
+#   make findsuper
+#   cat findsuper > $PKG/sbin/findsuper
+#   chmod 755 $PKG/sbin/findsuper )
+
+mv $PKG/etc/mke2fs.conf $PKG/etc/mke2fs.conf.new
+
+cat << EOF > $PKG/install/doinst.sh
+#!/bin/sh
+config() {
+  NEW="\$1"
+  OLD="\$(dirname \$NEW)/\$(basename \$NEW .new)"
+  # If there's no config file by that name, mv it over:
+  if [ ! -r \$OLD ]; then
+    mv \$NEW \$OLD
+  elif [ "\$(cat \$OLD | md5sum)" = "\$(cat \$NEW | md5sum)" ]; then # toss the redundant copy
+    rm \$NEW
+  fi
+  # Otherwise, we leave the .new copy for the admin to consider...
+}
+config etc/mke2fs.conf.new
+if [ -x /usr/bin/install-info ]; then
+  install-info --info-dir=/usr/info /usr/info/libext2fs.info.gz 2> /dev/null
+fi
+EOF
+
+# Build the package:
+cd $PKG
+makepkg -l y -c n $TMP/e2fsprogs-$VERSION-$PKGARCH-$BUILD.tgz
+
+# Clean up the extra stuff:
+if [ "$1" = "--cleanup" ]; then
+  rm -rf $TMP/e2fsprogs-$VERSION
+  rm -rf $PKG
+fi

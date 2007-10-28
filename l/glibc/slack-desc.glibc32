@@ -1,0 +1,11 @@
+glibc32: glibc32 (32-bit support files for glibc)
+glibc32:
+glibc32: This package contains 32-bit glibc .so files and
+glibc32: include files required for use of 32-bit programs
+glibc32: in multilib distributions.
+glibc32:
+glibc32: This package is required to compile gcc.
+glibc32:
+glibc32:
+glibc32:
+glibc32:

@@ -1,0 +1,48 @@
+#!/bin/sh
+# Set initial variables:
+PKGNAM=cpio
+VERSION=2.5
+BUILD=2
+
+. /etc/pkghelpers
+pkghelpers_env
+
+rm -rf $PKG
+mkdir -p $PKG # place for the package to be built
+
+echo "+============+"
+echo "| cpio-$VERSION |"
+echo "+============+"
+cd $TMP
+tar xzvf $CWD/cpio-$VERSION.tar.gz
+cd cpio-$VERSION
+LDFLAGS=-L/usr/lib$LIBSUFFIX \
+CFLAGS="$SLKCFLAGS" \
+./configure --prefix=/usr --libdir=/usr/lib$LIBSUFFIX
+make
+mkdir -p $PKG/bin
+strip cpio mt
+cat cpio > $PKG/bin/cpio
+cat mt > $PKG/bin/mt-GNU
+chmod 755 $PKG/bin/*
+chown -R root:root $PKG/bin
+mkdir -p $PKG/usr/man/man1
+for page in cpio.1 mt.1 ; do
+  cat $page | gzip -9c > $PKG/usr/man/man1/$page.gz
+done
+makeinfo cpio.texi
+mkdir -p $PKG/usr/info
+cat cpio.info | gzip -9c > $PKG/usr/info/cpio.info.gz
+mkdir -p $PKG/usr/doc/cpio-$VERSION
+cp -a \
+  COPYING COPYING.LIB ChangeLog INSTALL NEWS README \
+  $PKG/usr/doc/cpio-$VERSION
+chmod $LIBSUFFIX4 $PKG/usr/doc/cpio-$VERSION/*
+chown -R root:root $PKG/usr/doc/cpio-$VERSION
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+
+# Build the package:
+cd $PKG
+pkghelpers_fixup
+pkghelpers_makepkg

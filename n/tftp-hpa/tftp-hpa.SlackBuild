@@ -1,0 +1,73 @@
+#!/bin/sh
+# Set initial variables:
+CWD=`pwd`
+if [ "$TMP" = "" ]; then
+  TMP=/tmp
+fi
+PKG=$TMP/package-tftp-hpa
+
+VERSION=0.48
+ARCH=${ARCH:-x86_64}
+BUILD=1
+DISTRO=${DISTRO:-slamd64}
+
+if [ $DISTRO = slackware ]; then
+	PKGARCH=$ARCH
+else
+	PKGARCH=${ARCH}_${DISTRO}
+fi
+
+if [ ! -d $TMP ]; then
+  mkdir -p $TMP # location to build the source
+fi
+rm -rf $PKG
+mkdir -p $PKG
+
+cd $TMP
+rm -rf tftp-hpa-$VERSION
+tar xjvf $CWD/tftp-hpa-$VERSION.tar.bz2 || exit 1
+cd tftp-hpa-$VERSION
+
+chown -R root:root .
+find . -perm 666 -exec chmod 644 {} \;
+find . -perm 664 -exec chmod 644 {} \;
+find . -perm 600 -exec chmod 644 {} \;
+find . -perm 444 -exec chmod 644 {} \;
+find . -perm 400 -exec chmod 644 {} \;
+find . -perm 440 -exec chmod 644 {} \;
+find . -perm 777 -exec chmod 755 {} \;
+find . -perm 775 -exec chmod 755 {} \;
+find . -perm 511 -exec chmod 755 {} \;
+find . -perm 711 -exec chmod 755 {} \;
+find . -perm 555 -exec chmod 755 {} \;
+
+./configure --prefix=/usr
+make || exit 1
+
+cd tftp
+strip --strip-unneeded tftp
+mkdir -p $PKG/usr/bin
+cat tftp > $PKG/usr/bin/tftp
+chmod 755 $PKG/usr/bin/tftp
+mkdir -p $PKG/usr/man/man{1,8}
+cat tftp.1 | gzip -9c > $PKG/usr/man/man1/tftp.1.gz
+cd ../tftpd
+strip --strip-unneeded tftpd
+mkdir -p $PKG/usr/sbin
+cat tftpd > $PKG/usr/sbin/in.tftpd
+chmod 755 $PKG/usr/sbin/in.tftpd
+cat tftpd.8 | gzip -9c > $PKG/usr/man/man8/in.tftpd.8.gz
+cd ..
+mkdir -p $PKG/usr/doc/tftp-hpa-$VERSION
+cp -a \
+  CHANGES INSTALL INSTALL.tftp README README.security \
+  $PKG/usr/doc/tftp-hpa-$VERSION
+
+# Finish up the package:
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+
+# Build the package:
+cd $PKG
+makepkg -l y -c n $TMP/tftp-hpa-$VERSION-$PKGARCH-$BUILD.tgz
+

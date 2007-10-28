@@ -1,0 +1,68 @@
+#!/bin/sh
+# Set initial variables:
+# Created by Patrick J. Volkerding - volkerdi@slackware.com
+# Redefined by Bruno H. Collovini  - buick@microlink.com.br
+# 11/15/2002
+# made sane by Fred Emmott - mail@fredemmott.co.uk 20050115
+# converted to PHBuild by Fred Emmott - mail@fredemmott.co.uk 20071005
+
+PKGNAM=enscript
+VERSION=1.6.3
+BUILD=2
+
+. /etc/pkghelpers
+pkghelpers_env
+#-------------- Set MAKE BUILD --------------------
+rm -rf $PKG
+mkdir -p $PKG
+echo "+=============+"
+echo "| enscript-$VERSION |"
+echo "+=============+"
+cd $TMP
+tar xzvf $CWD/enscript-$VERSION.tar.gz
+#------ ENTER ENSCRIPT SOURCE FILE
+cd enscript-$VERSION
+#------
+CFLAGS=-O2 LDFLAGS=-s ./configure --prefix=/usr \
+                                  --with-media=Letter \
+                                  --sysconfdir=/etc
+make -j12 || exit
+make install DESTDIR=$PKG
+( cd tests ; make check )
+## Apparently, enscript's build script is a little bit broken and forgets
+## to install the following two crucial files:
+#cp -a /etc/enscript.cfg /etc/enscript.cfg
+#cp -a /usr/share/enscript/enscript.st /usr/share/enscript/enscript.st
+chown -R root:root $PKG/usr/bin
+mkdir -p $PKG/usr/doc/enscript-$VERSION
+cp -a *.txt ABOUT-NLS AUTHORS COPYING ChangeLog docs/FAQ.html INSTALL NEWS \
+  README* THANKS TODO $PKG/usr/doc/enscript-$VERSION
+chown root.root $PKG/usr/doc/enscript-$VERSION/*
+chmod 644 $PKG/usr/doc/enscript-$VERSION/*
+mkdir -p $PKG/usr/share/enscript/afm
+mkdir -p $PKG/usr/share/enscript/hl
+cp afm/*afm $PKG/usr/share/enscript/afm
+cp afm/*map $PKG/usr/share/enscript/afm
+cp afm/*pfa $PKG/usr/share/enscript/afm
+cp states/hl/*.st $PKG/usr/share/enscript/hl
+# LOCALE MESSAGES ;)
+for LOC in `ls po/*.gmo | cut -d"/" -f2 | cut -d"." -f1`; do
+ mkdir -p $PKG/usr/share/locale/$LOC/LC_MESSAGES
+ cp po/$LOC.gmo  $PKG/usr/share/locale/$LOC/LC_MESSAGES/enscript.mo
+done
+mkdir -p $PKG/etc
+cp lib/enscript.cfg $PKG/etc
+#----------- CREATE PACKAGE----------------------------
+echo "##################"
+echo "# Create package #"
+echo "##################"
+echo
+echo  enscript-$VERSION-$ARCH-$BUILD.tgz
+#------------------------------------------------------
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+
+# Build the package:
+cd $PKG
+pkghelpers_fixup
+pkghelpers_makepkg

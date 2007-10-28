@@ -1,0 +1,55 @@
+#!/bin/sh
+# Build "links" for Slackware by <volkerdi@slackware.com>
+# Set initial variables:
+
+# Package version number:
+PKGNAM=links
+VERSION=2.1pre28
+BUILD=${BUILD:-1}
+
+. /etc/pkghelpers
+pkghelpers_env
+
+rm -rf $PKG
+mkdir -p $PKG
+
+cd $TMP
+rm -rf links-$VERSION
+tar xjvf $CWD/links-$VERSION.tar.bz2
+cd links-$VERSION
+chown -R root:root .
+# We are configuring this without X as there are MANY browser choices for
+# X already.  If you need a browser for X, either use something else or
+# recompile.  :-)
+CFLAGS="$SLKCFLAGS" \
+./configure \
+  --prefix=/usr \
+	--libdir=/usr/lib$LIBSUFFIX \
+  --sysconfdir=/etc \
+  --enable-javascript \
+  --enable-graphics \
+  --without-x \
+  --without-sdl \
+  $ARCH-$DISTRO-linux
+make -j12 || exit
+mkdir -p $PKG/usr/bin
+cat links > $PKG/usr/bin/links
+chmod 755 $PKG/usr/bin/links
+mkdir -p $PKG/usr/man/man1
+cat links.1 | gzip -9c > $PKG/usr/man/man1/links.1.gz
+mkdir -p $PKG/usr/doc/links-$VERSION
+cp -a \
+  AUTHORS BUGS COPYING INSTALL NEWS README SITES TODO doc/links_cal \
+  $PKG/usr/doc/links-$VERSION
+cp -a mailcap.pl $PKG/usr/doc/links-$VERSION
+find $PKG/usr/doc/links-$VERSION -type f -exec chmod 644 {} \;
+find $PKG/usr/doc/links-$VERSION -type d -exec chmod 755 {} \;
+chmod 755 $PKG/usr/doc/links-$VERSION/mailcap.pl
+
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+
+# Build the package:
+cd $PKG
+pkghelpers_fixup
+pkghelpers_makepkg

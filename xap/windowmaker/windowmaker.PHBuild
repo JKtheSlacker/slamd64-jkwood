@@ -1,0 +1,90 @@
+#!/bin/sh
+
+PKGNAM=windowmaker
+SRCNAM=WindowMaker
+VERSION=${VERSION:-0.92.0}
+BUILD=${BUILD:-3}
+
+. /etc/pkghelpers
+pkghelpers_env
+
+rm -rf $PKG
+mkdir -p $PKG
+
+cd $TMP
+rm -rf $SRCNAM-$VERSION
+tar xjvf $CWD/$SRCNAM-$VERSION.tar.bz2
+cd $SRCNAM-$VERSION
+
+# Make sure ownerships and permissions are sane:
+chown -R root:root .
+find . -perm 664 -exec chmod 644 {} \;
+find . -perm 600 -exec chmod 644 {} \;
+find . -perm 444 -exec chmod 644 {} \;
+find . -perm 400 -exec chmod 644 {} \;
+find . -perm 440 -exec chmod 644 {} \;
+find . -perm 777 -exec chmod 755 {} \;
+find . -perm 775 -exec chmod 755 {} \;
+find . -perm 511 -exec chmod 755 {} \;
+find . -perm 711 -exec chmod 755 {} \;
+find . -perm 555 -exec chmod 755 {} \;
+
+# This should be non-interactive where possible.
+zcat $CWD/wmaker.inst.diff.gz | patch -p1 --verbose || exit 1
+
+# Patch from Fedora
+zcat $CWD/windowmaker-gcc4-x86_64.patch.gz | patch -p0 --verbose || exit 1
+
+LINGUAS="`cd po ; /bin/ls *.po | sed 's/.po//g'`" \
+GNUSTEP_LOCAL_ROOT=/usr/lib$LIBSUFFIX/GNUstep \
+CFLAGS="$SLKCFLAGS" \
+NLSDIR=/usr/share/locale \
+./configure \
+  --prefix=/usr \
+  --libdir=/usr/lib$LIBSUFFIX \
+  --sysconfdir=/etc/X11 \
+  --enable-gnome \
+  --enable-kde \
+  --enable-usermenu \
+  --with-appspath=/usr/lib$LIBSUFFIX/GNUstep/Applications \
+  --build=$ARCH-$DISTRO-linux
+# NLS bugs like -i
+make -i -j5 || exit 1
+
+# Change /usr/local/GNUstep to /usr/lib/GNUstep in the WMRootMenu:
+zcat $CWD/windowmaker.wmrootmenu.diff.gz | patch -p1 --verbose || exit 1
+
+if [ "$LIBSUFFIX" != "" ]; then
+  sed -i s%/usr/lib/GNUstep%/usr/lib$LIBSUFFIX/GNUstep/% WindowMaker/Defaults/WMRootMenu || exit 1
+fi
+
+make -i install DESTDIR=$PKG || exit 1
+
+# Install documentation:
+mkdir -p $PKG/usr/doc/WindowMaker-$VERSION
+cp -a \
+  AUTHORS BUGFORM BUGS COPYING COPYING.WTFPL FAQ FAQ.I18N FAQ.I18N.cs FAQ.I18N.sk INSTALL INSTALL.cs INSTALL.es INSTALL.fr INSTALL.pt INSTALL.sk MIRRORS NEWS README README.definable-cursor README.pt TODO \
+   $PKG/usr/doc/WindowMaker-$VERSION
+
+cd $TMP
+rm -rf $SRCNAM-extra-0.1
+tar xzvf $CWD/$SRCNAM-extra-0.1.tar.gz
+cd $SRCNAM-extra-0.1
+CFLAGS="$SLKCFLAGS" \
+./configure \
+  --prefix=/usr \
+  --libdir=/usr/lib$LIBSUFFIX \
+  --with-iconsdir=/usr/share/pixmaps \
+  --build=$ARCH-$DISTRO-linux
+make -j5 || exit 1
+make install DESTDIR=$PKG || exit 1
+
+mkdir -p $PKG/etc/X11/xinit
+cat $CWD/xinitrc.wmaker > $PKG/etc/X11/xinit/xinitrc.wmaker
+chmod 755 $PKG/etc/X11/xinit/xinitrc.wmaker
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+
+cd $PKG
+pkghelpers_fixup
+pkghelpers_makepkg

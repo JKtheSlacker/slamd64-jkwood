@@ -1,0 +1,19 @@
+# HOW TO EDIT THIS FILE:
+# The "handy ruler" below makes it easier to edit a package description.  Line
+# up the first '|' above the ':' following the base package name, and the '|' on
+# the right side marks the last column you can put a character in.  You must make
+# exactly 11 lines for the formatting to be correct.  It's also customary to
+# leave one space after the ':'.
+
+   |-----handy-ruler------------------------------------------------------|
+atk32: atk32
+atk32:
+atk32: atk is a library of accessibility functions that is used by the
+atk32: GTK+-2 toolkit.
+atk32:
+atk32: This package contains 32-bit binaries.
+atk32:
+atk32:
+atk32:
+atk32:
+atk32:

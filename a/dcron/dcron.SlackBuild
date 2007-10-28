@@ -1,0 +1,69 @@
+#!/bin/sh
+# Set initial variables:
+CWD=`pwd`
+if [ "$TMP" = "" ]; then
+  TMP=/tmp
+fi
+PKG=$TMP/package-dcron
+
+VERSION=2.3.3
+ARCH=x86_64
+BUILD=4
+
+if [ ! -d $TMP ]; then
+  mkdir -p $TMP # location to build the source
+fi
+if [ ! -d $PKG ]; then
+  mkdir -p $PKG # place for the package to be built
+fi
+
+# Explode the package framework:
+cd $PKG
+explodepkg $CWD/_dcron.tar.gz
+
+echo "+=============+"
+echo "| dcron-$VERSION |"
+echo "+=============+"
+cd $TMP
+tar xzvf $CWD/dcron-$VERSION.tar.gz
+cd dcron-$VERSION
+mkdir -p $PKG/usr/doc/dcron-$VERSION
+cp -a CHANGES README dcron-$VERSION.lsm $PKG/usr/doc/dcron-2.3.3
+chown root.root $PKG/usr/doc/dcron-$VERSION/*
+chmod 644 $PKG/usr/doc/dcron-$VERSION/*
+zcat $CWD/dcron-$VERSION.diff.gz | patch -p1 -E --verbose --backup
+# Added signal handling/logging patch from TEMHOTA <temnota@kmv.ru>:
+zcat $CWD/dcron-$VERSION.diff2.gz | patch -p1 -E --verbose --backup
+# Use /usr/sbin/sendmail, not /usr/lib/sendmail.  Fixes cron working
+# with Postfix.  Suggested by Big Brother.
+zcat $CWD/dcron-$VERSION.diff3.gz | patch -p1 -E --verbose --backup
+# Fix problem where user creates /var/spool/cron/crontabs/<user>.new 
+# using 'crontab -', exits with control-c, and then crontab refuses to
+# overwrite the junk file:
+zcat $CWD/dcron-$VERSION.crontab.diff4.gz | patch -p1 -E --verbose --backup
+# Dcron reports wrong version:
+zcat $CWD/dcron-2.3.3.version.diff.gz | patch -p1
+# Keep dcron from improperly forking in some circumstances.
+# Thanks to Henrik Carlqvist for the patch.
+zcat $CWD/dcron.fork.diff.gz | patch -p1
+make
+strip crond crontab
+cat crond > $PKG/usr/sbin/crond
+cat crontab > $PKG/usr/bin/crontab
+zcat $CWD/run-parts.gz > $PKG/usr/bin/run-parts
+cat crontab.1 | gzip -9c > $PKG/usr/man/man1/crontab.1.gz
+cat crond.8 | gzip -9c > $PKG/usr/man/man8/crond.8.gz
+cat $CWD/run-parts.8.gz > $PKG/usr/man/man8/run-parts.8.gz
+
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+
+# Build the package:
+cd $PKG
+echo "n" | makepkg $TMP/dcron-$VERSION-${ARCH}_slamd64-$BUILD.tgz
+
+# Clean up the extra stuff:
+if [ "$1" = "--cleanup" ]; then
+  rm -rf $TMP/dcron-$VERSION
+  rm -rf $PKG
+fi

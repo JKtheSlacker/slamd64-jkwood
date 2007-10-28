@@ -1,0 +1,101 @@
+#!/bin/sh
+PKGNAM=db44
+VERSION=4.4.20
+BUILD=2
+
+. /etc/pkghelpers
+pkghelpers_env
+
+cd $TMP
+rm -rf db-$VERSION
+tar xjvf $CWD/db-$VERSION.tar.bz2
+cd db-$VERSION
+
+# Official patches:
+zcat $CWD/patch.4.4.20.1.gz | patch -p0 --verbose
+zcat $CWD/patch.4.4.20.2.gz | patch -p0 --verbose
+
+chown -R root.root .
+find . -perm 664 -exec chmod 644 {} \;
+find . -perm 600 -exec chmod 644 {} \;
+find . -perm 444 -exec chmod 644 {} \;
+find . -perm 400 -exec chmod 644 {} \;
+find . -perm 440 -exec chmod 644 {} \;
+find . -perm 777 -exec chmod 755 {} \;
+find . -perm 775 -exec chmod 755 {} \;
+find . -perm 511 -exec chmod 755 {} \;
+find . -perm 711 -exec chmod 755 {} \;
+find . -perm 555 -exec chmod 755 {} \;
+
+rm -rf build-dir
+mkdir build-dir
+cd build-dir
+CFLAGS="$SLKCFLAGS" \
+CXXFLAGS="$SLKCFLAGS" \
+../dist/configure \
+  --prefix=/usr \
+	--libdir=/usr/lib$LIBSUFFIX \
+  --enable-shared \
+  --enable-rpc \
+  --enable-cxx \
+  --enable-compat185 \
+	--with-mutex=x86/gcc-assembly \
+  $ARCH-$DISTRO-linux
+
+make -j12 || exit 1
+make install DESTDIR=$PKG
+# Remove WAY TOO LARGE (and misplaced) docs:
+rm -rf $PKG/usr/docs
+mkdir -p $PKG/usr/doc/db-$VERSION
+cp -a \
+  ../LICENSE ../README \
+  $PKG/usr/doc/db-$VERSION
+cat << EOF > $PKG/usr/doc/db-$VERSION/README-DOCS
+
+  For a ton of additional documentation (too large to include
+  here) on writing source code that uses libdb44, please see
+  the source tarball db-$VERSION.tar.bz2, which can be found
+  in the Slackware source tree in source/l/db44/, or on
+  Sleepycat's web site:  http://www.sleepycat.com.
+
+EOF
+
+# Move include files:
+( cd $PKG/usr/include
+  mkdir db44
+  mv *.h db44
+  for file in db44/* ; do
+    ln -sf $file .
+  done
+  # Better add this symlink, too, just to be safe...
+  ln -sf db44 db4
+)
+
+# Put libdb-4.4.so into /lib since it might be needed
+# before /usr is mounted (eg, nsswitch.conf can be set up to
+# use databases instead of flat files)
+mkdir -p $PKG/lib$LIBSUFFIX
+mv $PKG/usr/lib$LIBSUFFIX/libdb-4.4.so $PKG/lib$LIBSUFFIX/libdb-4.4.so
+( cd $PKG/usr/lib$LIBSUFFIX
+  ln -sf /lib$LIBSUFFIX/libdb-4.4.so .
+)
+
+# Some things might look for these libraries by other names.
+( cd $PKG/usr/lib$LIBSUFFIX
+  ln -sf libdb-4.4.a libdb-4.a
+  ln -sf libdb-4.4.a libdb4.a
+  ln -sf libdb-4.4.a libdb.a
+  ln -sf libdb_cxx-4.4.a libdb_cxx-4.a
+  ln -sf libdb_cxx-4.4.a libdb_cxx.a
+  ln -sf libdb-4.4.so libdb4.so
+  ln -sf libdb-4.4.so libdb.so
+)
+
+chmod 755 $PKG/usr/bin/*
+
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+
+cd $PKG
+pkghelpers_fixup
+pkghelpers_makepkg

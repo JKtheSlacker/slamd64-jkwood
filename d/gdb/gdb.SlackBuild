@@ -1,0 +1,74 @@
+#!/bin/sh
+# Set initial variables:
+CWD=`pwd`
+if [ "$TMP" = "" ]; then
+  TMP=/tmp
+fi
+PKG=$TMP/package-gdb
+
+VERSION=${VERSION:-6.6}
+ARCH=${ARCH:-x86_64}
+BUILD=${BUILD:-1}
+DISTRO=${DISTRO:-slamd64}
+
+if [ $DISTRO = slackware ]; then
+	PKGARCH=$ARCH
+else
+	PKGARCH=${ARCH}_${DISTRO}
+fi
+
+if [ $DISTRO = slamd64 ]; then
+	LIBSUFFIX=${LIBSUFFIX:-64}
+fi
+
+if [ ! -d $TMP ]; then
+  mkdir -p $TMP # location to build the source
+fi
+rm -rf $PKG
+mkdir -p $PKG
+
+cd $TMP
+rm -rf gdb-$VERSION
+tar xjvf $CWD/gdb-$VERSION.tar.bz2 || exit 1
+cd gdb-$VERSION
+chown -R root:root .
+./configure \
+  --prefix=/usr \
+	--libdir=/usr/lib$LIBSUFFIX \
+  $ARCH-$DISTRO-linux
+( cd readline ; make )
+make -j4 || exit 1
+mkdir -p $PKG/usr/doc/gdb-$VERSION/gdb
+cp -a COPYING COPYING.LIB README $PKG/usr/doc/gdb-$VERSION
+cd gdb
+cp -a NEWS README TODO $PKG/usr/doc/gdb-$VERSION/gdb
+cp -a gdbserver/README $PKG/usr/doc/gdb-$VERSION/README.gdbserver
+find $PKG/usr/doc/gdb-$VERSION -type f -exec chmod 644 {} \;
+strip --strip-unneeded gdb
+mkdir -p $PKG/usr/bin
+cat gdb > $PKG/usr/bin/gdb
+mkdir -p $PKG/usr/man/man1
+cat gdb.1 | gzip -9c > $PKG/usr/man/man1/gdb.1.gz
+cd doc
+mkdir -p $PKG/usr/info
+for file in gdb.info* gdbint.info* ; do
+  cat $file | gzip -9c > $PKG/usr/info/$file.gz
+done
+cd ../gdbserver
+make
+strip --strip-unneeded gdbserver
+cat gdbserver > $PKG/usr/bin/gdbserver
+chmod 755 $PKG/usr/bin/*
+cat gdbserver.1 | gzip -9c > $PKG/usr/man/man1/gdbserver.1.gz
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+
+# Build the package:
+cd $PKG
+makepkg -l y -c n $TMP/gdb-$VERSION-$PKGARCH-$BUILD.tgz
+
+# Clean up the extra stuff:
+if [ "$1" = "--cleanup" ]; then
+  rm -rf $TMP/gdb-$VERSION
+  rm -rf $PKG
+fi

@@ -1,0 +1,54 @@
+#!/bin/sh
+# Set initial variables:
+CWD=`pwd`
+if [ "$TMP" = "" ]; then
+  TMP=/tmp
+fi
+PKG=$TMP/package-netkit-ftp
+
+VERSION=0.17
+ARCH=${ARCH:-x86_64}
+BUILD=1
+DISTRO=${DISTRO:-slamd64}
+
+if [ $DISTRO = slackware ]; then
+	PKGARCH=$ARCH
+else
+	PKGARCH=${ARCH}_${DISTRO}
+fi
+
+if [ ! -d $TMP ]; then
+  mkdir -p $TMP # location to build the source
+fi
+rm -rf $PKG
+mkdir -p $PKG
+
+cd $TMP
+rm -rf netkit-ftp-0.17
+tar xzvf $CWD/netkit-ftp-0.17.tar.gz || exit 1
+cd netkit-ftp-0.17
+chown -R root:root .
+./configure --prefix=/usr
+make || exit 1
+cd ftp
+strip ftp
+mkdir -p $PKG/bin
+cat ftp > $PKG/bin/ftp
+chmod 755 $PKG/bin/ftp
+mkdir -p $PKG/usr/man/man{1,5}
+cat ftp.1 | gzip -9c > $PKG/usr/man/man1/ftp.1.gz
+cat netrc.5 | gzip -9c > $PKG/usr/man/man5/netrc.5.gz
+cd ..
+mkdir -p $PKG/usr/doc/netkit-ftp-0.17
+cp -a README $PKG/usr/doc/netkit-ftp-0.17
+chown root:root $PKG/usr/doc/netkit-ftp-0.17/*
+chmod 644 $PKG/usr/doc/netkit-ftp-0.17/*
+
+# Finish up the package:
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+
+# Build the package:
+cd $PKG
+makepkg -l y -c n $TMP/netkit-ftp-$VERSION-$PKGARCH-$BUILD.tgz
+

@@ -1,0 +1,72 @@
+#!/bin/sh
+CWD=`pwd`
+TMP=/tmp
+PKG=$TMP/package-kdemultimedia
+
+# Set the config option variables if they are not already set:
+if [ -r ../KDE.options ]; then
+  . ../KDE.options
+fi
+
+# The global options may be overridden here (if needed):
+if [ -r ./local.options ]; then
+  . ./local.options
+fi
+
+rm -rf $PKG
+mkdir -p $PKG/usr
+
+# I hear from Debian that the kernel is actually correct here, and that it's
+# KDE that has the bug.  All I know is that this kludges it, and nothing else
+# seems to run into this.  It's not enough to get me to patch the kernel in
+# a permanent way, that's for sure.
+#
+# If you can figure out who's officially responsible and what the fix really
+# is, please tell them.  If that's me, I'm waiting for the clue-stick.
+if [ "$ARCH" = "i386" \
+  -o "$ARCH" = "i486" \
+  -o "$ARCH" = "i586" \
+  -o "$ARCH" = "i686" ]; then
+  if ! grep -q "ifndef __STRICT_ANSI__" /usr/include/asm/byteorder.h ; then
+    ( cd /usr/include/asm
+      zcat $CWD/ugly-kernel-patch.diff.gz | patch -p1 --verbose --backup --suffix=.orig || exit 1
+    )
+  fi
+fi
+
+# Avoid a version number in .la files:
+if [ -d /usr/lib$LIBSUFFIX/qt ]; then
+  QTDIR=/usr/lib$LIBSUFFIX/qt
+fi
+cd $TMP
+echo "Building kdemultimedia-$VERSION.tar.bz2..."
+tar xjvf $CWD/kdemultimedia-$VERSION.tar.bz2 || exit 1
+cd kdemultimedia-$VERSION || exit 1
+chown -R root:root .
+CFLAGS=$CPUOPT \
+CXXFLAGS=$CPUOPT \
+./configure \
+  --prefix=/usr \
+  --sysconfdir=/etc/kde \
+  --with-xinerama \
+  --disable-debug \
+  --program-prefix="" \
+  --program-suffix="" \
+  --build=$TARGET-$DISTRO-linux
+make $NUMJOBS || exit 1
+make install DESTDIR=$PKG
+mkdir -p $PKG/usr/doc/kdemultimedia-$VERSION
+cp -a AUTHORS COPYING INSTALL README $PKG/usr/doc/kdemultimedia-$VERSION
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+
+( cd $PKG
+  find . | xargs file | grep "executable" | grep ELF | cut -f 1 -d : | xargs strip --strip-unneeded 2> /dev/null
+  find . | xargs file | grep "shared object" | grep ELF | cut -f 1 -d : | xargs strip --strip-unneeded 2> /dev/null
+)
+if [ -d $PKG/usr/man ]; then
+  gzip -9 $PKG/usr/man/man?/*
+fi
+
+cd $PKG
+makepkg -l y -c n ../kdemultimedia-$VERSION-$PKGARCH-$BUILD.tgz

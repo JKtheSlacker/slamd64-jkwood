@@ -1,0 +1,55 @@
+#!/bin/sh
+# Set initial variables:
+PKGNAM=joe
+VERSION=3.5
+ARCH=${ARCH:-x86_64}
+BUILD=${BUILD:-2}
+
+. /etc/pkghelpers
+pkghelpers_env
+
+if [ ! -d $TMP ]; then
+  mkdir -p $TMP # location to build the source
+fi
+rm -rf $PKG
+mkdir -p $PKG
+
+cd $TMP
+rm -rf joe-$VERSION
+tar xjvf $CWD/joe-$VERSION.tar.bz2
+cd joe-$VERSION
+
+chown -R root:root .
+find . -perm 666 -exec chmod 644 {} \;
+find . -perm 664 -exec chmod 644 {} \;
+find . -perm 600 -exec chmod 644 {} \;
+find . -perm 444 -exec chmod 644 {} \;
+find . -perm 400 -exec chmod 644 {} \;
+find . -perm 440 -exec chmod 644 {} \;
+find . -perm 777 -exec chmod 755 {} \;
+find . -perm 775 -exec chmod 755 {} \;
+find . -perm 511 -exec chmod 755 {} \;
+find . -perm 711 -exec chmod 755 {} \;
+find . -perm 555 -exec chmod 755 {} \;
+
+./configure \
+  --prefix=/usr \
+  --sysconfdir=/etc \
+  --program-prefix="" \
+  --program-suffix="" \
+  $ARCH-$DISTRO-linux
+make -j12 || exit 1
+make install DESTDIR=$PKG
+# Wrong place for this...
+rm -rf $PKG/etc/joe/doc
+mkdir -p $PKG/usr/doc/joe-$VERSION
+cp -a \
+  COPYING HACKING HINTS LIST NEWS README TODO docs/help-system.html \
+  $PKG/usr/doc/joe-$VERSION
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+
+# Build the package:
+cd $PKG
+pkghelpers_fixup
+pkghelpers_makepkg

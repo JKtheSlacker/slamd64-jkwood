@@ -1,0 +1,61 @@
+#!/bin/sh
+CWD=`pwd`
+TMP=${TMP:-/tmp}
+PKG=$TMP/package-xsane
+
+VERSION=0.994
+ARCH=${ARCH:-x86_64}
+BUILD=${BUILD:-1}
+DISTRO=${DISTRO:-slamd64}
+
+if [ $DISTRO = slackware ]; then
+	PKGARCH=$ARCH
+else
+	PKGARCH=${ARCH}_${DISTRO}
+fi
+
+if [ "$ARCH" = "i386" ]; then
+  SLKCFLAGS="-O2 -march=i386 -mcpu=i686"
+elif [ "$ARCH" = "i486" ]; then
+  SLKCFLAGS="-O2 -march=i486 -mtune=i686"
+elif [ "$ARCH" = "s390" ]; then
+  SLKCFLAGS="-O2"
+elif [ "$ARCH" = "x86_64" ]; then
+  SLKCFLAGS="-O2 -fPIC"
+fi
+
+if [ ! -d $TMP ]; then
+  mkdir -p $TMP
+fi
+rm -rf $PKG
+mkdir -p $PKG/usr
+cd $TMP
+rm -rf xsane-$VERSION
+tar xjvf $CWD/xsane-$VERSION.tar.bz2
+cd xsane-$VERSION
+chown -R root:root .
+find . -perm 777 -exec chmod 755 {} \;
+find . -perm 664 -exec chmod 644 {} \;
+find . -perm 600 -exec chmod 644 {} \;
+CFLAGS="$SLKCFLAGS" \
+./configure \
+  --prefix=/usr
+make -j6
+make install prefix=$PKG/usr
+rmdir $PKG/usr/sbin
+( cd $PKG
+  find . | xargs file | grep "executable" | grep ELF | cut -f 1 -d : | xargs strip --strip-unneeded 2> /dev/null
+  find . | xargs file | grep "shared object" | grep ELF | cut -f 1 -d : | xargs strip --strip-unneeded 2> /dev/null
+)
+mkdir -p $PKG/usr/doc/xsane-$VERSION
+cp -a \
+  xsane.* \
+  $PKG/usr/doc/xsane-$VERSION
+  rm -f $PKG/usr/doc/xsane-$VERSION/xsane.spec*
+gzip -9 $PKG/usr/man/man?/*.?
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+
+cd $PKG
+makepkg -l y -c n $TMP/xsane-$VERSION-$PKGARCH-$BUILD.tgz
+

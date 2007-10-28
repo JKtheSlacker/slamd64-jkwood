@@ -1,0 +1,66 @@
+#!/bin/sh
+# Set initial variables:
+CWD=`pwd`
+if [ "$TMP" = "" ]; then
+  TMP=/tmp
+fi
+PKG=$TMP/package-netkit-rwho
+
+VERSION=0.17
+ARCH=${ARCH:-x86_64}
+BUILD=1
+DISTRO=${DISTRO:-slamd64}
+
+if [ $DISTRO = slackware ]; then
+	PKGARCH=$ARCH
+else
+	PKGARCH=${ARCH}_${DISTRO}
+fi
+
+if [ ! -d $TMP ]; then
+  mkdir -p $TMP # location to build the source
+fi
+rm -rf $PKG
+mkdir -p $PKG
+
+cd $TMP
+rm -rf netkit-rwho-0.17
+tar xzvf $CWD/netkit-rwho-0.17.tar.gz || exit 1
+cd netkit-rwho-0.17 chown -R root:root .
+zcat $CWD/netkit-rwho-0.17.diff.gz | patch -p1 || exit 1
+( cd rwhod; zcat $CWD/rwhod.c.diff.gz | patch -p0 || exit 1) || exit 1
+./configure --prefix=/usr
+make RPCGEN="rpcgen -Y /usr/bin" || exit 1
+cd rwho
+strip rwho
+mkdir -p $PKG/usr/bin
+cat rwho > $PKG/usr/bin/rwho
+chmod 755 $PKG/usr/bin/rwho
+mkdir -p $PKG/usr/man/man{1,8}
+cat rwho.1 | gzip -9c > $PKG/usr/man/man1/rwho.1.gz
+cd ../rwhod
+strip rwhod
+mkdir -p $PKG/usr/sbin
+cat rwhod > $PKG/usr/sbin/rwhod
+chmod 755 $PKG/usr/sbin/rwhod
+cat rwhod.8 | gzip -9c > $PKG/usr/man/man8/rwhod.8.gz
+cd ../ruptime
+strip ruptime
+mkdir -p $PKG/usr/bin
+cat ruptime > $PKG/usr/bin/ruptime
+chmod 755 $PKG/usr/bin/ruptime
+cat ruptime.1 | gzip -9c > $PKG/usr/man/man1/ruptime.1.gz
+cd ..
+mkdir -p $PKG/usr/doc/netkit-rwho-0.17
+cp -a README $PKG/usr/doc/netkit-rwho-0.17
+chown root:root $PKG/usr/doc/netkit-rwho-0.17/*
+chmod 644 $PKG/usr/doc/netkit-rwho-0.17/*
+mkdir -p $PKG/var/spool/rwho
+
+# Finish up the package:
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+
+# Build the package:
+cd $PKG
+makepkg -l y -c n $TMP/netkit-rwho-$VERSION-$PKGARCH-$BUILD.tgz

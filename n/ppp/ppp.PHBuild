@@ -1,0 +1,115 @@
+#!/bin/sh
+# Set initial variables:
+PKGNAM=ppp
+VERSION=2.4.4
+BUILD=2
+
+. /etc/pkghelpers
+pkghelpers_env
+
+rm -rf $PKG
+mkdir -p $PKG
+
+echo "+============+"
+echo "| ppp-$VERSION |"
+echo "+============+"
+cd $TMP
+rm -rf ppp-$VERSION
+tar xjvf $CWD/ppp-$VERSION.tar.bz2
+cd ppp-$VERSION
+chown -R root:root .
+zcat $CWD/ppp.slack.diff.gz | patch -p1 --verbose --backup --suffix=.orig || exit
+( cd pppd ; zcat $CWD/pathnames.h.diff.gz | patch -p0 --verbose || exit 1 )
+./configure \
+  --prefix=/usr \
+	--libdir=/usr/lib$LIBSUFFIX
+make -j12 LIBDIR=/usr/lib$LIBSUFFIX/pppd || exit 1
+make install DESTDIR=$PKG/usr LIBDIR=$PKG/usr/lib$LIBSUFFIX/pppd
+mv $PKG/usr/share/man $PKG/usr
+rmdir $PKG/usr/share
+
+# Install PPP config files:
+mkdir -p $PKG/etc/ppp
+cp -a etc.ppp/* $PKG/etc/ppp
+chmod 600 $PKG/etc/ppp/*secrets
+( cd $PKG/etc/ppp
+  mv chap-secrets chap-secrets.new
+  mv options options.new
+  mv pap-secrets pap-secrets.new
+)
+zcat $CWD/options.new.gz > $PKG/etc/ppp/options.new
+
+# Fix what seems like an insecure default setting.
+# Feel free to "chmod 4750 pppoatm.so rp-pppoe.so" at your own risk.
+# Since they are only runnable by group root, the risk really isn't much...
+chmod 755 $PKG/usr/lib$LIBSUFFIX/pppd/*/*.so
+
+mkdir -p $PKG/usr/doc/ppp-$VERSION
+cp -a \
+  FAQ PLUGINS README* SETUP scripts \
+  $PKG/usr/doc/ppp-$VERSION
+
+echo "+====================+"
+echo "| radiusclient-0.3.2 |"
+echo "+====================+"
+cd $TMP
+rm -rf radiusclient-0.3.2
+tar xjf $CWD/radiusclient-0.3.2.tar.bz2
+cd radiusclient-0.3.2
+zcat $CWD/config.sub.gz > config.sub
+chown -R root:root .
+./configure \
+  --prefix=/usr \
+	--libdir=/usr/lib$LIBSUFFIX \
+  --sysconfdir=/etc
+make -j12 || exit 1
+make install DESTDIR=$PKG
+zcat $CWD/radius.msdict.gz > $PKG/etc/radiusclient/dictionary.microsoft
+zcat $CWD/realms.gz > $PKG/etc/radiusclient/realms
+zcat $CWD/servers.gz > $PKG/etc/radiusclient/servers
+( cd $PKG/etc/radiusclient
+  chmod 600 realms servers
+  mv issue issue.new
+  mv radiusclient.conf radiusclient.conf.new
+  mv realms realms.new
+  mv servers servers.new
+)
+mkdir -p $PKG/usr/doc/radiusclient-0.3.2
+cp -a \
+  BUGS CHANGES COPYRIGHT README README.radexample doc/instop.html \
+  $PKG/usr/doc/radiusclient-0.3.2 
+chmod 644 $PKG/usr/doc/radiusclient-0.3.2/*
+
+echo "+===============+"
+echo "| pppsetup-1.98 |"
+echo "+===============+"
+cd $TMP
+rm -rf pppsetup-1.98
+tar xzvf $CWD/pppsetup-1.98.tar.gz
+cd pppsetup-1.98
+chown -R root:root .
+zcat $CWD/pppsetup-1.98.slack.diff.gz | patch -p1 --backup || exit
+zcat $CWD/pppsetup-1.98.pppoff.diff.gz | patch -p0 --backup || exit
+zcat $CWD/pppsetup-1.98.moredevs.diff.gz | patch -p1 --backup || exit
+zcat $CWD/pppsetup-1.98.backupfiles.diff.gz | patch -p1 --backup || exit
+chmod 755 ppp-off pppsetup
+cp -a ppp-off pppsetup $PKG/usr/sbin
+mkdir -p $PKG/usr/doc/pppsetup
+cp -a \
+  README.pppsetup ppp-compile.txt pppsetup-1.98.README pppsetup-1.98.lsm \
+  $PKG/usr/doc/pppsetup
+
+( cd $PKG
+  find . -name "*.a" | xargs file | grep "ar archive" | cut -f 1 -d : | xargs strip -g 2> /dev/null
+)
+chmod 755 $PKG/usr/sbin/*
+chmod 644 $PKG/usr/man/man?/*
+
+mkdir -p $PKG/install
+zcat $CWD/doinst.sh.gz > $PKG/install/doinst.sh
+cat $CWD/slack-desc > $PKG/install/slack-desc
+
+# Build the package:
+cd $PKG
+pkghelpers_fixup
+pkghelpers_makepkg

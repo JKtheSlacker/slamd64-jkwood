@@ -1,0 +1,27 @@
+#!/bin/sh
+CWD=`pwd`
+TMP=/tmp
+
+VERSION=1.6.3
+
+cd $TMP
+tar xzvf $CWD/enscript-$VERSION.tar.gz
+cd enscript-$VERSION
+CFLAGS=-O2 LDFLAGS=-s ./configure --prefix=/usr \
+                                  --with-media=Letter \
+                                  --sysconfdir=/etc
+make
+make install
+( cd tests ; make check )
+## Apparently, enscript's build script is a little bit broken and forgets
+## to install the following two crucial files:
+#cp -a /etc/enscript.cfg /etc/enscript.cfg
+#cp -a /usr/share/enscript/enscript.st /usr/share/enscript/enscript.st
+chown -R root.bin /usr/bin
+mkdir -p /usr/doc/enscript-$VERSION
+cp -a *.txt ABOUT-NLS AUTHORS COPYING ChangeLog docs/FAQ.html INSTALL NEWS \
+  README* THANKS TODO /usr/doc/enscript-$VERSION
+chown root.root /usr/doc/enscript-$VERSION/*
+chmod 644 /usr/doc/enscript-$VERSION/*
+mkdir -p /install
+cat $CWD/slack-desc > /install/slack-desc

@@ -1,0 +1,99 @@
+#!/bin/sh
+# Copyright 2006, 2007  Patrick J. Volkerding, Sebeka, MN, USA
+# All rights reserved.
+#
+# Redistribution and use of this script, with or without modification, is
+# permitted provided that the following conditions are met:
+#
+# 1. Redistributions of this script must retain the above copyright
+#    notice, this list of conditions and the following disclaimer.
+#
+#  THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR IMPLIED
+#  WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+#  MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.  IN NO
+#  EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+#  SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+#  PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+#  OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+#  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+#  OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+#  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+
+PKGNAM=svgalib
+VERSION=${VERSION:-1.9.25}
+BUILD=${BUILD:-1}
+
+. /etc/pkghelpers
+pkghelpers_env
+
+cd $TMP
+rm -rf ${PKGNAM}-${VERSION}
+tar xzvf $CWD/${PKGNAM}-$VERSION.tar.gz
+cd ${PKGNAM}-$VERSION
+
+# Make sure ownerships and permissions are sane:
+chown -R root:root .
+find . -perm 666 -exec chmod 644 {} \;
+find . -perm 664 -exec chmod 644 {} \;
+find . -perm 600 -exec chmod 644 {} \;
+find . -perm 444 -exec chmod 644 {} \;
+find . -perm 400 -exec chmod 644 {} \;
+find . -perm 440 -exec chmod 644 {} \;
+find . -perm 777 -exec chmod 755 {} \;
+find . -perm 775 -exec chmod 755 {} \;
+find . -perm 511 -exec chmod 755 {} \;
+find . -perm 711 -exec chmod 755 {} \;
+find . -perm 555 -exec chmod 755 {} \;
+find . -name "*.h" -exec chmod 644 {} \;
+
+zcat $CWD/svgalib.nodevfs.diff.gz | patch -p1 --verbose || exit 1
+zcat $CWD/svgalib.prefix.diff.gz | patch -p1 --verbose || exit 1
+# Newer kernels no longer use this header file:
+zcat $CWD/svgalib.noconfigh.diff.gz | patch -p1 --verbose || exit 1
+
+# Use a thin wrapper around /usr/bin/install to implement destdir
+chmod 755 $CWD/bin/install
+rm -rf $PKG
+
+sed -i "s#/lib\$#/lib$LIBSUFFIX#g" Makefile.cfg
+sed -i 's#/share/man#/man#g' Makefile.cfg
+sed -i 's#$(datadir)/#/etc/vga/#g' Makefile.cfg
+mkdir -p $PKG
+
+# Build and install:
+make install TOPDIR=$PKG || exit 1
+
+# Build demos:
+make demoprogs TOPDIR=$PKG || exit 1
+
+# Install demos:
+mkdir -p $PKG/usr/share/svgalib-demos
+( cd demos
+  # this will produce a harmless error... hey, some of these demos might come back, right?
+  install -m755 fun testgl speedtest mousetest vgatest scrolltest testlinear keytest testaccel accel forktest eventtest spin bg_test printftest joytest mjoytest bankspeed lineart linearspeed addmodetest svidtune linearfork cursor vgatweak buildcsr rwpage \
+  linuxlogo.bitmap \
+  $PKG/usr/share/svgalib-demos
+)
+
+# Add a documentation directory:
+mkdir -p $PKG/usr/doc/${PKGNAM}-$VERSION
+cp -a \
+  0-README LICENSE README svgalib.lsm \
+  $PKG/usr/doc/${PKGNAM}-$VERSION
+( cd doc
+  cp -a \
+  0-INSTALL CHANGES DESIGN Driver-programming-HOWTO README.joystick \
+  README.keymap README.multi-monitor README.patching README.vesa TODO dual-head-howto \
+  $PKG/usr/doc/${PKGNAM}-$VERSION
+)
+
+cd $PKG
+rm -rf etc/cups
+rm -rf lib/modules
+rmdir lib
+
+mkdir -p install
+cat $CWD/slack-desc > install/slack-desc
+pkghelpers_fixup
+pkghelpers_makepkg

@@ -1,0 +1,121 @@
+#!/bin/sh
+# by: volkerdi@slackware.com
+# Set initial variables:
+PKGNAM=gpm
+VERSION=1.20.1
+BUILD=${BUILD:-3}
+
+. /etc/pkghelpers
+pkghelpers_env
+
+if [ ! -d $TMP ]; then
+  mkdir -p $TMP # location to build the source
+fi
+rm -rf $PKG
+mkdir -p $PKG
+
+cd $TMP
+rm -rf gpm-$VERSION
+tar xjvf $CWD/gpm-$VERSION.tar.bz2
+cd gpm-$VERSION
+chown -R root:root .
+find . -perm 666 -exec chmod 644 {} \;
+find . -perm 664 -exec chmod 644 {} \;
+find . -perm 600 -exec chmod 644 {} \;
+find . -perm 444 -exec chmod 644 {} \;
+find . -perm 400 -exec chmod 644 {} \;
+find . -perm 440 -exec chmod 644 {} \;
+find . -perm 777 -exec chmod 755 {} \;
+find . -perm 775 -exec chmod 755 {} \;
+find . -perm 511 -exec chmod 755 {} \;
+find . -perm 711 -exec chmod 755 {} \;
+find . -perm 555 -exec chmod 755 {} \;
+find . -perm 600 -exec chmod 644 {} \;
+find . -perm 700 -exec chmod 755 {} \;
+
+zcat $CWD/gpm-evdev-cumulative.patch.gz | patch -p1 --verbose || exit 1
+zcat $CWD/gpm.evdevmakefile.patch.gz | patch -p1 --verbose || exit 1
+zcat $CWD/gpm-1.20.1-math.patch.gz | patch -p1 --verbose || exit 1
+zcat $CWD/gpm-1.20.1-weak-wgetch.patch.gz | patch -p1 --verbose || exit 1
+zcat $CWD/gpm-1.20.1-nodebug.patch.gz | patch -p1 --verbose || exit 1
+zcat $CWD/gpm-1.20.1-gpmopen.patch.gz | patch -p1 --verbose || exit 1
+zcat $CWD/gpm-1.20.1-idie.patch.gz | patch -p1 --verbose || exit 1
+zcat $CWD/gpm-1.20.1-subscript.patch.gz | patch -p1 --verbose || exit 1
+zcat $CWD/gpm-1.20.1-input.patch.gz | patch -p1 --verbose || exit 1
+zcat $CWD/gpm-1.20.1-consolename.patch.gz | patch -p1 --verbose || exit 1
+zcat $CWD/gpm-1.20.1-multilib.patch.gz | patch -p1 --verbose || exit 1
+zcat $CWD/gpm-1.20.1-no-console-error.patch.gz | patch -p1 --verbose || exit 1
+zcat $CWD/gpm-1.20.1-lib-silent.patch.gz | patch -p1 --verbose || exit 1
+zcat $CWD/gpm-1.20.1.send-noise-to-syslogs.diff.gz | patch -p1 --verbose || exit 1
+
+autoconf; # uh yeah, gpm seems to have forgotten to do this
+
+CFLAGS="$SLKCFLAGS" \
+./configure \
+  --prefix=/usr \
+  --sysconfdir=/etc \
+  $ARCH-$DISTRO-linux
+
+make -j12 || exit
+zcat $CWD/inputattach.c.gz > inputattach.c
+# ... I hate this -I
+gcc $SLKCFLAGS -I/usr/src/linux/include/ -o inputattach inputattach.c || exit
+
+mkdir -p $PKG/usr/bin $PKG/etc/rc.d
+cat inputattach > $PKG/usr/bin/inputattach
+( cd src
+  mkdir -p $PKG/usr/sbin
+  cat gpm > $PKG/usr/sbin/gpm
+  cat prog/disable-paste > $PKG/usr/bin/disable-paste
+  cat prog/gpm-root > $PKG/usr/bin/gpm-root
+  cat prog/hltest > $PKG/usr/bin/hltest
+  cat prog/mev > $PKG/usr/bin/mev
+  cat prog/mouse-test > $PKG/usr/bin/mouse-test
+  mkdir -p $PKG/usr/include
+  cp headers/gpm.h $PKG/usr/include/gpm.h
+  chmod 644 $PKG/usr/include/gpm.h
+  mkdir -p $PKG/usr/lib$LIBSUFFIX $PKG/lib$LIBSUFFIX
+  cat lib/libgpm.a > $PKG/usr/lib$LIBSUFFIX/libgpm.a
+  cat lib/libgpm.so.1.19.0 > $PKG/lib$LIBSUFFIX/libgpm.so.1.19.0
+  chmod 755 $PKG/lib$LIBSUFFIX/libgpm.so.1.19.0
+)
+( cd conf
+  mkdir -p $PKG/etc
+  cat gpm-root.conf > $PKG/etc/gpm-root.conf
+  cat gpm-syn.conf > $PKG/etc/gpm-syn.conf
+  cat gpm-twiddler.conf > $PKG/etc/gpm-twiddler.conf
+)
+( cd contrib/emacs
+  mkdir -p $PKG/usr/share/emacs/site-lisp
+  cat t-mouse.el > $PKG/usr/share/emacs/site-lisp/t-mouse.el
+)
+mkdir -p $PKG/usr/doc/gpm-$VERSION
+cp -a \
+  BUGS COPYING Changelog Changes MANIFEST README TODO \
+  $PKG/usr/doc/gpm-$VERSION
+( cd doc
+  for page in *.1 *.7 *.8 ; do
+    CHAPTER=`echo $page | cut -f 2 -d .`
+    mkdir -p $PKG/usr/man/man$CHAPTER
+    cat $page | gzip -9c > $PKG/usr/man/man${CHAPTER}/$page.gz
+  done
+  mkdir -p $PKG/usr/info
+  cat gpm.info | gzip -9c > $PKG/usr/info/gpm.info.gz
+  cp -a \
+    Announce FAQ HACK_GPM README* \
+    $PKG/usr/doc/gpm-$VERSION
+)
+( cd $PKG/usr/lib$LIBSUFFIX ; ln -sf ../../lib$LIBSUFFIX/libgpm.so.1 libgpm.so )
+( cd $PKG/lib$LIBSUFFIX ; ln -sf libgpm.so.1.19.0 libgpm.so.1 )
+zcat $CWD/mouseconfig.gz > $PKG/usr/sbin/mouseconfig
+chmod 755 $PKG/usr/bin/* $PKG/usr/sbin/*
+mkdir -p $PKG/var/log/setup
+zcat $CWD/setup.mouse.gz > $PKG/var/log/setup/setup.mouse
+chmod 755 $PKG/var/log/setup/setup.mouse
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+
+# Build the package:
+cd $PKG
+pkghelpers_fixup
+pkghelpers_makepkg

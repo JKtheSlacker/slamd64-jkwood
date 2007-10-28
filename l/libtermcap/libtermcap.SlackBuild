@@ -1,0 +1,56 @@
+#!/bin/sh
+CWD=`pwd`
+
+VERSION=1.2.3
+ARCH=x86_64
+BUILD=2
+DISTRO=${DISTRO:-slamd64}
+
+if [ $DISTRO = slackware ]; then
+	PKGARCH=$ARCH
+else
+	PKGARCH=${ARCH}_${DISTRO}
+fi
+
+if [ $DISTRO = slamd64 ]; then
+	LIBSUFFIX=${LIBSUFFIX:-64}
+fi
+
+TMP=/tmp
+BUILDDIR=$TMP/termcap-compat-$VERSION
+PKGDIR=$TMP/package-libtermcap
+
+cd $TMP
+tar xzvf $CWD/termcap-compat_$VERSION.tar.gz
+cd $BUILDDIR
+chown -R root.root .
+zcat $CWD/termcap-compat_$VERSION.diff.gz | patch -p1 --verbose --backup --suffix=.orig
+zcat $CWD/termcap.h.diff.gz | patch -p0 --verbose --backup --suffix=.orig
+zcat $CWD/termcap.bufsize.diff.gz | patch -p1 --verbose --backup --suffix=.orig
+make
+
+rm -rf $PKGDIR
+mkdir -p $PKGDIR/{lib$LIBSUFFIX,usr/doc/termcap-$VERSION,usr/{lib$LIBSUFFIX,include,info},install}
+cp $BUILDDIR/libtermcap.so.* $PKGDIR/lib$LIBSUFFIX/
+cp $BUILDDIR/libtermcap.a $PKGDIR/usr/lib$LIBSUFFIX/
+cp $BUILDDIR/termcap.h $PKGDIR/usr/include/
+cp $BUILDDIR/termcap.info* $PKGDIR/usr/info/
+cp $BUILDDIR/{ChangeLog,README,debian/changelog} $PKGDIR/usr/doc/termcap-$VERSION/
+
+# Tidy-up a little
+cd $PKGDIR/usr/info
+gzip -9 *
+cd $PKGDIR/lib$LIBSUFFIX
+ldconfig .
+chown root:root libtermcap*
+
+( cd $PKGDIR;	find -type f | xargs file | grep ELF | cut -f 1 -d : | xargs strip --strip-unneeded )
+
+mkdir -p $PKGDIR/install
+cat $CWD/slack-desc > $PKGDIR/install/slack-desc
+cat $CWD/doinst.sh > $PKGDIR/install/doinst.sh
+
+cd $PKGDIR
+makepkg -l y -c n /tmp/libtermcap-$VERSION-$PKGARCH-$BUILD.tgz
+
+echo "Package in /tmp"

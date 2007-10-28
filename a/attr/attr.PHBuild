@@ -1,0 +1,81 @@
+#!/bin/sh
+PKGNAM=attr
+VERSION=2.4.32-1
+BUILD=2
+
+. /etc/pkghelpers
+pkghelpers_env
+
+rm -rf $PKG
+mkdir -p $PKG
+
+cd $TMP
+rm -rf attr-$(echo $VERSION | cut -f 1 -d '-')
+tar xzvf $CWD/attr_$VERSION.tar.gz
+cd attr-$(echo $VERSION | cut -f 1 -d '-')
+chown -R root:root .
+find . -perm 666 -exec chmod 644 {} \;
+find . -perm 664 -exec chmod 644 {} \;
+find . -perm 600 -exec chmod 644 {} \;
+find . -perm 444 -exec chmod 644 {} \;
+find . -perm 400 -exec chmod 644 {} \;
+find . -perm 440 -exec chmod 644 {} \;
+find . -perm 777 -exec chmod 755 {} \;
+find . -perm 775 -exec chmod 755 {} \;
+find . -perm 511 -exec chmod 755 {} \;
+find . -perm 711 -exec chmod 755 {} \;
+find . -perm 555 -exec chmod 755 {} \;
+
+# Add DESTDIR support and improve docs install location:
+zcat $CWD/attr.destdir.diff.gz | patch -p1 --verbose --backup --suffix=.orig || exit 1
+
+# The 1/2 assed job has begun...  the onus of running autoconf should never
+# be placed on packagers.  They may not have the same autotools versions.
+autoconf
+
+./configure \
+  --prefix=/ \
+  --exec-prefix=/ \
+  --sbindir=/bin \
+  --bindir=/usr/bin \
+  --libdir=/lib$LIBSUFFIX \
+  --libexecdir=/usr/lib$LIBSUFFIX \
+  --includedir=/usr/include \
+  --mandir=/usr/man \
+  --datadir=/usr/share
+
+make -j12 || exit 1
+make install DESTDIR=$PKG
+make install-dev DESTDIR=$PKG
+make install-lib DESTDIR=$PKG
+
+mv $PKG/usr/share/doc $PKG/usr
+( cd $PKG/usr/doc ; mv attr attr-$VERSION )
+# It would be nice to keep the same timestamps that the files have in the source:
+rm -rf $PKG/usr/doc/attr-$VERSION/ea-conv
+cp -a \
+  README doc/COPYING doc/PORTING doc/ea-conv \
+  $PKG/usr/doc/attr-$VERSION
+
+strip -g $PKG/usr/lib$LIBSUFFIX/*.a
+
+# Remove bogus files:
+rm -f $PKG/lib$LIBSUFFIX/*.a $PKG/lib$LIBSUFFIX/libattr.so $PKG/lib$LIBSUFFIX/*.la $PKG/usr/lib$LIBSUFFIX/*.la
+# Make /usr/lib/libattr.so a symlink to /lib:
+( cd $PKG/usr/lib$LIBSUFFIX; rm -f libattr.so ; ln -sf /lib$LIBSUFFIX/libattr.so.1 libattr.so )
+# Fix shared library perms:
+chmod 755 $PKG/lib$LIBSUFFIX/*
+
+# Gzip the man pages:
+( cd $PKG/usr/man
+  for i in `find . -type l` ; do ln -s $( readlink $i ).gz $i.gz ; rm $i ; done
+  gzip -9 */*.?
+)
+
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+
+cd $PKG
+PKGVER=$(echo $VERSION | tr - __)
+pkghelpers_fixup
+pkghelpers_makepkg

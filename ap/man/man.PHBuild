@@ -1,0 +1,52 @@
+#!/bin/sh
+PKGNAM=man
+VERSION=1.6c
+BUILD=${BUILD:-2}
+
+. /etc/pkghelpers
+pkghelpers_env
+
+cd /tmp
+rm -rf $PKG
+mkdir -p $PKG
+rm -rf man-$VERSION
+tar xjvf $CWD/man-$VERSION.tar.bz2
+cd man-$VERSION
+
+# Back out a change in man-1.6c that breaks makewhatis:
+zcat $CWD/man.makewhatis.diff.gz | patch -p1 --verbose || exit 1
+
+chown -R root:root .
+find . -perm 666 -exec chmod 644 {} \;
+find . -perm 664 -exec chmod 644 {} \;
+find . -perm 600 -exec chmod 644 {} \;
+find . -perm 444 -exec chmod 644 {} \;
+find . -perm 400 -exec chmod 644 {} \;
+find . -perm 440 -exec chmod 644 {} \;
+find . -perm 777 -exec chmod 755 {} \;
+find . -perm 775 -exec chmod 755 {} \;
+find . -perm 511 -exec chmod 755 {} \;
+find . -perm 711 -exec chmod 755 {} \;
+find . -perm 555 -exec chmod 755 {} \;
+CFLAGS="$SLKCFLAGS" \
+./configure +lang all +traditional
+make -j12 || exit 1
+make install PREFIX=$PKG
+mv $PKG/usr/lib/man.conf $PKG/usr/lib/man.conf.new
+( cd $PKG/usr/man
+  find . -name "*.?" -exec gzip -9 {} \;
+  # hack to remove empty man directories:
+  ( find . -type d | xargs rmdir ) 2> /dev/null
+  ( find . -type d | xargs rmdir ) 2> /dev/null
+)
+mkdir -p $PKG/usr/doc/man-$VERSION
+cp -a \
+  COPYING INSTALL LSM README TODO \
+  $PKG/usr/doc/man-$VERSION
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+zcat $CWD/doinst.sh.gz > $PKG/install/doinst.sh
+
+cd $PKG
+pkghelpers_fixup
+pkghelpers_makepkg

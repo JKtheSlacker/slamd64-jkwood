@@ -1,0 +1,55 @@
+#!/bin/sh
+
+PKGNAM=device-mapper
+VERSION=1.02.19
+ARCH=${ARCH:-x86_64}
+BUILD=1
+
+. /etc/pkghelpers
+pkghelpers_env
+
+rm -rf $PKG
+mkdir -p $PKG
+cd /tmp
+rm -rf device-mapper.$VERSION
+tar xjvf $CWD/device-mapper.$VERSION.tar.bz2
+cd device-mapper.$VERSION
+
+chown -R root.root .
+find . -perm 664 -exec chmod 644 {} \;
+find . -perm 600 -exec chmod 644 {} \;
+find . -perm 444 -exec chmod 644 {} \;
+find . -perm 400 -exec chmod 644 {} \;
+find . -perm 440 -exec chmod 644 {} \;
+find . -perm 777 -exec chmod 755 {} \;
+find . -perm 775 -exec chmod 755 {} \;
+find . -perm 511 -exec chmod 755 {} \;
+find . -perm 711 -exec chmod 755 {} \;
+find . -perm 555 -exec chmod 755 {} \;
+
+CFLAGS="$SLKCFLAGS" \
+./configure \
+  --libdir=/lib$LIBSUFFIX \
+  --enable-static_link \
+  --with-device-uid=0 \
+  --with-device-gid=6 \
+  --with-device-mode=0660 \
+  --build=$ARCH-$DISTRO-linux
+
+make -j10 || exit 1
+make install DESTDIR=$PKG || exit 1
+
+mkdir -p $PKG/etc/udev/rules.d
+cat $CWD/64-device-mapper.rules > $PKG/etc/udev/rules.d/64-device-mapper.rules
+
+mkdir -p $PKG/usr/doc/device-mapper.$VERSION
+cp -a \
+  COPYING COPYING.LIB INSTALL INTRO README VERSION WHATS_NEW \
+  $PKG/usr/doc/device-mapper.$VERSION
+
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+
+cd $PKG
+pkghelpers_fixup
+pkghelpers_makepkg

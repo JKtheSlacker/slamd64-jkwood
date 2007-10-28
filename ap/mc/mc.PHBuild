@@ -1,0 +1,78 @@
+#!/bin/sh
+PKGNAM=mc
+VERSION=4.6.1_20070309
+BUILD=${BUILD:-1}
+
+. /etc/pkghelpers
+pkghelpers_env
+
+rm -rf $PKG
+mkdir -p $PKG/usr
+cd $TMP
+rm -rf mc-$VERSION
+tar xjvf $CWD/mc-$VERSION.tar.bz2 || exit 1
+cd mc-$VERSION
+
+zcat $CWD/mc-4.6.1.php.syntax.diff.gz | patch -p1 --verbose || exit 1
+
+chown -R root:root .
+find . -perm 664 -exec chmod 644 {} \;
+find . -perm 600 -exec chmod 644 {} \;
+find . -perm 444 -exec chmod 644 {} \;
+find . -perm 400 -exec chmod 644 {} \;
+find . -perm 440 -exec chmod 644 {} \;
+find . -perm 777 -exec chmod 755 {} \;
+find . -perm 775 -exec chmod 755 {} \;
+find . -perm 511 -exec chmod 755 {} \;
+find . -perm 711 -exec chmod 755 {} \;
+find . -perm 555 -exec chmod 755 {} \;
+
+# This is obsolete:
+# ( cd vfs/samba ; zcat $CWD/samba.codepages.diff.gz | patch -p0 )
+# To enable samba, I believe these are the options to use:
+# --with-samba \
+# --with-configdir=/etc/samba \
+# --with-codepagedir=/etc/codepages \
+#
+# Using --with-included-slang seems to be the magic incantation that builds
+# a clean, small mc like days of yore
+# --with-screen=mcslang \
+#
+
+CFLAGS="$SLKCFLAGS" \
+./configure \
+  --prefix=/usr \
+  --sysconfdir=/etc \
+  --mandir=/usr/man \
+  --localstatedir=/var \
+  --enable-charset \
+  --with-gpm-mouse \
+  --with-ext2undel \
+  --with-x=yes \
+  --with-vfs \
+  --build=$ARCH-$DISTRO-linux
+
+# Removed due to bug reports.  Does anyone use this feature?
+# Will it be missed?  complain to: volkerdi@slackware.com
+#	    --with-samba
+
+make -j12 || exit 1
+make DESTDIR=$PKG install || exit 1
+
+mkdir -p $PKG/etc/profile.d
+cat $PKG/usr/share/mc/bin/mc.csh > $PKG/etc/profile.d/mc.csh
+cat $PKG/usr/share/mc/bin/mc.sh > $PKG/etc/profile.d/mc.sh
+chmod 755 $PKG/etc/profile.d/*
+
+mkdir -p $PKG/usr/doc/mc-$VERSION
+cp -a \
+  ABOUT-NLS AUTHORS COPYING FAQ HACKING INSTALL INSTALL.FAST MAINTAINERS NEWS README* TODO \
+  $PKG/usr/doc/mc-$VERSION
+
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+
+# Build package:
+cd $PKG
+pkghelpers_fixup
+pkghelpers_makepkg

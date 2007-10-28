@@ -1,0 +1,70 @@
+#!/bin/sh
+# Copyright 2007 Frederick Emmott <mail@fredemmott.co.uk>
+# Distributed under the GNU General Public License, version 2,
+# as published by the Free Software foundation, NOT any other
+# version.
+
+pkghelpers_checkpkg() {
+	SUCCESS=$(mktemp $TMP/pkghelpers.XXXXXX)
+	##### JUNK IN ROOT #####
+	RootJunk=$(ls -1 | egrep -v 'bin|boot|dev|etc|home|install|lib|lib64|media|mnt|opt|proc|sbin|srv|sys|tmp|usr|var')
+	if [ "$RootJunk" != "" ]; then
+		for dir in $RootJunk; do
+			pkghelpers_warn Possible junk in / in package: $dir
+		done
+		rm -f $SUCCESS
+	fi
+
+	##### UNSTRIPPED BINARIES #####
+	for file in $(find -type f | xargs file | grep ELF | grep "not stripped" | cut -f1 -d: | sed 's#^./##'); do
+		pkghelpers_warn Unstripped binary: $file
+		rm -f $SUCCESS
+	done
+	
+	##### UNCOMPRESSED MAN PAGES #####
+	[ $(ls -1 usr/man/*/*.[1-8] 2>/dev/null | wc -l) != 0 ] && pkghelpers_warn Uncompressed man pages detected. && rm -f $SUCCESS
+
+	##### DIRECTORIES THAT "SHOULDN'T EXIST" #####
+	$MULTILIB && WarnDirs="lib usr/lib usr/lib/pkgconfig"
+	$MULTILIB || WarnDirs="lib64 usr/lib64 usr/lib64/pkgconfig"
+	WarnDirs="$WarnDirs usr/local usr/share/man opt/kde"
+
+	for dir in $WarnDirs; do
+		[ -e $dir ] && pkghelpers_warn $dir found in package. && rm -f $SUCCESS
+	done
+
+	##### SLACK-DESC #####
+	[ ! -e install/slack-desc ] && pkghelpers_warn No slack-desc found in package. && rm -f $SUCCESS
+
+	##### BAD OWNERSHIP #####
+	find -exec ls -ld {} \; | (
+		while read line; do
+			user=$(echo $line | cut -f3 '-d ')
+			# Convert username to numeric UID
+			echo $user | egrep -q '[^0-9]' && user=$(echo $user | egrep "^$user:" /etc/passwd | cut -f3 -d:)
+
+			[ $user -gt 100 ] && pkghelpers_warn "File owned by $user: $(echo $line | awk '{ print $8 }')" && rm -f $SUCCESS
+		done
+	)
+
+	##### BAD SYMLINKS #####
+	find -type l | (
+		while read line; do
+			if [ ! -e $(readlink -m "$line") ]; then
+				echo "Bad symbolic link: $line -> $(readlink -m "$line")"
+				rm -f $SUCCESS
+			fi
+			if ls -ld "$line" | grep -q "/tmp/package"; then
+				echo "Symbolic link to destdir: $line -> $(readlink -m "$line")"
+				rm -f $SUCCESS
+			fi
+		done
+	)
+
+	if [ ! -e $SUCCESS ]; then
+		exit 1
+	else
+		rm $SUCCESS
+		exit 0
+	fi		
+}

@@ -1,0 +1,34 @@
+#!/bin/sh
+PKGNAM=libart_lgpl
+VERSION=2.3.19
+BUILD=${BUILD:-1}
+
+. /etc/pkghelpers
+pkghelpers_env
+
+rm -rf $PKG
+mkdir -p $PKG/usr
+
+cd $TMP
+rm -rf libart_lgpl-$VERSION
+tar xjvf $CWD/libart_lgpl-$VERSION.tar.bz2 || exit 1
+cd libart_lgpl-$VERSION
+
+zcat $CWD/libart_lgpl-2.3.19-extern-c.patch.gz | patch -p1 --verbose || exit 1
+
+chown -R root:root .
+find . -perm 664 -exec chmod 644 {} \;
+CFLAGS="$SLKCFLAGS" \
+./configure --prefix=/usr --libdir=/usr/lib$LIBSUFFIX
+make -j12 || exit 1
+make install DESTDIR=$PKG
+mkdir -p $PKG/usr/doc/libart_lgpl-$VERSION
+cp -a \
+  AUTHORS COPYING NEWS README \
+  $PKG/usr/doc/libart_lgpl-$VERSION
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+
+cd $TMP/package-libart_lgpl
+pkghelpers_fixup
+pkghelpers_makepkg

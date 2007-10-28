@@ -1,0 +1,137 @@
+#!/bin/sh
+# Copyright 2006-2007  Robby Workman  (http://rlworkman.net)
+# Copyright 2007  Patrick J. Volkerding, Sebeka, MN, USA
+# All rights reserved.
+#
+# Redistribution and use of this script, with or without modification, is
+# permitted provided that the following conditions are met:
+#
+# 1. Redistributions of this script must retain the above copyright
+#    notice, this list of conditions and the following disclaimer.
+#
+#  THIS SCRIPT IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR IMPLIED
+#  WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+#  MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.  IN NO
+#  EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+#  SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+#  PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+#  OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+#  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+#  OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SCRIPT, EVEN IF
+#  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+PKGNAME=gnupg2
+VERSION=2.0.4
+ARCH=${ARCH:-x86_64}
+BUILD=${BUILD:-1}
+DISTRO=${DISTRO:-slamd64}
+
+if [ $DISTRO = slackware ]; then
+	PKGARCH=$ARCH
+else
+	PKGARCH=${ARCH}_${DISTRO}
+fi
+
+if [ $DISTRO = slamd64 ]; then
+	LIBSUFFIX=${LIBSUFFIX:-64}
+fi
+
+CWD=$(pwd)
+TMP=${TMP:-/tmp}
+PKG=$TMP/package-gnupg
+
+if [ "$ARCH" = "i386" ]; then
+  SLKCFLAGS="-O2 -march=i386 -mcpu=i686"
+elif [ "$ARCH" = "i486" ]; then
+  SLKCFLAGS="-O2 -march=i486 -mtune=i686"
+elif [ "$ARCH" = "s390" ]; then
+  SLKCFLAGS="-O2"
+elif [ "$ARCH" = "x86_64" ]; then
+  SLKCFLAGS="-O2 -fPIC"
+fi
+
+rm -rf $PKG
+mkdir -p $TMP $PKG
+cd $TMP
+rm -rf gnupg-$VERSION
+tar xjvf $CWD/gnupg-$VERSION.tar.bz2 || exit 1
+cd gnupg-$VERSION
+chown -R root:root .
+find . -perm 666 -exec chmod 644 {} \;
+find . -perm 664 -exec chmod 644 {} \;
+find . -perm 600 -exec chmod 644 {} \;
+find . -perm 444 -exec chmod 644 {} \;
+find . -perm 400 -exec chmod 644 {} \;
+find . -perm 440 -exec chmod 644 {} \;
+find . -perm 777 -exec chmod 755 {} \;
+find . -perm 775 -exec chmod 755 {} \;
+find . -perm 511 -exec chmod 755 {} \;
+find . -perm 711 -exec chmod 755 {} \;
+find . -perm 555 -exec chmod 755 {} \;
+
+CFLAGS="$SLKCFLAGS" \
+CXXFLAGS="$SLKCFLAGS" \
+./configure --prefix=/usr \
+  --mandir=/usr/man \
+	--libdir=/usr/lib$LIBSUFFIX \
+  --infodir=/usr/info \
+  --program-prefix="" \
+  --program-suffix="" \
+  --build=$ARCH-$DISTRO-linux \
+  --host=$ARCH-$DISTRO-linux
+
+make -j6 || exit 1
+make install DESTDIR=$PKG
+
+( cd $PKG
+  find . | xargs file | grep "executable" | grep ELF | cut -f 1 -d : | xargs strip --strip-unneeded 2> /dev/null
+  find . | xargs file | grep "shared object" | grep ELF | cut -f 1 -d : | xargs strip --strip-unneeded 2> /dev/null
+)
+
+rm -f $PKG/usr/info/dir
+gzip -9 $PKG/usr/info/*
+gzip -9 $PKG/usr/man/*/*
+
+mkdir -p $PKG/usr/doc/gnupg2-$VERSION
+cp -a \
+  ABOUT-NLS AUTHORS COPYING INSTALL NEWS README* THANKS TODO VERSION \
+    $PKG/usr/doc/gnupg2-$VERSION
+# Build html docs
+( cd doc
+  make gnupg.html
+  mv gnupg.html $PKG/usr/doc/gnupg2-$VERSION/html
+)
+# Fix some filenames in the html directory
+( cd $PKG/usr/doc/gnupg2-$VERSION/html
+mv how_002dto_002dspecify_002da_002duser_002did.html howto_specify_user_id.html
+mv gpg-1_002e4-vs_002e-1_002e9.html gpg-1.4-vs-1.9.html
+mv gpg_002dpreset_002dpassphrase.html gpg_preset_passphrase.html
+mv gpgsm_002dgencert_002esh.html gpgsm_gencert_sh.html
+mv Invoking-gpg_002dpreset_002dpassphrase.html Invoking-gpg_preset_passphrase.html
+mv Invoking-gpg_002dconnect_002dagent.html Invoking-gpg_connect_agent.html
+mv gpg_002dconnect_002dagent.html gpg_connect_agent.html
+mv Agent-GET_005fCONFIRMATION.html Agent-GET_CONFIRMATION.html
+mv option-_002d_002denable_002dssh_002dsupport.html option-enable_ssh_support.html
+mv option-_002d_002doptions.html option-options.html
+mv Invoking-GPG_002dAGENT.html Invoking-GPG_AGENT.html
+mv option-_002d_002dallow_002dmark_002dtrusted.html option-allow_mark_trusted.html
+mv Controlling-gpg_002dconnect_002dagent.html Controlling-gpg_connect_agent.html
+mv Agent-GET_005fPASSPHRASE.html Agent-GET_PASSPHRASE.html
+mv option-_002d_002dhomedir.html option-homedir.html
+mv PKCS_002315-Card.html PKCS-15-Card.html
+)
+# Move some docs from /usr/share to their proper location
+mv $PKG/usr/share/gnupg/FAQ $PKG/usr/doc/gnupg2-$VERSION
+mv $PKG/usr/share/gnupg/faq.html $PKG/usr/doc/gnupg2-$VERSION/html
+
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+
+cd $PKG
+/sbin/makepkg -l y -c n $TMP/$PKGNAME-$VERSION-$PKGARCH-$BUILD.tgz
+
+# Clean up the extra stuff:
+if [ "$1" = "--cleanup" ]; then
+  rm -rf $TMP/gnupg-$VERSION
+  rm -rf $PKG
+fi

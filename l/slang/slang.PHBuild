@@ -1,0 +1,55 @@
+#!/bin/sh
+PKGNAM=slang
+VERSION=${VERSION:-2.0.7}
+DOCV=${DOCV:-2.0.4}
+BUILD=${BUILD:-1}
+
+. /etc/pkghelpers
+pkghelpers_env
+
+rm -rf $PKG
+mkdir -p $PKG
+
+cd $TMP
+rm -rf slang-$VERSION
+tar xjvf $CWD/slang-$VERSION.tar.bz2 || exit 1
+cd slang-$VERSION
+chown -R root:root .
+CFLAGS="$SLKCFLAGS" \
+  ./configure \
+  --prefix=/usr \
+	--libdir=/usr/lib$LIBSUFFIX \
+  --sysconfdir=/etc \
+  --includedir=/usr/include \
+  --disable-static \
+  $ARCH-$DISTRO-linux
+
+make -j12 || exit 1
+make install DESTDIR=$PKG
+make -j12 elf || exit 1
+make install-elf DESTDIR=$PKG
+
+chmod 755 $PKG/usr/lib$LIBSUFFIX/libslang.so.$VERSION
+# --disable-static doesn't always work, but this is guaranteed:
+rm -f $PKG/usr/lib$LIBSUFFIX/*.a
+
+# Prepare the documentation:
+rm -r $PKG/usr/share/doc/slang
+rm -r $PKG/usr/share/doc
+rmdir $PKG/usr/share/doc
+
+mkdir -p $PKG/usr/doc/slang-$VERSION
+cp -a \
+  COPYING INSTALL.pc INSTALL.unx INSTALL.vms NEWS README UPGRADE.txt \
+  $PKG/usr/doc/slang-$VERSION
+# Add some additional documentation:
+tar xjvf $CWD/slangdoc-$DOCV.tar.bz2
+chown -R root:root doc
+cp -a doc/html $PKG/usr/doc/slang-$VERSION
+
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+
+cd $PKG
+pkghelpers_fixup
+pkghelpers_makepkg

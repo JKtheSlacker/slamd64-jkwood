@@ -1,0 +1,46 @@
+#!/bin/sh
+# Set initial variables:
+PKGNAM=popa3d
+VERSION=1.0.2
+BUILD=3
+
+. /etc/pkghelpers
+pkghelpers_env
+
+rm -rf $PKG
+mkdir -p $PKG
+
+cd $TMP
+rm -rf popa3d-$VERSION
+tar xzvf $CWD/popa3d-$VERSION.tar.gz
+cd popa3d-$VERSION
+chown -R root:root .
+zcat $CWD/popa3d.diff.gz | patch -p1 --verbose --backup --suffix=.orig || exit 1
+make -j12 || exit 1
+# already stripped
+mkdir -p $PKG/usr/sbin
+cat popa3d > $PKG/usr/sbin/popa3d
+chmod 755 $PKG/usr/sbin/popa3d
+mkdir -p $PKG/usr/man/man8
+cat popa3d.8 | gzip -9c > $PKG/usr/man/man8/popa3d.8.gz
+
+# Empty directory to chroot() into.  Should already be installed by aaa_base, or
+# openssh, or both:
+#mkdir -p $PKG/var/empty
+
+# Docs:
+mkdir -p $PKG/usr/doc/popa3d-$VERSION
+cp -a \
+  CHANGES CONTACT DESIGN INSTALL LICENSE VIRTUAL \
+  $PKG/usr/doc/popa3d-$VERSION
+chmod 644 $PKG/usr/doc/popa3d-$VERSION/*
+# Add install script -- this ensures pop user/group are there:
+mkdir -p $PKG/install
+zcat $CWD/doinst.sh.gz > $PKG/install/doinst.sh
+# Description:
+cat $CWD/slack-desc > $PKG/install/slack-desc
+
+# Build the package:
+cd $PKG
+pkghelpers_fixup
+pkghelpers_makepkg

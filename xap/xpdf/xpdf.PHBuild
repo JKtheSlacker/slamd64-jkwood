@@ -1,0 +1,101 @@
+#!/bin/sh
+# Set initial variables:
+PKGNAM=xpdf
+VERSION=3.02
+PATCHLEVEL=pl1
+PKGVER=${VERSION}${PATCHLEVEL}
+BUILD=1
+
+. /etc/pkghelpers
+pkghelpers_env
+
+rm -rf $PKG
+
+cd $TMP
+rm -rf xpdf-$VERSION
+tar xzvf $CWD/xpdf-$VERSION.tar.gz
+cd xpdf-$VERSION
+
+zcat $CWD/xpdf-resizefix.diff.gz | patch -p1 --verbose || exit 1
+cat $CWD/xpdf-3.02pl1.patch | patch -p1 --verbose || exit 1
+
+chown -R root:root .
+zcat $CWD/xpdfrc.diff.gz | patch -p1 --verbose --backup --suffix=.orig || exit
+LDFLAGS="-L/usr/lib$LIBSUFFIX " \
+CFLAGS="$SLKCFLAGS" \
+CXXFLAGS="$SLKCFLAGS" \
+./configure \
+  --prefix=/usr \
+	--libdir=/usr/lib$LIBSUFFIX \
+  --sysconfdir=/etc \
+  --with-gzip \
+  --with-freetype2-includes=/usr/include/freetype2
+make || exit 1
+make install DESTDIR=$PKG || exit 1
+mkdir -p $PKG/etc
+cat doc/sample-xpdfrc > $PKG/etc/xpdfrc
+( cd $PKG
+  find . | xargs file | grep "executable" | grep ELF | cut -f 1 -d : | xargs strip --strip-unneeded 2> /dev/null
+  find . | xargs file | grep "shared object" | grep ELF | cut -f 1 -d : | xargs strip --strip-unneeded 2> /dev/null
+)
+chmod 755 $PKG/usr/bin/*
+mkdir -p $PKG/usr/doc/xpdf-$VERSION
+cp -a \
+  ANNOUNCE CHANGES COPYING INSTALL README \
+  $PKG/usr/doc/xpdf-$VERSION
+chmod 644 $PKG/usr/doc/xpdf-$VERSION/*
+# Add cyrillic support.  Can't leave that out.
+tar xzvf $CWD/xpdf-cyrillic-2003-jun-28.tar.gz
+cd xpdf-cyrillic
+zcat $CWD/xpdf-cyrillic.diff.gz | patch -p1 --verbose --backup --suffix=.orig || exit
+mkdir -p $PKG/usr/share/xpdf/cyrillic
+cat Bulgarian.nameToUnicode > $PKG/usr/share/xpdf/cyrillic/Bulgarian.nameToUnicode
+cat KOI8-R.unicodeMap > $PKG/usr/share/xpdf/cyrillic/KOI8-R.unicodeMap
+cat add-to-xpdfrc >> $PKG/etc/xpdfrc
+# Add latin2 support:
+tar xzvf $CWD/xpdf-latin2-2002-oct-22.tar.gz
+cd xpdf-latin2
+zcat $CWD/xpdf-latin2.diff.gz | patch -p1 --verbose --backup --suffix=.orig || exit
+mkdir -p $PKG/usr/share/xpdf/latin2
+cat Latin2.unicodeMap > $PKG/usr/share/xpdf/latin2/Latin2.unicodeMap
+cat add-to-xpdfrc >> $PKG/etc/xpdfrc
+# Add greek support:
+tar xzvf $CWD/xpdf-greek-2003-jun-28.tar.gz
+cd xpdf-greek
+zcat $CWD/xpdf-greek.diff.gz | patch -p1 --verbose --backup --suffix=.orig || exit
+mkdir -p $PKG/usr/share/xpdf/greek
+cat ISO-8859-7.unicodeMap > $PKG/usr/share/xpdf/greek/ISO-8859-7.unicodeMap
+cat Greek.nameToUnicode > $PKG/usr/share/xpdf/greek/Greek.nameToUnicode
+cat add-to-xpdfrc >> $PKG/etc/xpdfrc
+mv $PKG/etc/xpdfrc $PKG/etc/xpdfrc.new
+mkdir -p $PKG/install
+cat << EOF > $PKG/install/doinst.sh
+#!/bin/sh
+config() {
+  NEW="\$1"
+  OLD="\$(dirname \$NEW)/\$(basename \$NEW .new)"
+  # If there's no config file by that name, mv it over:
+  if [ ! -r \$OLD ]; then
+    mv \$NEW \$OLD
+  elif [ "\$(cat \$OLD | md5sum)" = "\$(cat \$NEW | md5sum)" ]; then # toss the redundant copy
+    rm \$NEW
+  fi
+  # Otherwise, we leave the .new copy for the admin to consider...
+}
+config etc/xpdfrc.new
+EOF
+cat $CWD/slack-desc > $PKG/install/slack-desc
+
+# We'll use the versions of these from the poppler derived work (if they exist here):
+( cd $PKG/usr/bin
+  rm -f pdfinfo pdftops pdftoppm pdftohtml pdftotext pdfimages pdffonts
+  cd $PKG/usr/man/man1
+  for file in pdfinfo pdftops pdftoppm pdftohtml pdftotext pdfimages pdffonts ; do
+    rm -f ${file}.1.gz
+  done
+)
+
+# Build the package:
+cd $PKG
+pkghelpers_fixup
+pkghelpers_makepkg

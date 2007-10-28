@@ -1,0 +1,50 @@
+#!/bin/sh
+# Set initial variables:
+PKGNAM=rcs
+VERSION=5.7
+BUILD=2
+
+. /etc/pkghelpers
+pkghelpers_env
+
+if [ ! -d $PKG ]; then
+  mkdir -p $PKG # place for the package to be built
+fi
+
+# Explode the package framework:
+cd $PKG
+explodepkg $CWD/_rcs.tar.gz
+
+echo "+=========+"
+echo "| rcs-$VERSION |"
+echo "+=========+"
+cd $TMP
+tar xzvf $CWD/rcs-$VERSION.tar.gz
+cd rcs-$VERSION
+zcat $CWD/rcs-$VERSION.diff.gz | patch -p0
+./configure --prefix=/usr
+make CFLAGS="$SLKCFLAGS" LDFLAGS=-s || exit 1
+cd src
+cat ci > $PKG/usr/bin/ci
+cat co > $PKG/usr/bin/co
+cat ident > $PKG/usr/bin/ident
+cat merge > $PKG/usr/bin/merge
+cat rcs > $PKG/usr/bin/rcs
+cat rcsclean > $PKG/usr/bin/rcsclean
+cat rcsdiff > $PKG/usr/bin/rcsdiff
+cat rcsmerge > $PKG/usr/bin/rcsmerge
+cat rcstest > $PKG/usr/bin/rcstest
+cat rlog > $PKG/usr/bin/rlog
+cd ../man
+for page in ci.1 co.1 ident.1 merge.1 rcs.1 rcsclean.1 rcsdiff.1 rcsfreeze.1 \
+rcsintro.1 rcsmerge.1 rlog.1 ; do
+  cat $page | gzip -9c > $PKG/usr/man/man1/$page.gz
+done
+cat rcsfile.5 | gzip -9c > $PKG/usr/man/man5/rcsfile.5.gz
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+
+# Build the package:
+cd $PKG
+pkghelpers_fixup
+pkghelpers_makepkg

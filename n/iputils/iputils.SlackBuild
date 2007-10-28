@@ -1,0 +1,75 @@
+#!/bin/sh
+# Set initial variables:
+CWD=`pwd`
+if [ "$TMP" = "" ]; then
+  TMP=/tmp
+fi
+PKG=$TMP/package-iputils
+
+VERSION=s20070202
+ARCH=${ARCH:-x86_64}
+BUILD=1
+DISTRO=${DISTRO:-slamd64}
+
+if [ $DISTRO = slackware ]; then
+	PKGARCH=$ARCH
+else
+	PKGARCH=${ARCH}_${DISTRO}
+fi
+
+if [ ! -d $TMP ]; then
+  mkdir -p $TMP # location to build the source
+fi
+rm -rf $PKG
+mkdir -p $PKG
+
+cd $TMP
+rm -rf iputils-$VERSION
+tar xjvf $CWD/iputils-$VERSION.tar.bz2 || exit 1
+cd iputils-$VERSION
+chown -R root:root .
+make || exit 1
+( cd doc ; make man )
+strip arping clockdiff ping ping6 rarpd rdisc tracepath tracepath6 traceroute6
+mkdir -p $PKG/sbin
+cat arping > $PKG/sbin/arping
+chmod 755 $PKG/sbin/arping
+mkdir -p $PKG/usr/sbin
+cat clockdiff > $PKG/usr/sbin/clockdiff
+chmod 755 $PKG/usr/sbin/clockdiff
+mkdir -p $PKG/bin
+cat ping > $PKG/bin/ping
+cat ping6 > $PKG/bin/ping6
+chmod 4711 $PKG/bin/ping $PKG/bin/ping6
+cat rarpd > $PKG/usr/sbin/rarpd
+cat rdisc > $PKG/usr/sbin/rdisc
+chmod 755 $PKG/usr/sbin/rarpd $PKG/usr/sbin/rdisc
+mkdir -p $PKG/usr/bin
+cat tracepath > $PKG/usr/bin/tracepath
+cat tracepath6 > $PKG/usr/bin/tracepath6
+cat traceroute6 > $PKG/usr/bin/traceroute6
+chmod 755 $PKG/usr/bin/tracepath*
+chmod 4711 $PKG/usr/bin/traceroute6
+mkdir -p $PKG/usr/man/man8
+( cd doc
+  for file in arping clockdiff ping rarpd rdisc tracepath traceroute6 ; do
+    cat $file.8 | gzip -9c > $PKG/usr/man/man8/$file.8.gz
+  done
+  cd $PKG/usr/man/man8
+  ln -sf ping.8.gz ping6.8.gz
+  ln -sf tracepath.8.gz tracepath6.8.gz
+)
+mkdir -p $PKG/usr/doc/iputils-$VERSION
+cp -a \
+  RELNOTES \
+  $PKG/usr/doc/iputils-$VERSION
+chmod 644 $PKG/usr/doc/iputils-$VERSION/*
+
+# Finish up the package:
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+
+# Build the package:
+cd $PKG
+makepkg -l y -c n $TMP/iputils-$VERSION-$PKGARCH-$BUILD.tgz
+

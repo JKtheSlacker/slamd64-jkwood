@@ -1,0 +1,37 @@
+#!/bin/sh
+PKGNAM=librsvg
+VERSION=2.16.1
+BUILD=1
+
+. /etc/pkghelpers
+pkghelpers_env
+
+rm -rf $PKG
+mkdir -p $PKG
+cd /tmp
+rm -rf librsvg-$VERSION
+tar xjvf $CWD/librsvg-$VERSION.tar.bz2
+cd librsvg-$VERSION
+chown -R root:root .
+find . -perm 777 -exec chmod 755 {} \;
+find . -perm 664 -exec chmod 644 {} \;
+CFLAGS="$SLKCFLAGS" \
+./configure \
+  --prefix=/usr \
+	--libdir=/usr/lib$LIBSUFFIX \
+  --sysconfdir=/etc \
+  --localstatedir=/var/lib \
+  --enable-static=no \
+  --build=$ARCH-$DISTRO-linux
+make -j10
+make install DESTDIR=$PKG
+mkdir -p $PKG/usr/doc/librsvg-$VERSION
+cp -a \
+  AUTHORS COPYING* NEWS README TODO \
+  $PKG/usr/doc/librsvg-$VERSION
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+
+cd $PKG
+pkghelpers_fixup
+pkghelpers_makepkg

@@ -1,0 +1,39 @@
+#!/bin/sh
+PKGNAM=whois
+VERSION=4.7.21
+BUILD=1
+
+. /etc/pkghelpers
+pkghelpers_env
+rm -rf $PKG
+mkdir -p $PKG
+cd $TMP
+rm -rf whois-$VERSION
+tar xzvf $CWD/whois_$VERSION.tar.gz
+cd whois-$VERSION
+chown -R root:root .
+make || exit
+mkdir -p $PKG/usr/bin
+cat whois > $PKG/usr/bin/whois
+chmod 755 $PKG/usr/bin/whois
+( cd po
+  make
+  for n in *.mo ; do \
+    l=`basename $n .mo`; \
+    /usr/bin/install -c -m 755 -d $PKG/usr/share/locale/$l; \
+    /usr/bin/install -c -m 755 -d $PKG/usr/share/locale/$l/LC_MESSAGES; \
+    /usr/bin/install -c -m 644 $n $PKG/usr/share/locale/$l/LC_MESSAGES/whois.mo; \
+  done
+)
+mkdir -p $PKG/usr/man/man1
+cat whois.1 | gzip -9c > $PKG/usr/man/man1/whois.1.gz
+mkdir -p $PKG/usr/doc/whois-$VERSION
+cp -a \
+  COPYING README \
+  $PKG/usr/doc/whois-$VERSION
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+
+cd $PKG
+pkghelpers_fixup
+pkghelpers_makepkg

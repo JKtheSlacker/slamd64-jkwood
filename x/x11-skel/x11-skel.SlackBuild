@@ -1,0 +1,60 @@
+#!/bin/sh
+# Set initial variables:
+CWD=`pwd`
+if [ "$TMP" = "" ]; then
+  TMP=/tmp
+fi
+PKG=$TMP/package-x11-skel
+
+VERSION=7.1
+ARCH=noarch
+BUILD=2
+DISTRO=slamd64
+
+if [ $DISTRO = slackware ]; then
+	PKGARCH=$ARCH
+else
+	PKGARCH=${ARCH}_${DISTRO}
+fi
+
+if [ $DISTRO = slamd64 ]; then
+	LIBSUFFIX=64
+else
+	LIBSUFFIX=
+fi
+
+if [ ! -d $TMP ]; then
+  mkdir -p $TMP # location to build the source
+fi
+rm -rf $PKG
+mkdir -p $PKG
+
+cd $PKG
+mkdir -p etc/xdg
+mkdir -p etc/X11
+mkdir -p usr/lib$LIBSUFFIX/X11
+mkdir -p usr/bin
+mkdir -p var/log/setup
+mkdir -p usr/man/man1
+cp -a $CWD/scripts/xorg.conf-fbdev etc/X11
+cp -a $CWD/scripts/xorg.conf-vesa etc/X11
+chown -R root:root etc/X11
+find etc/X11 -type f -exec chmod 644 {} \;
+cp -a $CWD/scripts/xorgsetup usr/bin
+cp -a $CWD/scripts/xwmconfig usr/bin
+chown root:root usr/bin/*
+sed -i "s#lib/#lib$LIBSUFFIX/#g" usr/bin/*
+chmod 755 usr/bin/*
+cp -a $CWD/scripts/setup.xwmconfig var/log/setup
+chown root:root var/log/setup/setup.xwmconfig
+chmod 755 var/log/setup/setup.xwmconfig
+cat $CWD/manpages/xwmconfig.1 | gzip -9c > $PKG/usr/man/man1/xwmconfig.1.gz
+
+mkdir -p install
+zcat $CWD/doinst.sh.gz | sed -e "s#lib#lib$LIBSUFFIX#g" > $PKG/install/doinst.sh
+cat $CWD/slack-desc > $PKG/install/slack-desc
+
+# Build the package:
+cd $PKG
+makepkg -l y -c n $TMP/x11-skel-$VERSION-$PKGARCH-$BUILD.tgz
+

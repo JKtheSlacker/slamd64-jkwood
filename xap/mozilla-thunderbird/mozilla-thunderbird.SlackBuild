@@ -1,0 +1,106 @@
+#!/bin/sh
+CWD=`pwd`
+TMP=${TMP:-/tmp}
+PKG=$TMP/package-mozilla-thunderbird
+
+VERSION=2.0.0.6
+ARCH=${ARCH:-x86_64}
+BUILD=${BUILD:-2}
+
+if [ "$ARCH" = "i386" ]; then
+  SLKCFLAGS="-O2 -march=i386 -mcpu=i686"
+elif [ "$ARCH" = "i486" ]; then
+  SLKCFLAGS="-O2 -march=i486 -mcpu=i686"
+elif [ "$ARCH" = "s390" ]; then
+  SLKCFLAGS="-O2"
+elif [ "$ARCH" = "x86_64" ]; then
+  SLKCFLAGS="-O2 -fPIC"
+fi
+
+if [ ! -d $TMP ]; then
+  mkdir -p $TMP
+fi
+rm -rf $PKG
+mkdir -p $PKG/usr/lib64
+
+cd $TMP
+rm -rf mozilla
+tar jxvf $CWD/thunderbird-$VERSION-source.tar.bz2
+
+cd mozilla
+chown -R root:root .
+find . -perm 664 -exec chmod 644 {} \;
+find . -perm 775 -exec chmod 755 {} \;
+
+zcat $CWD/visibility-mozconfig.gz > .mozconfig
+
+export MOZILLA_OFFICIAL="1" &&
+export BUILD_OFFICIAL="1" &&
+export MOZ_CO_PROJECT="mail" &&
+./configure --prefix=/usr \
+	--libdir=/usr/lib64 \
+	--enable-official-branding \
+	--with-default-mozilla-five-home=/usr/lib64/thunderbird-$VERSION \
+	--with-user-appdir=.thunderbird \
+	--with-system-zlib \
+	--with-system-png \
+	--enable-application=mail \
+	--enable-default-toolkit=gtk2 \
+	--enable-crypto \
+	--enable-xft \
+	--enable-xinerama \
+	--enable-optimize \
+	--enable-reorder \
+	--enable-strip \
+	--enable-cpp-rtti \
+	--enable-single-profile \
+	--disable-freetype2 \
+	--disable-accessibility \
+	--disable-debug \
+	--disable-tests \
+	--disable-logging \
+	--disable-pedantic \
+	--disable-installer \
+	--enable-ldap \
+	--disable-profilesharing \
+	--disable-gnomeui
+
+make -j10 || exit 1
+# Make some more extesnsions
+#make -j6 -C mail/extensions/offline || exit 1
+
+make install DESTDIR=$PKG
+
+# Install some more extensions
+#make -C mail/extensions/offline install DESTDIR=$PKG
+
+( cd $PKG/usr/lib64/thunderbird-$VERSION
+echo "Applying firefox patch"
+  zcat $CWD/mozilla-thunderbird-firefox.diff.gz | patch -p0 --verbose || exit 1
+) || exit 1
+
+mkdir -p $PKG/usr/share/applications
+cat $CWD/mozilla-thunderbird.desktop > $PKG/usr/share/applications/mozilla-thunderbird.desktop
+mkdir -p $PKG/usr/share/pixmaps
+cat $CWD/thunderbird.png > $PKG/usr/share/pixmaps/thunderbird.png
+
+# These files/directories are usually created if Thunderbird is run as root, which on many
+# systems might (and possibly should) be never.  Therefore, if we don't see them we'll
+# put stubs in place to prevent startup errors.
+( cd $PKG/usr/lib64/thunderbird-$VERSION
+  if [ -d chrome ]; then
+    if [ ! -r chrome/app-chrome.manifest ]; then
+      echo > chrome/app-chrome.manifest
+    fi
+  fi
+  if [ ! -d updates ]; then
+    mkdir -p updates/0
+  fi
+)
+
+mkdir $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+
+cd $PKG
+find -name "*.rej" | xargs rm
+makepkg -l y -c n $TMP/mozilla-thunderbird-$VERSION-${ARCH}_slamd64-$BUILD.tgz

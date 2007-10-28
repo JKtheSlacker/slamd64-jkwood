@@ -1,0 +1,48 @@
+#!/bin/sh
+PKGNAM=floppy
+VERSION=5.4
+BUILD=3
+
+. /etc/pkghelpers
+pkghelpers_env
+
+rm -rf $PKG /tmp/{fdutils*,mtools*}
+mkdir -p $PKG/usr/bin
+
+cd /tmp
+tar xzvf $CWD/fdutils-5.4.tar.gz
+cd fdutils-5.4
+zcat $CWD/fdutils-5.4-20020222.diff.gz | patch -p1 --verbose --backup --suffix=.orig
+zcat $CWD/fdutils.mediaprm.diff.gz | patch -p1 --verbose --backup --suffix=.orig
+CFLAGS="-O -fPIC" ./configure $ARCH-$DISTRO-linux --prefix=/usr --sysconfdir=/etc
+make install prefix=$PKG/usr
+mkdir -p $PKG/usr/doc/fdutils-5.4
+cp -a COPYING CREDITS Changelog INSTALL doc/FAQ.html doc/README \
+  $PKG/usr/doc/fdutils-5.4
+chown root:root $PKG/usr/doc/fdutils-5.4/*
+chmod 644 $PKG/usr/doc/fdutils-5.4/*
+
+cd /tmp
+tar xzvf $CWD/mtools-3.9.8.tar.gz
+cd mtools-3.9.8
+CFLAGS="-O2 -fPIC" ./configure $ARCH-$DISTRO-linux --prefix=/usr --sysconfdir=/etc --libdir=/usr/lib64
+zcat $CWD/mtools-Make.diff.gz | patch -p0 --verbose --backup || exit 1
+make -j12
+make install prefix=$PKG/usr
+mkdir -p $PKG/usr/doc/mtools-3.9.8
+mkdir -p $PKG/etc
+cat $CWD/mtools.conf > $PKG/etc/mtools.conf
+cp -a COPYING Changelog INSTALL README Release.notes TODO \
+  $PKG/usr/doc/mtools-3.9.8
+chown root:root $PKG/usr/doc/mtools-3.9.8/*
+chmod 644 $PKG/usr/doc/mtools-3.9.8/*
+# These are obsolete and/or cruft:
+rm -f $PKG/usr/bin/MAKEFLOPPIES $PKG/usr/bin/lz %PKG/usr/bin/mcheck \
+	$PKG/usr/bin/mcomp $PKG/usr/bin/mxtar $PKG/usr/bin/tgz \
+	$PKG/usr/bin/uz $PKG/usr/man/man1/makefloppies.1
+
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+cd $PKG
+pkghelpers_fixup
+pkghelpers_makepkg

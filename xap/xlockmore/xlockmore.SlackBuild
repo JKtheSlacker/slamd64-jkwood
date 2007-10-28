@@ -1,0 +1,103 @@
+#!/bin/sh
+# Set initial variables:
+CWD=`pwd`
+if [ "$TMP" = "" ]; then
+  TMP=/tmp
+fi
+PKG=$TMP/package-xlockmore
+
+VERSION=5.23
+ARCH=${ARCH:-x86_64}
+BUILD=1
+DISTRO=${DISTRO:-slamd64}
+
+if [ $DISTRO = slackware ]; then
+	PKGARCH=$ARCH
+else
+	PKGARCH=${ARCH}_${DISTRO}
+fi
+
+if [ "$ARCH" = "i386" ]; then
+  SLKCFLAGS="-O2 -march=i386 -mcpu=i686"
+elif [ "$ARCH" = "i486" ]; then
+  SLKCFLAGS="-O2 -march=i486 -mtune=i686"
+elif [ "$ARCH" = "s390" ]; then
+  SLKCFLAGS="-O2"
+elif [ "$ARCH" = "x86_64" ]; then
+  SLKCFLAGS="-O2 -fPIC -lcrypt"
+fi
+
+if [ ! -d $TMP ]; then
+  mkdir -p $TMP # location to build the source
+fi
+rm -rf $PKG
+if [ ! -d $PKG ]; then
+  mkdir -p $PKG # place for the package to be built
+fi
+
+## Explode the package framework:
+#cd $PKG
+#tar xzvf $CWD/_xlockmore.tar.gz
+
+cd $TMP
+rm -rf xlockmore-$VERSION
+tar xjvf $CWD/xlockmore-$VERSION.tar.bz2
+cd xlockmore-$VERSION
+chown -R root:root .
+find . -perm 640 -exec chmod 644 {} \;
+zcat $CWD/xlockmore.bitmap.diff.gz | patch -p1 --verbose --backup --suffix=.orig || exit 1
+mkdir -p $PKG/usr/include/X11/bitmaps
+
+# Removed due to restrictions on redistribution
+#cp $CWD/l-bob.xbm $PKG/usr/include/X11/bitmaps
+#cp $CWD/s-bob.xbm $PKG/usr/include/X11/bitmaps
+
+cp $CWD/l-linux.xbm $PKG/usr/include/X11/bitmaps
+mkdir -p $PKG/usr/doc/xlockmore-$VERSION
+cp -a README $PKG/usr/doc/xlockmore-$VERSION/README
+cp -a docs/* $PKG/usr/doc/xlockmore-$VERSION
+cp -a $CWD/l-bob.README $PKG/usr/doc/xlockmore-$VERSION
+## Normal compile:
+#./configure --prefix=/usr --without-opengl --without-mesagl \
+#  --without-dtsaver --without-rplay --without-nas --disable-bomb
+# Use MesaGL/OpenGL:
+CFLAGS="$SLKCFLAGS" \
+CXXFLAGS="$SLKCFLAGS" \
+./configure \
+  --prefix=/usr \
+  --without-dtsaver \
+  --without-ttf \
+  --without-gtk \
+  --without-rplay \
+  --without-nas \
+  --disable-bomb \
+  --without-motif \
+  --without-esound \
+  --without-gtk \
+  $ARCH-$DISTRO-linux
+make
+cd xlock
+mkdir -p $PKG/etc/X11/app-defaults
+cat XLock.ad > $PKG/etc/X11/app-defaults/XLock
+mkdir -p $PKG/usr/bin
+cat xlock > $PKG/usr/bin/xlock
+chown root.shadow $PKG/usr/bin/xlock
+chmod 2751 $PKG/usr/bin/xlock
+mkdir -p $PKG/usr/man/man1
+cat xlock.man | gzip -9c > $PKG/usr/man/man1/xlock.1.gz
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+( cd $PKG
+  find . | xargs file | grep "executable" | grep ELF | cut -f 1 -d : | xargs strip --strip-unneeded 2> /dev/null
+  find . | xargs file | grep "shared object" | grep ELF | cut -f 1 -d : | xargs strip --strip-unneeded 2> /dev/null
+)
+
+# Build the package:
+cd $PKG
+makepkg -l y -c n $TMP/xlockmore-$VERSION-$PKGARCH-$BUILD.tgz
+
+# Clean up the extra stuff:
+if [ "$1" = "--cleanup" ]; then
+  rm -rf $TMP/xlockmore-$VERSION
+  rm -rf $PKG
+fi

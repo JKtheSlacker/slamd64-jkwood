@@ -1,0 +1,106 @@
+#!/bin/sh
+CWD=`pwd`
+TMP=${TMP:-/tmp}
+
+VERSION=2.3.4
+ARCH=${ARCH:-x86_64}
+BUILD=${BUILD:-1}
+DISTRO=${DISTRO:-slamd64}
+
+if [ $DISTRO = slackware ]; then
+	PKGARCH=$ARCH
+else
+	PKGARCH=${ARCH}_${DISTRO}
+fi
+
+if [ $DISTRO = slamd64 ]; then
+	LIBSUFFIX=${LIBSUFFIX:-64}
+fi
+
+if [ "$ARCH" = "i386" ]; then
+  SLKCFLAGS="-O2 -march=i386 -mcpu=i686"
+elif [ "$ARCH" = "i486" ]; then
+  SLKCFLAGS="-O2 -march=i486 -mtune=i686"
+elif [ "$ARCH" = "s390" ]; then
+  SLKCFLAGS="-O2"
+elif [ "$ARCH" = "x86_64" ]; then
+  SLKCFLAGS="-O2 -fPIC"
+fi
+
+PKG=$TMP/package-freetype
+rm -rf $PKG
+mkdir -p $PKG
+
+cd $TMP
+rm -rf freetype-$VERSION
+tar xjvf $CWD/freetype-$VERSION.tar.bz2 || exit 1
+cd freetype-$VERSION
+
+chown -R root:root .
+find . -perm 666 -exec chmod 644 {} \;
+find . -perm 664 -exec chmod 644 {} \;
+find . -perm 600 -exec chmod 644 {} \;
+find . -perm 444 -exec chmod 644 {} \;
+find . -perm 400 -exec chmod 644 {} \;
+find . -perm 440 -exec chmod 644 {} \;
+find . -perm 777 -exec chmod 755 {} \;
+find . -perm 775 -exec chmod 755 {} \;
+find . -perm 511 -exec chmod 755 {} \;
+find . -perm 711 -exec chmod 755 {} \;
+find . -perm 555 -exec chmod 755 {} \;
+
+# This breaks far too many things.  Freetype2 developers will have to get their
+# punishment on someone else's distribution.
+zcat $CWD/freetype.illadvisederror.diff.gz | patch -p1 --verbose || exit 1
+
+# The line below enables code patented by Apple, so don't uncomment it
+# unless you have a license to use the code and take all legal responsibility
+# for doing so.
+# Please see this web site for more details:
+#   http://www.freetype.org/patents.html
+#zcat $CWD/freetype.bytecode.interpreter.diff.gz | patch -p1 --verbose || exit 1
+
+# The line below enables code patented by Microsoft, so don't uncomment it
+# unless you have a license to use the code and take all legal responsibility
+# for doing so.
+# Please see this web site for more details:
+#   http://www.freetype.org/patents.html
+#zcat $CWD/freetype.subpixel.rendering.diff.gz | patch -p1 --verbose || exit 1
+
+chown -R root:root .
+CFLAGS="$SLKCFLAGS" make setup CFG="--prefix=/usr --libdir=/usr/lib$LIBSUFFIX $ARCH-$DISTRO-linux"
+make -j4 || exit 1
+make install DESTDIR=$PKG
+
+# This shouldn't be needed (apps should pick up -I/usr/include/freetype2 from
+# `freetype-config --cflags` while compiling), but it's so often reported as a bug that
+# I'll give in to the point.  Now that Freetype1 is pretty much gone having this link
+# shouldn't hurt anything.  Try not to rely on it, though.
+mkdir -p $PKG/usr/include
+( cd $PKG/usr/include
+  rm -rf freetype
+  ln -sf freetype2/freetype .
+)
+
+# Can't imagine a lot of use for this:
+rm -f $PKG/usr/lib$LIBSUFFIX/*.a
+
+( cd $PKG
+  find . | xargs file | grep "executable" | grep ELF | cut -f 1 -d : | xargs strip --strip-unneeded 2> /dev/null
+  find . | xargs file | grep "shared object" | grep ELF | cut -f 1 -d : | xargs strip --strip-unneeded 2> /dev/null
+)
+
+mkdir -p $PKG/usr/doc/freetype-$VERSION
+cp -a \
+  docs \
+  README \
+  $PKG/usr/doc/freetype-$VERSION
+# too much
+rm -rf $PKG/usr/doc/freetype-$VERSION/docs/reference
+
+mkdir $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+
+cd $PKG
+makepkg -l y -c n $TMP/freetype-$VERSION-$PKGARCH-$BUILD.tgz
+

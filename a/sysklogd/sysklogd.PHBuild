@@ -1,0 +1,73 @@
+#!/bin/sh
+# Set initial variables:
+PKGNAM=sysklogd
+VERSION=${VERSION:-1.4.1}
+BUILD=${BUILD:-2}
+
+. /etc/pkghelpers
+pkghelpers_env
+
+rm -rf $PKG
+mkdir -p $PKG
+
+# Explode the package framework:
+cd $PKG
+explodepkg $CWD/_$PKGNAM.tar.gz
+
+cd $TMP
+tar xzvf $CWD/$PKGNAM-$VERSION.tar.gz
+cd sysklogd-$VERSION
+
+if [ $DISTRO = slamd64 ]; then
+	rm module.h
+fi
+
+zcat $CWD/sysklogd_1.4.1-20.diff.gz | patch -p1 --verbose || exit 1
+#zcat $CWD/sysklogd-1.4.1-owl-syslogd-crunch_list.diff.gz | patch -p1 --verbose || exit 1
+
+# Make sure ownerships and permissions are sane:
+chown -R root:root .
+find . -perm 666 -exec chmod 644 {} \;
+find . -perm 664 -exec chmod 644 {} \;
+find . -perm 600 -exec chmod 644 {} \;
+find . -perm 444 -exec chmod 644 {} \;
+find . -perm 400 -exec chmod 644 {} \;
+find . -perm 440 -exec chmod 644 {} \;
+find . -perm 777 -exec chmod 755 {} \;
+find . -perm 775 -exec chmod 755 {} \;
+find . -perm 511 -exec chmod 755 {} \;
+find . -perm 711 -exec chmod 755 {} \;
+find . -perm 555 -exec chmod 755 {} \;
+
+make || exit 1
+make syslog_tst || exit 1
+
+# Install binaries:
+cat klogd > $PKG/usr/sbin/klogd
+cat syslog_tst > $PKG/usr/sbin/syslog_tst
+cat syslogd > $PKG/usr/sbin/syslogd
+
+# Install man pages:
+for page in klogd.8 sysklogd.8 ; do
+  cat $page > $PKG/usr/man/man8/$page
+done
+cat syslog.conf.5 > $PKG/usr/man/man5/syslog.conf.5
+
+# Add a documentation directory:
+mkdir -p $PKG/usr/doc/sysklogd-$VERSION
+cp -a ANNOUNCE CHANGES COPYING INSTALL MANIFEST NEWS README.1st \
+  README.linux $PKG/usr/doc/sysklogd-$VERSION
+
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+
+# Build the package:
+cd $PKG
+pkghelpers_fixup
+pkghelpers_makepkg
+
+# Clean up the extra stuff:
+if [ "$1" = "--cleanup" ]; then
+  rm -rf $TMP/$PKGNAM-$VERSION
+  rm -rf $PKG
+fi

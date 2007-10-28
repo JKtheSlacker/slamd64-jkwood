@@ -1,0 +1,39 @@
+#!/bin/sh
+# Set initial variables:
+
+PKGNAM=autoconf
+VERSION=2.61
+ARCH=noarch
+BUILD=1
+
+. /etc/pkghelpers
+pkghelpers_env
+
+rm -rf $PKG
+mkdir -p $PKG
+cd $TMP
+rm -rf autoconf-$VERSION
+tar xjvf $CWD/autoconf-$VERSION.tar.bz2
+cd autoconf-$VERSION
+chown -R root:root .
+find . -perm 444 -exec chmod 644 {} \;
+find . -perm 777 -exec chmod 755 {} \;
+find . -perm 666 -exec chmod 644 {} \;
+./configure \
+  --prefix=/usr \
+  --infodir=/usr/info \
+  --mandir=/usr/man
+make
+make install DESTDIR=$PKG
+rm -f $PKG/usr/info/dir
+mkdir -p $PKG/usr/doc/autoconf-$VERSION
+cp -a \
+  AUTHORS BUGS COPYING INSTALL NEWS README THANKS TODO \
+  $PKG/usr/doc/autoconf-$VERSION
+mkdir -p $PKG/install
+cat $CWD/doinst.sh > $PKG/install/doinst.sh
+cat $CWD/slack-desc > $PKG/install/slack-desc
+
+cd $PKG
+pkghelpers_fixup
+pkghelpers_makepkg

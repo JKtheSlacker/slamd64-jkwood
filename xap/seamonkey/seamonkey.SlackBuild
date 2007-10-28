@@ -1,0 +1,136 @@
+#!/bin/sh
+CWD=`pwd`
+TMP=${TMP:-/tmp}
+PKG=$TMP/package-seamonkey
+rm -rf $PKG
+mkdir -p $PKG/usr
+
+VERSION=${VERSION:-1.1.4}
+ARCH=${ARCH:-x86_64}
+BUILD=${BUILD:-1}
+
+cd $TMP
+tar xjvf $CWD/seamonkey-${VERSION}.source.tar.bz2
+cd mozilla
+
+# Make sure the perms/ownerships are sane:
+chown -R root:root .
+find . -perm 666 -exec chmod 644 {} \;
+find . -perm 664 -exec chmod 644 {} \;
+find . -perm 600 -exec chmod 644 {} \;
+find . -perm 444 -exec chmod 644 {} \;
+find . -perm 400 -exec chmod 644 {} \;
+find . -perm 440 -exec chmod 644 {} \;
+find . -perm 777 -exec chmod 755 {} \;
+find . -perm 775 -exec chmod 755 {} \;
+find . -perm 511 -exec chmod 755 {} \;
+find . -perm 711 -exec chmod 755 {} \;
+find . -perm 555 -exec chmod 755 {} \;
+
+# Add /usr/lib64/mozilla/plugins to MOZ_PLUGINS_PATH:
+zcat $CWD/seamonkey.moz_plugin_path.diff.gz | patch -p1 --verbose --backup --suffix=.orig || exit 1
+rm -f xpfe/bootstrap/mozilla.in.orig
+
+chown -R root:root .
+zcat $CWD/visibility-mozconfig.gz > .mozconfig
+BUILD_OFFICIAL=1 MOZILLA_OFFICIAL=1 \
+./configure --prefix=/usr \
+	--libdir=/usr/lib64 \
+  --enable-optimize=-O2 \
+  --disable-debug \
+  --with-default-mozilla-five-home=/usr/lib64/seamonkey-${VERSION} \
+  --enable-strip \
+  --disable-tests \
+  --enable-svg \
+  --enable-canvas \
+  --disable-short-wchar \
+  --enable-nspr-autoconf \
+  --disable-calendar \
+  --enable-extensions=default,irc \
+  --enable-crypto \
+  --disable-xprint \
+  --without-system-nspr \
+  --with-system-zlib \
+  --with-system-jpeg \
+  --with-system-png \
+  --with-system-mng \
+  --enable-application=suite \
+  --enable-xft \
+  $ARCH-$DISTRO-linux
+
+BUILD_OFFICIAL=1 MOZILLA_OFFICIAL=1 make -s export || exit 1
+BUILD_OFFICIAL=1 MOZILLA_OFFICIAL=1 make -s libs || exit 1
+BUILD_OFFICIAL=1 MOZILLA_OFFICIAL=1 DESTDIR=$PKG make install || exit 1
+
+# Install nss headers.
+mkdir -p $PKG/usr/include/seamonkey-${VERSION}/nss
+find security/nss/lib -name "*.h" -type f -exec cp -a {} $PKG/usr/include/seamonkey-${VERSION}/nss \;
+chown -R root:root $PKG/usr/include/seamonkey-${VERSION}/nss
+chmod 644 $PKG/usr/include/seamonkey-${VERSION}/nss/*
+
+# Link some libraries into /usr/lib64.  Unless this is done, some things (like gaim's
+# plugin for MSN) will be unable to load them, even if they linked with them
+# successfully.
+( cd $PKG/usr/lib64 && ( for somelib in libmozjs.so libnspr4.so libnss3.so libplc4.so libplds4.so libsmime3.so libsoftokn3.so libssl3.so ; do
+    # Link to it:
+    ln -sf seamonkey-${VERSION}/$somelib .
+  done )
+)
+
+# Compress and if needed symlink the man pages:
+if [ -d $PKG/usr/man ]; then
+  ( cd $PKG/usr/man
+    for manpagedir in $(find . -type d -name "man*") ; do
+      ( cd $manpagedir
+        for eachpage in $( find . -type l -maxdepth 1) ; do
+          ln -s $( readlink $eachpage ).gz $eachpage.gz
+          rm $eachpage
+        done
+        gzip -9 *.?
+      )
+    done
+  )
+fi
+
+( cd $PKG
+  find . | xargs file | grep ELF | cut -f 1 -d : | xargs strip --strip-unneeded
+)
+
+# This remains the standard plugin directory for all browsers.
+mkdir -p $PKG/usr/lib64/mozilla/plugins
+mkdir -p $PKG/usr/share/applications
+cp -a $CWD/*.desktop $PKG/usr/share/applications
+chown -R root:root $PKG/usr/share/applications
+chmod 644 $PKG/usr/share/applications/*
+mkdir -p $PKG/usr/share/pixmaps
+cp -a $CWD/*.png $PKG/usr/share/pixmaps
+chown -R root:root $PKG/usr/share/pixmaps
+chmod 644 $PKG/usr/share/pixmaps/*
+
+# Some software won't compile without this symlink:
+( cd $PKG/usr/lib64
+  if [ ! -e seamonkey ]; then
+    ln -sf seamonkey-${VERSION} seamonkey
+  fi
+)
+
+mkdir -p $PKG/usr/share/applications
+cp -a $CWD/*.desktop $PKG/usr/share/applications
+chown -R root:root $PKG/usr/share/applications
+chmod 644 $PKG/usr/share/applications/*
+mkdir -p $PKG/usr/share/pixmaps
+cp -a $CWD/*.png $PKG/usr/share/pixmaps
+chown -R root:root $PKG/usr/share/pixmaps
+chmod 644 $PKG/usr/share/pixmaps/*
+
+mkdir -p $PKG/usr/doc/seamonkey-$VERSION
+cp -a \
+  LEGAL LICENSE README.txt \
+  $PKG/usr/doc/seamonkey-$VERSION
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+zcat $CWD/doinst.sh.gz > $PKG/install/doinst.sh
+
+cd $TMP/package-seamonkey
+makepkg -l y -c n ../seamonkey-$VERSION-${ARCH}_slamd64-$BUILD.tgz
+

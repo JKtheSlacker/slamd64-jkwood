@@ -1,0 +1,62 @@
+#!/bin/sh
+# Set initial variables:
+PKGNAM=iptraf
+VERSION=${VERSION:-3.0.0}
+BUILD=${BUILD:-1}
+
+. /etc/pkghelpers
+pkghelpers_env
+
+cd $TMP
+rm -rf $PKG
+rm -rf iptraf-$VERSION
+tar xzvf $CWD/iptraf-$VERSION.tar.gz
+cd iptraf-$VERSION
+
+chown -R root:root .
+find . -perm 666 -exec chmod 644 {} \;
+find . -perm 664 -exec chmod 644 {} \;
+find . -perm 600 -exec chmod 644 {} \;
+find . -perm 444 -exec chmod 644 {} \;
+find . -perm 400 -exec chmod 644 {} \;
+find . -perm 440 -exec chmod 644 {} \;
+find . -perm 777 -exec chmod 755 {} \;
+find . -perm 775 -exec chmod 755 {} \;
+find . -perm 511 -exec chmod 755 {} \;
+find . -perm 711 -exec chmod 755 {} \;
+find . -perm 555 -exec chmod 755 {} \;
+
+zcat $CWD/iptraf_3.0.0-3.diff.gz | patch -p1 || exit 1
+zcat $CWD/iptraf.paths.diff.gz | patch -p1 || exit 1
+cd src
+make -j10 || exit 1
+mkdir -p $PKG/usr/sbin
+cp iptraf rawtime rvnamed $PKG/usr/sbin
+chmod 755 $PKG/usr/sbin/*
+mkdir -p $PKG/var/cache/iptraf
+mkdir -p $PKG//var/run/iptraf
+mkdir -p $PKG/var/log/iptraf
+mkdir -p $PKG/usr/doc/iptraf-$VERSION
+cd ..
+cp -a \
+  CHANGES Documentation FAQ INSTALL LICENSE README* RELEASE-NOTES \
+  $PKG/usr/doc/iptraf-$VERSION
+mkdir -p $PKG/usr/man/man8
+mv $PKG/usr/doc/iptraf-$VERSION/Documentation/iptraf.8 $PKG/usr/man/man8
+if [ -r $PKG/usr/doc/iptraf-$VERSION/Documentation/rawtime.8 ]; then
+  mv $PKG/usr/doc/iptraf-$VERSION/Documentation/rawtime.8 $PKG/usr/man/man8
+fi
+mv $PKG/usr/doc/iptraf-$VERSION/Documentation/rvnamed.8 $PKG/usr/man/man8
+
+# crud removal
+( cd $PKG/usr/doc/iptraf-$VERSION/Documentation
+  rm -rf manual.aux manual.dvi *.log manual.rtf manual.sgml manual.template .xvpics .log
+)
+
+rm -f $PKG/usr/doc/iptraf-$VERSION/Documentation/manual.template.gz
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+
+cd $TMP/package-iptraf
+pkghelpers_fixup
+pkghelpers_makepkg

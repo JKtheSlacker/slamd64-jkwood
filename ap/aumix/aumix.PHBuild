@@ -1,0 +1,38 @@
+#!/bin/sh
+PKGNAM=aumix
+VERSION=2.8
+BUILD=2
+
+. /etc/pkghelpers
+pkghelpers_env
+
+rm -rf $PKG
+mkdir -p $PKG
+
+cd /tmp
+rm -rf aumix-$VERSION
+tar xjvf $CWD/aumix-$VERSION.tar.bz2
+cd aumix-$VERSION
+zcat $CWD/aumix.alsa.diff.gz | patch -p1 --verbose --backup --suffix=.orig
+chown -R root.root .
+CFLAGS="$SLKCFLAGS" \
+./configure --prefix=/usr \
+            --without-gtk1
+make -j12 || exit 1
+make install DESTDIR=$PKG
+strip $PKG/usr/bin/*
+chown -R root:root $PKG/usr/bin
+mkdir -p $PKG/usr/doc/aumix-$VERSION
+cp -a \
+  ABOUT-NLS AUTHORS BUGS COPYING INSTALL NEWS README TODO \
+  $PKG/usr/doc/aumix-$VERSION
+# This is obsolete (besides being broken)
+rm -f $PKG/usr/bin/xaumix $PKG/usr/man/man1/xaumix.1
+# More fluff, doesn't deserve mainsteam placement
+mv $PKG/usr/bin/mute $PKG/usr/doc/aumix-$VERSION/mute.sh
+mkdir $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+
+cd $PKG
+pkghelpers_fixup
+pkghelpers_makepkg

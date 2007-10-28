@@ -1,0 +1,108 @@
+#!/bin/sh
+# Set initial variables:
+CWD=`pwd`
+if [ "$TMP" = "" ]; then
+  TMP=/tmp
+fi
+PKG=$TMP/package-cdrtools
+
+VERSION=2.01.01a23
+ZISOFSTOOLS=1.0.7
+ARCH=${ARCH:-x86_64}
+BUILD=${BUILD:-1}
+DISTRO=${DISTRO:-slamd64}
+
+if [ $DISTRO = slackware ]; then
+	PKGARCH=$ARCH
+else
+	PKGARCH=${ARCH}_${DISTRO}
+fi
+
+if [ ! -d $TMP ]; then
+  mkdir -p $TMP # location to build the source
+fi
+rm -rf $PKG
+mkdir -p $PKG/usr
+
+echo "+======================+"
+echo "| cdrtools-$VERSION |"
+echo "+======================+"
+cd $TMP
+rm -rf cdrtools-$(echo $VERSION | cut -f 1 -d a)
+tar xjvf $CWD/cdrtools-$VERSION.tar.bz2
+cd cdrtools-$(echo $VERSION | cut -f 1 -d a)
+chown -R root:root .
+find . -perm 775 -exec chmod 755 {} \;
+find . -perm 664 -exec chmod 644 {} \;
+zcat $CWD/cdrtools.ins_base.diff.gz | patch -p1 -E --backup --verbose || exit 1
+make -j4 || exit
+make install
+mkdir -p $PKG/usr/doc/cdrtools-$VERSION
+cp -a AN-* BUILD COMPILE COPYING INSTALL README* $PKG/usr/doc/cdrtools-$VERSION
+chown -R root:root $PKG/usr/doc/cdrtools-$VERSION/*
+find $PKG/usr/doc/cdrtools-$VERSION -type f -exec chmod 644 {} \;
+(
+   cd mkisofs
+   mkdir -p $PKG/usr/doc/cdrtools-$VERSION/mkisofs
+   cp -a COPYING ChangeLog README* TODO $PKG/usr/doc/cdrtools-$VERSION/mkisofs
+   chown root:root $PKG/usr/doc/cdrtools-$VERSION/mkisofs/*
+   chmod 644 $PKG/usr/doc/cdrtools-$VERSION/mkisofs/*
+)
+(
+   cd cdda2wav
+   mkdir -p $PKG/usr/doc/cdrtools-$VERSION/cdda2wav
+   cp -a FAQ Frontends GPL HOWTOUSE NEEDED OtherProgs README THANKS TODO \
+      Changelog $PKG/usr/doc/cdrtools-$VERSION/cdda2wav
+   chown root:root $PKG/usr/doc/cdrtools-$VERSION/cdda2wav/*
+   chmod 644 $PKG/usr/doc/cdrtools-$VERSION/cdda2wav/*
+)
+
+# These don't need to be in the package, IMHO.
+rm -rf $PKG/usr/lib $PKG/usr/include $PKG/usr/man/man5 $PKG/usr/man/man1/cdda2ogg.1
+
+# Fix permissions:
+cd $PKG
+find . -type d -exec chmod 755 {} \;
+chown root:root -R $PKG
+find $PKG/usr/man -type f -exec chmod 644 {} \;
+find $PKG/usr/man -type f -exec gzip -9 {} \;
+
+( cd $PKG/usr/bin ; ln -sf mkisofs mkhybrid )
+
+# Next big hole? ;)
+rm -r $PKG/usr/sbin
+rm -f $PKG/usr/doc/cdrtools-$VERSION/README.rscsi
+
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+
+# Add the mkzftree tool for zisofs:
+cd $TMP
+tar xjf $CWD/zisofs-tools-$ZISOFSTOOLS.tar.bz2
+cd zisofs-tools-$ZISOFSTOOLS
+chown -R root:root .
+find . -perm 775 -exec chmod 755 {} \;
+find . -perm 664 -exec chmod 644 {} \;
+./configure --prefix=/usr
+make
+cat mkzftree > $PKG/usr/bin/mkzftree
+chmod 755 $PKG/usr/bin/mkzftree
+cat mkzftree.1 | gzip -9c > $PKG/usr/man/man1/mkzftree.1.gz
+mkdir -p $PKG/usr/doc/zisofs-tools-$ZISOFSTOOLS
+cp -a \
+  CHANGES COPYING INSTALL README zisofs.magic \
+  $PKG/usr/doc/zisofs-tools-$ZISOFSTOOLS
+( cd $PKG
+  find . | xargs file | grep "executable" | grep ELF | cut -f 1 -d : | xargs strip --strip-unneeded 2> /dev/null
+  find . | xargs file | grep "shared object" | grep ELF | cut -f 1 -d : | xargs strip --strip-unneeded 2> /dev/null
+)
+
+# Build the package:
+cd $PKG
+makepkg -l y -c n $TMP/cdrtools-$VERSION-$PKGARCH-$BUILD.tgz
+
+# Clean up the extra stuff:
+if [ "$1" = "--cleanup" ]; then
+  rm -rf $TMP/cdrtools-$VERSION
+  rm -rf $PKG
+fi

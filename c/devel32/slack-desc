@@ -1,0 +1,11 @@
+devel32: devel32 (Files commonly needed for 32-bit development)
+devel32:
+devel32: This package contains several files commonly needed for
+devel32: 32-bit development.
+devel32:
+devel32: It also contains a shell script (/etc/profile.d/32dev.sh)
+devel32: that sets up your environment for 32-bit development. This
+devel32: should generally not be made executable, as it will interfere
+devel32: with normal usage, however can be useful to source from a
+devel32: terminal when you want to build something as 32-bits.
+devel32:

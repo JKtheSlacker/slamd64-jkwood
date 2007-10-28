@@ -1,0 +1,225 @@
+#!/bin/sh
+# Set initial variables:
+PKGNAM=yptools
+VERSION=2.9
+BUILD=2
+
+YPTOOLS=$VERSION
+YPBINDMT=1.19.1
+#YPMAKE=0.11
+YPSERV=2.18
+
+. /etc/pkghelpers
+pkghelpers_env
+
+rm -rf $PKG
+mkdir -p $PKG
+
+echo "+==============+"
+echo "| yp-tools-$YPTOOLS |"
+echo "+==============+"
+cd $TMP
+mkdir -p $PKG/etc
+# Add etc/nsswitch.conf-nis as a full NIS+ example config file:
+zcat $CWD/nsswitch.conf-nis.gz > $PKG/etc/nsswitch.conf-nis.new
+rm -rf yp-tools-$YPTOOLS
+tar xjvf $CWD/yp-tools-$YPTOOLS.tar.bz2
+cd yp-tools-$YPTOOLS
+echo ./configure --prefix=/usr --libdir=/usr/lib$LIBSUFFIX --disable-domainname $ARCH-$DISTRO-linux
+./configure --prefix=/usr --libdir=/usr/lib$LIBSUFFIX --disable-domainname $ARCH-$DISTRO-linux
+make clean
+./configure --prefix=/usr --libdir=/usr/lib$LIBSUFFIX --disable-domainname $ARCH-$DISTRO-linux
+make CFLAGS="$SLKCFLAGS" || exit 1
+mkdir -p $PKG/var/yp
+cat etc/nicknames > $PKG/var/yp/nicknames.new
+mkdir -p $PKG/usr/share/locale/de/LC_MESSAGES
+cat po/de.gmo > $PKG/usr/share/locale/de/LC_MESSAGES/yp-tools.mo
+cd src
+mkdir -p $PKG/usr/bin
+cat ypcat > $PKG/usr/bin/ypcat
+cat ypmatch > $PKG/usr/bin/ypmatch
+cat yppasswd > $PKG/usr/bin/yppasswd
+cat ypwhich > $PKG/usr/bin/ypwhich
+( cd $PKG/usr/bin
+ chmod 755 ypcat ypmatch yppasswd ypwhich )
+( cd $PKG/usr/bin
+ rm -rf ypchfn ypchsh
+ ln -sf yppasswd ypchfn
+ ln -sf yppasswd ypchsh )
+mkdir -p $PKG/usr/sbin
+cat yppoll > $PKG/usr/sbin/yppoll
+cat ypset > $PKG/usr/sbin/ypset
+( cd $PKG/usr/sbin
+ chmod 755 yppoll ypset )
+cd ../man
+mkdir -p $PKG/usr/man/man{1,5,8}
+cat nicknames.5 | gzip -9c > $PKG/usr/man/man5/nicknames.5.gz
+for file in *.1 ; do
+ cat $file | gzip -9c > $PKG/usr/man/man1/$file.gz
+done
+for file in *.8 ; do
+ cat $file | gzip -9c > $PKG/usr/man/man8/$file.gz
+done
+cd ..
+mkdir -p $PKG/usr/doc/yp-tools-$YPTOOLS
+cp -a ABOUT-NLS AUTHORS COPYING ChangeLog INSTALL NEWS README THANKS TODO \
+ $PKG/usr/doc/yp-tools-$YPTOOLS
+chown -R root.root $PKG/usr/doc/yp-tools-$YPTOOLS
+chmod 644 $PKG/usr/doc/yp-tools-$YPTOOLS/*
+
+echo "+================+"
+echo "| ypbind-mt-$YPBINDMT |"
+echo "+================+"
+cd $TMP
+rm -rf ypbind-mt-$YPBINDMT
+tar xjvf $CWD/ypbind-mt-$YPBINDMT.tar.bz2
+cd ypbind-mt-$YPBINDMT
+./configure --prefix=/usr --libdir=/usr/lib$LIBSUFFIX \
+      $ARCH-$DISTRO-linux
+# Hard to believe how sloppy these tarballs are.This is why I got complaints
+# that YP didn't work but it was "fixed with a simple recompile."
+make clean
+./configure --prefix=/usr --libdir=/usr/lib$LIBSUFFIX \
+     $ARCH-$DISTRO-linux
+make || exit 1
+mkdir -p $PKG/etc
+cat etc/yp.conf > $PKG/etc/yp.conf.new
+cat src/ypbind > $PKG/usr/sbin/ypbind
+chmod 755 $PKG/usr/sbin/ypbind
+cat man/yp.conf.5 | gzip -9c > $PKG/usr/man/man5/yp.conf.5.gz
+cat man/ypbind.8 | gzip -9c > $PKG/usr/man/man8/ypbind.8.gz
+mkdir -p $PKG/usr/share/locale/de/LC_MESSAGES
+cat po/de.gmo > $PKG/usr/share/locale/de/LC_MESSAGES/ypbind-mt.mo
+mkdir -p $PKG/usr/doc/ypbind-mt-$YPBINDMT
+cp -a ABOUT-NLS AUTHORS COPYING ChangeLog INSTALL NEWS README THANKS TODO \
+  $PKG/usr/doc/ypbind-mt-$YPBINDMT
+chown root.root $PKG/usr/doc/ypbind-mt-$YPBINDMT/*
+chmod 644 $PKG/usr/doc/ypbind-mt-$YPBINDMT/*
+
+# OBSOLETE (I don't see anyone packaging this anymore...  inform me if it still
+# works and you use and care about it)
+#echo "+=============+"
+#echo "| ypmake-$YPMAKE |"
+#echo "+=============+"
+#cd $TMP
+#rm -rf ypmake-$YPMAKE
+#tar xjvf $CWD/ypmake-$YPMAKE.tar.bz2
+#cd ypmake-$YPMAKE
+#./configure
+## I'm just not taking chances with the cleanliness of these sources anymore...
+#make clean
+#./configure
+#make
+#cat ypmake > $PKG/usr/sbin/ypmake
+#chmod 755 $PKG/usr/sbin/ypmake
+#mkdir -p $PKG/usr/lib/yp/ypmake
+#install -o root -g root -m 644 aliases arrays automount config ethers group \
+ #gshadow hosts netgroup netid networks passwd protocols publickey rpc \
+ #services shadow ypservers $PKG/usr/lib/yp/ypmake
+#cat ypmake.conf.sample > $PKG/var/yp/ypmake.conf.new
+#cat ypmake.conf.man | gzip -9c > $PKG/usr/man/man5/ypmake.conf.5.gz
+#cat ypmake.man | gzip -9c > $PKG/usr/man/man8/ypmake.8.gz
+#mkdir -p $PKG/usr/doc/ypmake-$YPMAKE
+#cp -a CHANGES README TODO $PKG/usr/doc/ypmake-$YPMAKE
+#chmod 644 $PKG/usr/doc/ypmake-$YPMAKE/*
+#chown root.root $PKG/usr/doc/ypmake-$YPMAKE/*
+
+echo "+============+"
+echo "| ypserv-$YPSERV |"
+echo "+============+"
+cd $TMP
+rm -rf ypserv-$YPSERV
+tar xjvf $CWD/ypserv-$YPSERV.tar.bz2
+cd ypserv-$YPSERV
+# --with-ndbm=yes 
+# Support for this was discontinued upstream
+# --enable-tcp-wrapper
+./configure --libdir=/usr/local/lib$LIBSUFFIX \
+      --enable-fqdn \
+      --enable-yppasswd \
+      $ARCH-$DISTRO-linux
+make clean
+./configure --libdir=/usr/local/lib$LIBSUFFIX \
+      --enable-fqdn \
+      --enable-yppasswd \
+      $ARCH-$DISTRO-linux
+make || exit 1
+mkdir -p $PKG/usr/lib$LIBSUFFIX/yp
+( cd scripts
+ for file in create_printcap match_printcap pwupdate ypinit ypxfr_1perday ypxfr_1perhour ypxfr_2perday ; do
+  cat $file > $PKG/usr/lib$LIBSUFFIX/yp/$file
+  chmod 755 $PKG/usr/lib$LIBSUFFIX/yp/$file
+ done 
+ for file in pwupdate.8 ypinit.8 ; do
+  gzip -9c $file > $PKG/usr/man/man8/$file.gz
+ done )
+for FILE in makedbm mknetid revnetgroup yphelper ypxfr ; do
+ ( cd $FILE
+  cat $FILE > $PKG/usr/lib$LIBSUFFIX/yp/$FILE
+  chmod 755 $PKG/usr/lib$LIBSUFFIX/yp/$FILE
+  cat ${FILE}.8 | gzip -9c > $PKG/usr/man/man8/${FILE}.8.gz )
+done
+cat rpc.ypxfrd/ypxfrd.8 | gzip -9c > $PKG/usr/man/man8/ypxfrd.8.gz
+for FILE in ypserv rpc.yppasswdd rpc.ypxfrd yppush ; do
+ ( cd $FILE
+  cat $FILE > $PKG/usr/sbin/$FILE
+  chmod 755 $PKG/usr/sbin/$FILE
+  cat ${FILE}.8 | gzip -9c > $PKG/usr/man/man8/${FILE}.8.gz )
+done
+cat rpc.yppasswdd/yppasswdd.8 | gzip -9c > $PKG/usr/man/man8/yppasswdd.8.gz
+cat scripts/ypMakefile > $PKG/var/yp/Makefile.new
+cat etc/securenets > $PKG/var/yp/securenets.new
+echo "# This file is part of the YP server package -- see 'man netgroup'" \
+> $PKG/etc/netgroup.new
+cat etc/netgroup >> $PKG/etc/netgroup.new
+cat etc/netgroup.5 | gzip -9c > $PKG/usr/man/man5/netgroup.5.gz
+cat etc/ypserv.conf.5 | gzip -9c > $PKG/usr/man/man5/ypserv.conf.5.gz
+mkdir -p $PKG/usr/include/rpcsvc
+cat lib/ypxfrd.x > $PKG/usr/include/rpcsvc/ypxfrd.x
+mkdir -p $PKG/usr/doc/ypserv-$YPSERV
+cp -a \
+ AUTHORS COPYING ChangeLog INSTALL NEWS README THANKS TODO \
+ $PKG/usr/doc/ypserv-$YPSERV
+chmod 644 $PKG/usr/doc/ypserv-$YPSERV/*
+chown root.root $PKG/usr/doc/ypserv-$YPSERV/*
+
+mkdir -p $PKG/etc/rc.d
+zcat $CWD/rc.yp.gz > $PKG/etc/rc.d/rc.yp.new
+chmod 755 $PKG/etc/rc.d/rc.yp.new
+
+( cd $PKG
+ find . | xargs file | grep "executable" | grep ELF | cut -f 1 -d : | xargs strip --strip-unneeded 2> /dev/null
+ find . | xargs file | grep "shared object" | grep ELF | cut -f 1 -d : | xargs strip --strip-unneeded 2> /dev/null
+)
+
+# install script and package description:
+mkdir -p $PKG/install
+cat << EOF > $PKG/install/doinst.sh
+config() {
+ NEW="\$1"
+ OLD="\`dirname \$NEW\`/\`basename \$NEW .new\`"
+ # If there's no config file by that name, mv it over:
+ if [ ! -r \$OLD ]; then
+  mv \$NEW \$OLD
+ elif [ "\`cat \$OLD | md5sum\`" = "\`cat \$NEW | md5sum\`" ]; then # toss the redundant copy
+  rm \$NEW
+ fi
+ # Otherwise, we leave the .new copy for the admin to consider...
+}
+
+config etc/nsswitch.conf-nis.new
+config etc/netgroup.new
+config etc/yp.conf.new
+config etc/rc.d/rc.yp.new
+config var/yp/nicknames.new
+config var/yp/Makefile.new
+config var/yp/securenets.new
+rm -f etc/nsswitch.conf.new etc/nsswitch.conf-nis.new etc/netgroup.new etc/yp.conf.new var/yp/nicknames.new var/yp/Makefile.new var/yp/securenets.new
+EOF
+
+cat $CWD/slack-desc > $PKG/install/slack-desc
+
+# Build the package:
+cd $PKG
+pkghelpers_fixup
+pkghelpers_makepkg

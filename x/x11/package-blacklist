@@ -1,0 +1,22 @@
+# Enter packages to skip (perhaps because they aren't used on
+# this platform) below.  Just the package name -- no version
+# number is needed.
+
+# MacOS related packages:
+applewmproto
+windowswmproto
+libAppleWM
+libWindowsWM
+
+# Sun video cards:
+xf86-video-sunbw2
+xf86-video-suncg14
+xf86-video-suncg3
+xf86-video-suncg6
+xf86-video-sunffb
+xf86-video-sunleo
+xf86-video-suntcx
+
+# Obsolete packages:
+xkbdata
+

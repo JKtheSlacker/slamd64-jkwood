@@ -1,0 +1,86 @@
+#!/bin/sh
+# Set initial variables:
+CWD=$(pwd)
+TMP=${TMP:-/tmp}
+PKG=$TMP/package-xaw3d
+
+VERSION=${VERSION:-1.5}
+ARCH=${ARCH:-x86_64}
+BUILD=${BUILD:-1}
+DISTRO=${DISTRO:-slamd64}
+
+if [ $DISTRO = slackware ]; then
+	PKGARCH=$ARCH
+else
+	PKGARCH=${ARCH}_${DISTRO}
+fi
+
+if [ $DISTRO = slamd64 ]; then
+	LIBSUFFIX=64
+else
+	LIBSUFFIX=
+fi
+
+if [ ! -d $TMP ]; then
+  mkdir -p $TMP # location to build the source
+fi
+rm -rf $PKG
+
+cd $TMP
+rm -rf $TMP/xc
+tar xzvf $CWD/Xaw3d-$VERSION.tar.gz
+( cd xc ; zcat $CWD/Xaw3d-$VERSION.diff.gz | patch -p1 --verbose --backup --suffix=.orig )
+cd xc/lib/Xaw3d
+
+ln -s . X11
+ln -s . Xaw3d
+
+# Force Xaw3d to link to its local headers, not non-existant system ones!
+sed -i -e 's/<X11\/Xaw3d\/\(.*\)>/\"X11\/Xaw3d\/\1\"/g' *.h
+sed -i -e 's/<X11\/Xaw3d\/\(.*\)>/\"X11\/Xaw3d\/\1\"/g' *.c
+
+xmkmf
+make || exit 1
+
+# Restore the headers so they can be installed and used safely by other applications
+sed -i -e 's/\"X11\/Xaw3d\/\(.*\)\"/<X11\/Xaw3d\/\1>/g' *.h
+sed -i -e 's/\"X11\/Xaw3d\/\(.*\)\"/<X11\/Xaw3d\/\1>/g' *.c
+
+strip --strip-unneeded libXaw3d.so.8.0
+mkdir -p $PKG/usr/lib$LIBSUFFIX
+cat libXaw3d.so.8.0 > $PKG/usr/lib$LIBSUFFIX/libXaw3d.so.8.0
+chmod 755 $PKG/usr/lib$LIBSUFFIX/libXaw3d.so.8.0
+# Make compat symlinks:
+( cd $PKG/usr/lib$LIBSUFFIX
+  ln -sf libXaw3d.so.8.0 libXaw3d.so.8
+  ln -sf libXaw3d.so.8 libXaw3d.so
+  ln -sf libXaw3d.so.8 libXaw3d.so.7
+  ln -sf libXaw3d.so.7 libXaw3d.so.6
+)
+mkdir -p $PKG/usr/doc/Xaw3d-$VERSION
+cp -a README.XAW3D $PKG/usr/doc/Xaw3d-$VERSION
+chown root:root $PKG/usr/doc/Xaw3d-$VERSION/README.XAW3D
+chmod 644 $PKG/usr/doc/Xaw3d-$VERSION/README.XAW3D
+mkdir -p $PKG/usr/include/X11/Xaw3d
+for header in AllWidgets.h AsciiSink.h AsciiSinkP.h AsciiSrc.h AsciiSrcP.h \
+AsciiText.h AsciiTextP.h Box.h BoxP.h Cardinals.h Command.h CommandP.h \
+Dialog.h DialogP.h Form.h FormP.h Grip.h GripP.h Label.h LabelP.h Layout.h \
+LayoutP.h List.h ListP.h MenuButton.h MenuButtoP.h MultiSrc.h MultiSrcP.h \
+MultiSink.h MultiSinkP.h Paned.h PanedP.h Panner.h PannerP.h Porthole.h \
+PortholeP.h Repeater.h RepeaterP.h Reports.h Scrollbar.h ScrollbarP.h \
+Simple.h SimpleP.h SimpleMenu.h SimpleMenP.h Sme.h SmeP.h SmeBSB.h SmeBSBP.h \
+SmeLine.h SmeLineP.h SmeThreeD.h SmeThreeDP.h StripChart.h StripCharP.h \
+Template.c Template.h TemplateP.h Text.h TextP.h TextSink.h TextSinkP.h \
+TextSrc.h TextSrcP.h ThreeD.h ThreeDP.h Toggle.h ToggleP.h Tree.h \
+TreeP.h VendorEP.h Viewport.h ViewportP.h XawImP.h XawInit.h ; do
+ cp -a $header $PKG/usr/include/X11/Xaw3d/$header
+ chown root:root $PKG/usr/include/X11/Xaw3d/$header
+ chmod 644 $PKG/usr/include/X11/Xaw3d/$header
+done
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+
+# Build the package:
+cd $PKG
+makepkg -l y -c y $TMP/xaw3d-$VERSION-$PKGARCH-$BUILD.tgz
+

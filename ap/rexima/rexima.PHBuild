@@ -1,0 +1,36 @@
+#!/bin/sh
+# Set initial variables:
+PKGNAM=rexima
+VERSION=1.4
+BUILD=2
+
+. /etc/pkghelpers
+pkghelpers_env
+
+rm -rf $PKG
+mkdir -p $PKG
+
+cd $TMP
+rm -rf rexima-$VERSION
+tar xzvf $CWD/rexima-$VERSION.tar.gz
+cd rexima-$VERSION
+chown -R root.root .
+make -j12 || exit 1
+strip rexima
+mkdir -p $PKG/usr/bin
+cat rexima > $PKG/usr/bin/rexima
+chmod 755 $PKG/usr/bin/rexima
+mkdir -p $PKG/usr/man/man1
+cat rexima.1 | gzip -9c > $PKG/usr/man/man1/rexima.1.gz
+mkdir -p $PKG/usr/doc/rexima-$VERSION
+cp -a \
+  COPYING README ChangeLog NEWS \
+  $PKG/usr/doc/rexima-$VERSION
+chmod 644 $PKG/usr/doc/rexima-$VERSION/*
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+
+# Build the package:
+cd $PKG
+pkghelpers_fixup
+pkghelpers_makepkg

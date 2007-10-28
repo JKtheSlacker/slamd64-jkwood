@@ -1,0 +1,64 @@
+#!/bin/sh
+CWD=`pwd`
+TMP=/tmp
+PKG=$TMP/package-pango32
+rm -rf $PKG
+mkdir -p $PKG/usr
+
+VERSION=1.16.4
+ARCH=${ARCH:-x86_64}
+BUILD=1
+DISTRO=${DISTRO:-slamd64}
+
+if [ $DISTRO = slackware ]; then
+	PKGARCH=$ARCH
+else
+	PKGARCH=${ARCH}_${DISTRO}
+fi
+
+if [ "$ARCH" = "i386" ]; then
+  SLKCFLAGS="-O2 -march=i386 -mcpu=i686"
+elif [ "$ARCH" = "i486" ]; then
+  SLKCFLAGS="-O2 -march=i486 -mtune=i686"
+elif [ "$ARCH" = "s390" ]; then
+  SLKCFLAGS="-O2"
+elif [ "$ARCH" = "x86_64" ]; then
+  SLKCFLAGS="-O2 -fPIC"
+fi
+
+cd $TMP
+rm -rf pango-$VERSION
+tar xjvf $CWD/pango-$VERSION.tar.bz2
+cd pango-$VERSION
+chown -R root:root .
+find . -perm 664 -exec chmod 644 {} \;
+
+(
+. /etc/profile.d/32dev.sh
+CFLAGS="$SLKCFLAGS" \
+./configure --prefix=/usr \
+						--libdir=/usr/lib \
+            --sysconfdir=/etc
+						--i686-$DISTRO-linux
+make -j9 || exit 1
+make install DESTDIR=$PKG
+# Spamming your root partition:
+make install
+)
+
+EXTRAETC=
+mkdir -p $PKG/etc/pango$EXTRAETC
+cp -a /etc/pango$EXTRAETC/* $PKG/etc/pango$EXTRAETC
+
+strip $PKG/usr/bin/*
+( cd $PKG
+  find . -type f | xargs file | grep ELF | cut -f 1 -d : | xargs strip --strip-unneeded
+	rm -rf usr/{share,include,man}
+	mkdir usr/bin/32
+	mv usr/bin/* usr/bin/32
+)
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+
+cd $PKG
+makepkg -l y -c n ../pango32-$VERSION-$PKGARCH-$BUILD.tgz

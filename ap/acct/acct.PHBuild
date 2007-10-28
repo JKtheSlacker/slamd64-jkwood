@@ -1,0 +1,56 @@
+#!/bin/sh
+# Set initial variables:
+PKGNAM=acct
+VERSION=6.3.2
+BUILD=2
+
+. /etc/pkghelpers
+pkghelpers_env
+
+if [ ! -d $PKG ]; then
+  mkdir -p $PKG # place for the package to be built
+fi
+
+cd $TMP
+tar xzvf $CWD/acct-$VERSION.tar.gz
+cd acct-$VERSION
+chown -R root.root .
+find . -perm 664 -exec chmod 644 {} \;
+CFLAGS="$SLKCFLAGS"  \
+./configure --prefix=/usr
+zcat $CWD/acct.files.diff.gz | patch -p1 --verbose --backup --suffix=.orig
+make -j12
+mkdir -p $PKG/sbin
+cat accton > $PKG/sbin/accton
+chown -R root:root $PKG/sbin
+chmod 755 $PKG/sbin/accton
+mkdir -p $PKG/usr/bin
+cat ac > $PKG/usr/bin/ac
+cat lastcomm > $PKG/usr/bin/lastcomm
+cat sa > $PKG/usr/bin/sa
+chown -R root:root $PKG/usr/bin
+chmod 755 $PKG/usr/bin/*
+mkdir -p $PKG/usr/sbin
+cat dump-acct > $PKG/usr/sbin/dump-acct
+cat dump-utmp > $PKG/usr/sbin/dump-utmp
+chown -R root:root $PKG/usr/sbin
+chmod 755 $PKG/usr/sbin/*
+mkdir -p $PKG/usr/info
+cat accounting.info | gzip -9c > $PKG/usr/info/accounting.info.gz
+mkdir -p $PKG/usr/man/man1
+cat ac.1 | gzip -9c > $PKG/usr/man/man1/ac.1.gz
+cat lastcomm.1 | gzip -9c > $PKG/usr/man/man1/lastcomm.1.gz
+mkdir -p $PKG/usr/man/man8
+cat accton.8 | gzip -9c > $PKG/usr/man/man8/accton.8.gz
+cat sa.8 | gzip -9c > $PKG/usr/man/man8/sa.8.gz
+mkdir -p $PKG/usr/doc/acct-$VERSION
+cp -a \
+   AUTHORS COPYING NEWS README \
+   $PKG/usr/doc/acct-$VERSION
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+
+# Build the package:
+cd $PKG
+pkghelpers_fixup
+pkghelpers_makepkg

@@ -1,0 +1,76 @@
+#!/bin/sh
+
+PKGNAM=tcl
+# See also version number 8.4 in the symlinks below...)
+VERSION=8.4.15
+BUILD=1
+
+. /etc/pkghelpers
+pkghelpers_env
+
+rm -rf $PKG
+mkdir -p $PKG
+
+cd $TMP
+rm -rf tcl$VERSION
+tar xjvf $CWD/tcl$VERSION-src.tar.bz2 || exit 1
+cd tcl$VERSION || exit 1
+chown -R root:root .
+find . -perm 664 -exec chmod 644 {} \;
+find . -perm 600 -exec chmod 644 {} \;
+find . -perm 444 -exec chmod 644 {} \;
+find . -perm 400 -exec chmod 644 {} \;
+find . -perm 440 -exec chmod 644 {} \;
+find . -perm 777 -exec chmod 755 {} \;
+find . -perm 775 -exec chmod 755 {} \;
+find . -perm 511 -exec chmod 755 {} \;
+find . -perm 711 -exec chmod 755 {} \;
+find . -perm 555 -exec chmod 755 {} \;
+mkdir -p $PKG/usr/doc/tcl$VERSION
+cp -a README license.terms $PKG/usr/doc/tcl$VERSION
+if [ $ARCH != x86_64 ]; then
+	EXTRACONF="--enable-64bit"
+fi
+cd unix
+# Enforce clue
+sed -i "s#TCL_LIBRARY='\$(prefix)/lib/tcl\$(VERSION)'#TCL_LIBRARY='\$(prefix)/lib$LIBSUFFIX/tcl\$(VERSION)'#" configure
+CFLAGS="$SLKCFLAGS" \
+./configure \
+  --prefix=/usr \
+  --libdir=/usr/lib$LIBSUFFIX \
+  --enable-shared \
+  --enable-man-symlinks \
+  --enable-man-compression=gzip \
+  $EXTRACONF \
+  --build=$ARCH-$DISTRO-linux
+make -j10 || exit 1
+make install DESTDIR=$PKG
+
+# Some sources require Tcl's private headers, which might not be the
+# best thing but we'll include them where we've seen other teams
+# doing the same thing:
+mkdir -p $PKG/usr/include/tcl-private/{generic,unix}
+cp -a ../generic/*.h $PKG/usr/include/tcl-private/generic
+cp -a ../unix/*.h $PKG/usr/include/tcl-private/unix
+( cd $PKG/usr/include/tcl-private/generic
+  rm -f tcl.h tclDecls.h tclPlatDecls.h
+  ln -sf ../../tcl.h .
+  ln -sf ../../tclDecls.h .
+  ln -sf ../../tclPlatDecls.h
+)
+
+( cd $PKG/usr/bin
+  rm -f tclsh
+  ln -sf tclsh8.4 tclsh
+)
+( cd $PKG/usr/lib$LIBSUFFIX
+  rm -f libtcl.so
+  ln -sf libtcl8.4.so libtcl.so
+)
+
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+
+cd $PKG
+pkghelpers_fixup
+pkghelpers_makepkg

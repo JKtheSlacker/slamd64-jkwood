@@ -1,0 +1,44 @@
+#!/bin/sh
+
+. /etc/pkghelpers
+
+PKGNAM=ispell
+VERSION=3.2.06
+BUILD=${BUILD:-2}
+
+pkghelpers_env
+
+rm -rf $PKG
+mkdir -p $PKG
+cd /tmp
+rm -rf ispell-$VERSION
+tar xzvf $CWD/ispell-$VERSION.tar.gz
+cd ispell-$VERSION
+zcat $CWD/ispell.diff.gz | patch -p1 --verbose || exit 1
+zcat $CWD/ispell.destdir.diff.gz | patch -p1 --verbose || exit 1
+if [ $LIBSUFFIX = 64 ]; then
+  zcat $CWD/ispell.config64.diff.gz | patch -p1 --verbose || exit 1
+fi
+
+make LIBDIR=/usr/lib$LIBSUFFIX
+make install DESTDIR=$PKG LIBDIR=$PKG/usr/lib$LIBSUFFIX
+
+make install
+( cd /usr/lib$LIBSUFFIX/ispell
+  ln -sf americanmed.hash american.hash
+  ln -sf americanmed.hash english.hash
+)
+
+chown -R root:root $PKG/usr/bin
+
+mkdir -p $PKG/usr/doc/ispell-$VERSION
+install -m 644 -o root -g root \
+  Contributors Magiclines README WISHES \
+$PKG/usr/doc/ispell-$VERSION
+
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+
+cd $PKG
+pkghelpers_fixup
+pkghelpers_makepkg

@@ -1,0 +1,2 @@
+sed -i "s#/lib\$#/lib$LIBSUFFIX#" usr/lib$LIBSUFFIX/pkgconfig/*
+makepkg -l y -c n ${SLACK_X_BUILD_DIR}/${PKGNAME}-${MODULAR_PACKAGE_VERSION}-${PKGARCH}${PKGARCHSUFFIX}-${MODBUILD}.tgz

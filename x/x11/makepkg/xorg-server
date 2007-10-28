@@ -1,0 +1,36 @@
+
+# Make the alternate server packages:
+rm -r ${SLACK_X_BUILD_DIR}/package-xorg-server-xdmx
+mkdir -p ${SLACK_X_BUILD_DIR}/package-xorg-server-xdmx/usr/bin
+mv $PKG/usr/bin/*dmx* ${SLACK_X_BUILD_DIR}/package-xorg-server-xdmx/usr/bin
+mkdir -p ${SLACK_X_BUILD_DIR}/package-xorg-server-xdmx/usr/man/man1
+mv $PKG/usr/man/man1/*dmx* ${SLACK_X_BUILD_DIR}/package-xorg-server-xdmx/usr/man/man1
+mkdir -p ${SLACK_X_BUILD_DIR}/package-xorg-server-xdmx/install
+cat $CWD/slack-desc/xorg-server-xdmx > ${SLACK_X_BUILD_DIR}/package-xorg-server-xdmx/install/slack-desc
+cd ${SLACK_X_BUILD_DIR}/package-xorg-server-xdmx
+makepkg -l y -c n ${SLACK_X_BUILD_DIR}/xorg-server-xdmx-${MODULAR_PACKAGE_VERSION}-$PKGARCH$PKGARCHSUFFIX-$BUILD.tgz
+
+rm -r ${SLACK_X_BUILD_DIR}/package-xorg-server-xnest
+mkdir -p ${SLACK_X_BUILD_DIR}/package-xorg-server-xnest/usr/bin
+mv $PKG/usr/bin/Xnest ${SLACK_X_BUILD_DIR}/package-xorg-server-xnest/usr/bin
+mkdir -p ${SLACK_X_BUILD_DIR}/package-xorg-server-xnest/usr/man/man1
+mv $PKG/usr/man/man1/Xnest.1.gz ${SLACK_X_BUILD_DIR}/package-xorg-server-xnest/usr/man/man1
+mkdir -p ${SLACK_X_BUILD_DIR}/package-xorg-server-xnest/install
+cat $CWD/slack-desc/xorg-server-xnest > ${SLACK_X_BUILD_DIR}/package-xorg-server-xnest/install/slack-desc
+cd ${SLACK_X_BUILD_DIR}/package-xorg-server-xnest
+makepkg -l y -c n ${SLACK_X_BUILD_DIR}/xorg-server-xnest-${MODULAR_PACKAGE_VERSION}-$PKGARCH$PKGARCHSUFFIX-$BUILD.tgz
+
+rm -r ${SLACK_X_BUILD_DIR}/package-xorg-server-xvfb
+mkdir -p ${SLACK_X_BUILD_DIR}/package-xorg-server-xvfb/usr/bin
+mv $PKG/usr/bin/Xvfb ${SLACK_X_BUILD_DIR}/package-xorg-server-xvfb/usr/bin
+mkdir -p ${SLACK_X_BUILD_DIR}/package-xorg-server-xvfb/usr/man/man1
+mv $PKG/usr/man/man1/Xvfb.1.gz ${SLACK_X_BUILD_DIR}/package-xorg-server-xvfb/usr/man/man1
+mkdir -p ${SLACK_X_BUILD_DIR}/package-xorg-server-xvfb/install
+cat $CWD/slack-desc/xorg-server-xvfb > ${SLACK_X_BUILD_DIR}/package-xorg-server-xvfb/install/slack-desc
+cd ${SLACK_X_BUILD_DIR}/package-xorg-server-xvfb
+makepkg -l y -c n ${SLACK_X_BUILD_DIR}/xorg-server-xvfb-${MODULAR_PACKAGE_VERSION}-$PKGARCH$PKGARCHSUFFIX-$BUILD.tgz
+
+# Build the main xorg-server package:
+cd $PKG
+makepkg -l y -c n ${SLACK_X_BUILD_DIR}/xorg-server-${MODULAR_PACKAGE_VERSION}-$PKGARCH$PKGARCHSUFFIX-$BUILD.tgz
+

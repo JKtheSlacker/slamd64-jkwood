@@ -1,0 +1,9 @@
+env
+zlib
+bzip2
+libpng
+libjpeg
+libtermcap
+openssl
+mysql
+libmng

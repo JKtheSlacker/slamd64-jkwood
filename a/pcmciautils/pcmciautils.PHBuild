@@ -1,0 +1,61 @@
+#!/bin/sh
+PKGNAM=pcmciautils
+VERSION=014
+BUILD=3
+
+. /etc/pkghelpers
+pkghelpers_env
+
+rm -rf $PKG
+mkdir -p $PKG
+cd $TMP
+rm -rf pcmciautils-$VERSION
+tar xvjf $CWD/pcmciautils-$VERSION.tar.bz2
+cd pcmciautils-$VERSION
+
+chown -R root.root .
+find . -perm 666 -exec chmod 644 {} \;
+find . -perm 664 -exec chmod 644 {} \;
+find . -perm 600 -exec chmod 644 {} \;
+find . -perm 444 -exec chmod 644 {} \;
+find . -perm 400 -exec chmod 644 {} \;
+find . -perm 440 -exec chmod 644 {} \;
+find . -perm 777 -exec chmod 755 {} \;
+find . -perm 775 -exec chmod 755 {} \;
+find . -perm 511 -exec chmod 755 {} \;
+find . -perm 711 -exec chmod 755 {} \;
+find . -perm 555 -exec chmod 755 {} \;
+
+make || exit 1
+make install DESTDIR=$PKG
+
+# Add some firmware:
+( cd $PKG
+  tar xvzf $CWD/cis-cs-3.2.8.tar.gz
+  chown -R root:root lib
+)
+
+rm -rf $PKG/etc/*
+mkdir -p $PKG/etc/pcmcia $PKG/etc/rc.d
+
+cp -a $CWD/rc.pcmcia $PKG/etc/rc.d/rc.pcmcia.new
+chown root:root $PKG/etc/rc.d/rc.pcmcia.new
+chmod 755 $PKG/etc/rc.d/rc.pcmcia.new
+
+cp -a $CWD/config.opts $PKG/etc/pcmcia/config.opts.new
+chown root:root $PKG/etc/pcmcia/config.opts.new
+chmod 644 $PKG/etc/pcmcia/config.opts.new
+
+mv $PKG/usr/share/man $PKG/usr
+rmdir $PKG/usr/share
+
+mkdir -p $PKG/usr/doc/pcmciautils-$VERSION
+cp COPYING $PKG/usr/doc/pcmciautils-$VERSION
+
+mkdir $PKG/install
+cat $CWD/doinst.sh > $PKG/install/doinst.sh
+cat $CWD/slack-desc > $PKG/install/slack-desc
+
+cd $PKG
+pkghelpers_fixup
+pkghelpers_makepkg

@@ -1,0 +1,12 @@
+# Add COPYING file:
+mkdir -p $PKG/usr/doc/xorg-server-$MODULAR_PACKAGE_VERSION
+cp -a COPYING $PKG/usr/doc/xorg-server-$MODULAR_PACKAGE_VERSION
+
+# Don't mess with my /var/log/ permissions:
+rmdir $PKG/var/log
+rmdir $PKG/var
+
+# Fix xserver location:
+mv $PKG/usr/lib/xserver etc/X11
+( cd $PKG/usr/lib ; ln -sf ../../etc/X11/xserver . )
+

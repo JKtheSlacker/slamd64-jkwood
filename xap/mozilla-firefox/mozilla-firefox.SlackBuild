@@ -1,0 +1,121 @@
+#!/bin/sh
+CWD=`pwd`
+TMP=${TMP:-/tmp}
+PKG=$TMP/package-mozilla-firefox
+
+# XXX XXX XXX XXX
+# IMPORTANT!
+# If you use this script yourself, you *MUST* remove --enable-official-branding,
+# unless you have permission from the mozilla foundation.
+# XXX XXX XXX XXX
+
+VERSION=2.0.0.6
+ARCH=${ARCH:-x86_64}
+BUILD=${BUILD:-2}
+
+# "-O" is the default, as few changes as possible to defaults for Firefox and Thunderbird
+if [ "$ARCH" = "i386" ]; then
+  SLKCFLAGS="-O"
+elif [ "$ARCH" = "i486" ]; then
+  SLKCFLAGS="-O"
+elif [ "$ARCH" = "s390" ]; then
+  SLKCFLAGS="-O"
+elif [ "$ARCH" = "x86_64" ]; then
+  SLKCFLAGS="-O -fPIC"
+fi
+
+if [ ! -d $TMP ]; then
+  mkdir -p $TMP
+fi
+rm -rf $PKG
+mkdir -p $PKG/usr/lib64
+
+cd $TMP
+rm -rf mozilla
+tar jxvf $CWD/firefox-$VERSION-source.tar.bz2
+
+cd mozilla
+chown -R root:root .
+find . -perm 664 -exec chmod 644 {} \;
+find . -perm 775 -exec chmod 755 {} \;
+
+# Otherwise we get the error normally related to -fPIC on non-x86:
+zcat $CWD/visibility-mozconfig.gz > .mozconfig
+
+export MOZILLA_OFFICIAL="1" &&
+export BUILD_OFFICIAL="1" &&
+export MOZ_PHOENIX="1" &&
+export CFLAGS="$SLKCFLAGS" &&
+export CXXFLAGS="$SLKCFLAGS" &&
+./configure --prefix=/usr \
+	--libdir=/usr/lib64 \
+	--enable-official-branding \
+	--with-default-mozilla-five-home=/usr/lib64/firefox-$VERSION \
+	--with-system-zlib \
+	--with-system-png \
+	--enable-application=browser \
+	--enable-default-toolkit=gtk2 \
+	--enable-crypto \
+	--enable-xft \
+	--enable-xinerama \
+	--enable-optimize \
+	--enable-reorder \
+	--enable-strip \
+	--enable-cpp-rtti \
+	--enable-single-profile \
+	--disable-freetype2 \
+	--disable-accessibility \
+	--disable-debug \
+	--disable-tests \
+	--disable-logging \
+	--disable-pedantic \
+	--disable-installer \
+	--disable-mailnews \
+	--disable-ldap \
+	--disable-composer \
+	--disable-profilesharing
+
+make -j10
+make install DESTDIR=$PKG || exit 1
+
+( cd $PKG/usr/lib64/firefox-$VERSION
+  zcat $CWD/mozilla-firefox-thunderbird.diff.gz | patch -p0 --verbose || exit 1
+  cd $PKG/usr/bin
+  zcat $CWD/firefox.moz_plugin_path.diff.gz | patch -p0 --verbose || exit 1
+) || exit 1
+
+( cd $PKG/usr/bin
+  chown -R root:root .
+)
+
+mkdir -p $PKG/usr/lib64/mozilla/plugins
+mkdir -p $PKG/usr/share/applications
+cat $CWD/mozilla-firefox.desktop > $PKG/usr/share/applications/mozilla-firefox.desktop
+mkdir -p $PKG/usr/share/pixmaps
+cat $CWD/firefox.png > $PKG/usr/share/pixmaps/firefox.png
+
+# These files/directories are usually created if Firefox is run as root, which on many
+# systems might (and possibly should) be never.  Therefore, if we don't see them we'll
+# put stubs in place to prevent startup errors.
+( cd $PKG/usr/lib64/firefox-$VERSION
+  if [ -d extensions/talkback\@mozilla.org ]; then
+    if [ ! -r extensions/talkback\@mozilla.org/chrome.manifest ]; then
+      echo > extensions/talkback\@mozilla.org/chrome.manifest
+    fi
+  fi
+  if [ ! -d updates ]; then
+    mkdir -p updates/0
+  fi
+
+	# Some icons aren't in the right place
+	mkdir -p chrome/icons/default
+	cp icons/{default,mozicon50}.xpm chrome/icons/default/
+)
+
+
+
+mkdir $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+
+cd $PKG
+makepkg -l y -c n $TMP/mozilla-firefox-$VERSION-${ARCH}_slamd64-$BUILD.tgz

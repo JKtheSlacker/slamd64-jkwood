@@ -1,0 +1,66 @@
+#!/bin/sh
+PKGNAM=t1lib
+VERSION=5.1.0
+BUILD=${BUILD:-2}
+
+. /etc/pkghelpers
+pkghelpers_env
+
+cd $TMP
+rm -rf t1lib-$VERSION
+tar xzvf $CWD/t1lib-$VERSION.tar.gz
+cd t1lib-$VERSION
+chown -R root:root .
+find . -perm 664 -exec chmod 644 {} \;
+find . -perm 600 -exec chmod 644 {} \;
+find . -perm 444 -exec chmod 644 {} \;
+find . -perm 400 -exec chmod 644 {} \;
+find . -perm 440 -exec chmod 644 {} \;
+find . -perm 777 -exec chmod 755 {} \;
+find . -perm 775 -exec chmod 755 {} \;
+find . -perm 511 -exec chmod 755 {} \;
+find . -perm 711 -exec chmod 755 {} \;
+find . -perm 555 -exec chmod 755 {} \;
+CFLAGS="$SLKCFLAGS" \
+./configure \
+  --prefix=/usr \
+	--libdir=/usr/lib$LIBSUFFIX \
+  --enable-static=no \
+  $ARCH-$DISTRO-linux
+make -j12 || exit 1
+mkdir -p $PKG/usr
+make install prefix=$PKG/usr libdir=$PKG/usr/lib$LIBSUFFIX
+chmod 755 $PKG/usr/lib$LIBSUFFIX/*.{so,la}
+mkdir -p $PKG/usr/doc/t1lib-$VERSION
+mv $PKG/usr/share/t1lib/doc/t1lib_doc.ps $PKG/usr/doc/t1lib-$VERSION
+gzip -9 $PKG/usr/doc/t1lib-$VERSION/t1lib_doc.ps
+rm -r $PKG/usr/share/t1lib/doc
+cp -a Fonts $PKG/usr/share/t1lib
+/bin/ls $PKG/usr/share/t1lib/Fonts/afm/*.afm /usr/X11R6/lib/X11/fonts/Type1/*.afm | sort | uniq | wc -l | sed -e 's/ //g' > $PKG/usr/share/t1lib/FontDataBase
+( cd $PKG/usr/share/t1lib/Fonts/afm ; /bin/ls *.afm ; cd /usr/X11R6/lib/X11/fonts/Type1 ; /bin/ls *.afm ) | sort | uniq >> $PKG/usr/share/t1lib/FontDataBase
+cat << EOF > $PKG/usr/share/t1lib/t1lib.config
+This is a configuration file for t1lib
+
+FONTDATABASE=/usr/share/t1lib/FontDataBase
+ENCODING=/usr/share/t1lib/Fonts/enc
+AFM=/usr/share/t1lib/Fonts/afm:/usr/X11R6/lib/X11/fonts/Type1
+TYPE1=/usr/share/t1lib/Fonts/type1:/usr/X11R6/lib/X11/fonts/Type1
+EOF
+mkdir -p $PKG/etc/profile.d
+cat << EOF > $PKG/etc/profile.d/t1lib.sh
+T1LIB_CONFIG=/usr/share/t1lib/t1lib.config
+export T1LIB_CONFIG
+EOF
+cat << EOF > $PKG/etc/profile.d/t1lib.csh
+setenv T1LIB_CONFIG /usr/share/t1lib/t1lib.config
+EOF
+chmod 755 $PKG/etc/profile.d/*
+cp -a \
+  Changes LGPL LICENSE README* \
+  $PKG/usr/doc/t1lib-$VERSION
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+
+cd $PKG
+pkghelpers_fixup
+pkghelpers_makepkg

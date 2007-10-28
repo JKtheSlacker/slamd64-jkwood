@@ -1,0 +1,28 @@
+Sat May  5 13:38:46 BST 2007
+ Stuart Winter <mozes@slackware.com>
+ linuxdoc-tools-0.9.21, build 4
+  * Converted from docbook RPM source builds to direct source build, with
+    the build script code by: Jerome Pinot
+    based on the Linux From Scratch documentation.
+    Merged some of Jerome's code back into the original linuxdoc-tools.build
+    script.
+    This fixes many bugs with the previous package, with broken catalogs
+    and so on.
+  * Upgraded to gtk-doc v1.8
+  * Upgraded to DocBook SGML DTD v4.5
+  * Upgraded to DocBook DSSSL Stylesheets v1.79
+  * Upgraded to DocBook XML DTD v4.5
+  * Upgraded to DocBook XSL Stylesheets v1.72.0 & docs
+  * Added AsciiDoc v8.2.1
+  * Added xmlto v0.0.18
+  * Removed unused build script code cruft from linuxdoc-tools.build 
+  * Re-ordered the build script since OpenSP v1.5.2 requires xmlto,
+    and xmlto requires the docbook stuff to be installed.
+  * Removed buildDocBookCatalog script.  If you delete your system's SGML or XML
+    catalog scripts, thinking that this script can repopulate them, it won't.
+    If you're adding docbook data to your system, you need to read the docs that
+    come with the new data you're installing.
+  * Thanks to Red Hat for the loan of a laptop on which to test this build ;-)
+
+Sat Oct 01 2005
+  * Previous releases

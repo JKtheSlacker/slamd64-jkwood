@@ -1,0 +1,57 @@
+#!/bin/sh
+# Set initial variables:
+PKGNAM=ash
+VERSION=0.4.0
+BUILD=2
+
+. /etc/pkghelpers
+pkghelpers_env
+
+if [ ! -d $PKG ]; then
+  mkdir -p $PKG # place for the package to be built
+fi
+
+echo "+===============+"
+echo "| ash-$VERSION |"
+echo "+===============+"
+cd $TMP
+rm -rf ash-$VERSION
+tar xzvf $CWD/ash-$VERSION.tar.gz
+cd ash-$VERSION
+chown -R root.root .
+( cd $CWD/patches
+  for file in ash-builtin.patch.gz ash-echo.patch.gz ash-getcwd.patch.gz ash-getopt.patch.gz ash-glob.patch.gz ash-jobs.patch.gz ash-kill.patch.gz ash-makefile.patch.gz ash-manpage.patch.gz ash-hetio.patch.gz ash-memout.patch.gz ash-misc.patch.gz ash-redir.patch.gz ash-setmode.patch.gz ash-syntax.patch.gz ash-test.patch.gz ash-times.patch.gz ash-debian.patch.gz ash-ppid.patch.gz ash-freebsd.patch.gz ash-sighup.patch.gz ; do
+    zcat $file
+  done ) | patch -p1 --verbose || exit 1
+
+# A few fixes, loosely based on a large LFS patch
+sed -i 's#= {#{#' arith.y || exit 1
+sed -i '/yyerrok;/d' arith.y || exit 1
+# and based on an LFS mailing list posting...
+sed -i 's#extern int hetio_inter#static int hetio_inter#' hetio.h || exit 1
+
+make || exit 1
+strip sh
+mkdir -p $PKG/bin
+cat sh > $PKG/bin/ash
+chmod 755 $PKG/bin/ash
+chown -R root:root $PKG/bin
+mkdir -p $PKG/usr/man/man1
+cat sh.1 | gzip -9c > $PKG/usr/man/man1/ash.1.gz
+mkdir -p $PKG/usr/doc/ash-$VERSION
+chmod 644 TOUR
+cp -a TOUR $PKG/usr/doc/ash-$VERSION
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+cat << EOF > $PKG/install/doinst.sh
+if grep "bin/ash" etc/shells 1> /dev/null 2> /dev/null; then
+  true
+else
+  echo "/bin/ash" >> etc/shells
+fi
+EOF
+
+# Build the package:
+cd $PKG
+pkghelpers_fixup
+pkghelpers_makepkg

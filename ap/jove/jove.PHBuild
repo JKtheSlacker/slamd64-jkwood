@@ -1,0 +1,50 @@
+#!/bin/sh
+# Set initial variables:
+PKGNAM=jove
+VERSION=4.16.0.61
+BUILD=3
+
+. /etc/pkghelpers
+pkghelpers_env
+
+if [ ! -d $PKG ]; then
+  mkdir -p $PKG # place for the package to be built
+fi
+
+cd $TMP
+tar xjvf $CWD/jove$VERSION.tar.bz2
+cd jove$VERSION
+chown -R root:root .
+zcat $CWD/jove.makefile.diff.gz | patch -p1 --verbose --backup # Patch modified for Slamd64
+make -j12 || exit 1
+strip recover jjove teachjove
+mkdir -p $PKG/usr/lib$LIBSUFFIX/jove
+install -c -m 755 recover $PKG/usr/lib$LIBSUFFIX/jove/recover
+mkdir -p $PKG/usr/bin
+install -c -m 755 jjove $PKG/usr/bin/jove
+install -c -m 755 teachjove $PKG/usr/bin/teachjove
+( cd $PKG/usr/bin
+  ln -sf /usr/lib$LIBSUFFIX/jove/recover jove-recover
+)
+install -c -m 644 doc/teach-jove $PKG/usr/lib$LIBSUFFIX/jove/teach-jove
+install -c -m 644 doc/cmds.doc $PKG/usr/lib$LIBSUFFIX/jove/cmds.doc
+install -c -m 644 doc/jove.rc.sun doc/keychart.sun doc/jove.rc.sun-cmd doc/keychart.sun-cmd doc/jove.rc.vt100 doc/keychart.vt100 doc/jove.rc.wyse doc/keychart.wyse doc/jove.rc.xterm doc/keychart.xterm doc/jove.rc.z29 doc/keychart.z29 doc/jove.rc.3022 doc/keychart.3022 doc/keychart. doc/XTermresource $PKG/usr/lib$LIBSUFFIX/jove
+install -c -m 644 doc/jove.rc $PKG/usr/lib$LIBSUFFIX/jove/jove.rc
+mkdir -p $PKG/usr/man/man1
+install -c -m 644 doc/jove.1 $PKG/usr/man/man1/jove.1
+install -c -m 644 doc/teachjove.1 $PKG/usr/man/man1/teachjove.1
+mkdir -p $PKG/usr/doc/jove$VERSION
+cp -a \
+  README $CWD/jove.README \
+  $PKG/usr/doc/jove$VERSION
+chmod 644 $PKG/usr/doc/jove$VERSION/*
+# This is only used on systems without pttys.
+# cat portsrv > $PKG/usr/lib/jove/portsrv
+# chmod 755 $PKG/usr/lib/jove/portsrv
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+
+# Build the package:
+cd $PKG
+pkghelpers_fixup
+pkghelpers_makepkg

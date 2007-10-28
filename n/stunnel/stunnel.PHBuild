@@ -1,0 +1,47 @@
+#!/bin/sh
+# Set initial variables:
+PKGNAM=stunnel
+VERSION=4.17
+BUILD=2
+
+. /etc/pkghelpers
+pkghelpers_env
+
+rm -rf $PKG
+mkdir -p $PKG # place for the package to be built
+
+cd $TMP
+rm -rf stunnel-$VERSION
+tar xzvf $CWD/stunnel-$VERSION.tar.gz
+cd stunnel-$VERSION
+chown -R root.root .
+find . -perm 777 -exec chmod 755 {} \;
+CFLAGS="$SLKCFLAGS" \
+./configure --prefix=/usr \
+						--libdir=/usr/lib$LIBSUFFIX \
+            --sysconfdir=/etc
+make -j12 || exit 1
+# This will produce a useless key.
+make -i install DESTDIR=$PKG
+# Get rid of key, so nobody tries to use it:
+rm -r $PKG/etc/stunnel/stunnel.pem
+# Add cnf:
+cat tools/stunnel.cnf > $PKG/etc/stunnel/stunnel.cnf
+cat $CWD/generate-stunnel-key.sh > $PKG/etc/stunnel/generate-stunnel-key.sh
+chmod 755 $PKG/etc/stunnel/generate-stunnel-key.sh
+mkdir -p $PKG/usr/doc/stunnel-$VERSION
+mv $PKG/usr/share/doc/stunnel/* $PKG/usr/doc/stunnel-$VERSION
+rm -rf $PKG/usr/share/doc
+rmdir $PKG/usr/share
+mkdir -p $PKG/usr/man/pl/man8
+mv $PKG/usr/man/man8/stunnel.pl.8 $PKG/usr/man/pl/man8/stunnel.8
+mkdir -p $PKG/usr/man/fr/man8
+mv $PKG/usr/man/man8/stunnel.fr.8 $PKG/usr/man/fr/man8/stunnel.8
+gzip -9 $PKG/usr/man/*/man?/*.? $PKG/usr/man/man?/*.?
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+
+# Build the package:
+cd $PKG
+pkghelpers_fixup
+pkghelpers_makepkg

@@ -1,0 +1,56 @@
+#!/bin/sh
+# Set initial variables:
+PKGNAM=at
+VERSION=${VERSION:-3.1.10}
+BUILD=${BUILD:-2}
+
+. /etc/pkghelpers
+pkghelpers_env
+
+# Create the package framework:
+rm -rf $PKG
+mkdir -p $PKG
+
+cd $TMP
+rm -rf at-$VERSION
+tar xjvf $CWD/at-${VERSION}.tar.bz2
+cd at-$VERSION
+
+chown -R root:root .
+find . -perm 666 -exec chmod 644 {} \;
+find . -perm 664 -exec chmod 644 {} \;
+find . -perm 600 -exec chmod 644 {} \;
+find . -perm 444 -exec chmod 644 {} \;
+find . -perm 400 -exec chmod 644 {} \;
+find . -perm 440 -exec chmod 644 {} \;
+find . -perm 777 -exec chmod 755 {} \;
+find . -perm 775 -exec chmod 755 {} \;
+find . -perm 511 -exec chmod 755 {} \;
+find . -perm 711 -exec chmod 755 {} \;
+find . -perm 555 -exec chmod 755 {} \;
+
+CFLAGS="$SLKCFLAGS" \
+./configure \
+  $ARCH-$DISTRO-linux
+make -j12 || exit
+make install IROOT=$PKG || exit
+
+mv $PKG/etc/at.deny $PKG/etc/at.deny.new
+chown root:root $PKG/var $PKG/var/spool
+
+rm -rf $PKG/usr/doc/at
+mkdir -p $PKG/usr/doc/at-$VERSION
+cp -a \
+  COPYING ChangeLog debian/copyright Problems README timespec \
+  $PKG/usr/doc/at-$VERSION
+mv $PKG/usr/doc/at-$VERSION/copyright $PKG/usr/doc/at-$VERSION/Copyright
+chmod 644 $PKG/usr/doc/at-$VERSION/Copyright
+
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+zcat $CWD/doinst.sh > $PKG/install/doinst.sh
+
+# Build the package:
+cd $PKG
+pkghelpers_fixup
+pkghelpers_makepkg

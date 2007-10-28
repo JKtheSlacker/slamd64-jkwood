@@ -1,0 +1,97 @@
+#!/bin/sh
+# Set initial variables:
+PKGNAM=groff
+VERSION=1.19.2
+BUILD=${BUILD:-2}
+
+. /etc/pkghelpers
+pkghelpers_env
+
+rm -rf $PKG
+mkdir -p $PKG
+
+cd $TMP
+rm -rf groff-$VERSION
+tar xjvf $CWD/groff-$VERSION.tar.bz2
+cd groff-$VERSION
+chown -R root:root .
+find . -perm 664 -exec chmod 644 {} \;
+find . -perm 600 -exec chmod 644 {} \;
+find . -perm 444 -exec chmod 644 {} \;
+find . -perm 400 -exec chmod 644 {} \;
+find . -perm 440 -exec chmod 644 {} \;
+find . -perm 777 -exec chmod 755 {} \;
+find . -perm 775 -exec chmod 755 {} \;
+find . -perm 511 -exec chmod 755 {} \;
+find . -perm 711 -exec chmod 755 {} \;
+find . -perm 555 -exec chmod 755 {} \;
+
+zcat $CWD/groff.docdir.diff.gz | patch -p1 --verbose --backup --suffix=.orig || exit 1
+
+CFLAGS="$SLKCFLAGS" \
+CXXFLAGS="$SLKCFLAGS" \
+./configure \
+  --prefix=/usr \
+	--libdir=/usr/lib$LIBSUFFIX \
+  $ARCH-$DISTRO-linux
+make || exit 1
+
+mkdir -p $PKG/usr
+make install prefix=$PKG/usr
+(
+  cd src/devices/xditview
+  mkdir -p $PKG/etc/X11/app-defaults
+  cp -a GXditview.ad $PKG/etc/X11/app-defaults/GXditview
+)
+mkdir -p $PKG/usr/doc/groff-$VERSION/xditview
+cp -a \
+  BUG-REPORT COPYING FDL INSTALL INSTALL.gen MORE.STUFF NEWS PROBLEMS PROJECTS README TODO VERSION \
+  $PKG/usr/doc/groff-$VERSION
+( cd src/devices/xditview ; cp -a README TODO $PKG/usr/doc/groff-$VERSION/xditview )
+
+# If you want all this stuff, it's in the source tarball:
+rm -rf $PKG/usr/doc/groff-$VERSION/*.ps \
+  $PKG/usr/doc/groff-$VERSION/examples \
+  $PKG/usr/doc/groff-$VERSION/html \
+  $PKG/usr/doc/groff-$VERSION/pdf
+
+# Do not use color ANSI output by default for man pages.
+# A silly "innovation" if ever there was one, sure to break
+# a ton of existing scripts otherwise...
+zcat $CWD/groff.man.mdoc.local.gz >> $PKG/usr/share/groff/site-tmac/man.local
+zcat $CWD/groff.man.mdoc.local.gz >> $PKG/usr/share/groff/site-tmac/mdoc.local
+
+# Make links:
+( cd $PKG
+  ( cd usr/bin ; rm -rf geqn )
+  ( cd usr/bin ; ln -sf eqn geqn )
+  ( cd usr/bin ; rm -rf gindxbib )
+  ( cd usr/bin ; ln -sf indxbib gindxbib )
+  ( cd usr/bin ; rm -rf gpic )
+  ( cd usr/bin ; ln -sf pic gpic )
+  ( cd usr/bin ; rm -rf grefer )
+  ( cd usr/bin ; ln -sf refer grefer )
+  ( cd usr/bin ; rm -rf gsoelim )
+  ( cd usr/bin ; ln -sf soelim gsoelim )
+  ( cd usr/bin ; rm -rf zsoelim )
+  ( cd usr/bin ; ln -sf soelim zsoelim )
+  ( cd usr/bin ; rm -rf gtbl )
+  ( cd usr/bin ; ln -sf tbl gtbl )
+  ( cd usr/bin ; rm -rf gtroff )
+  ( cd usr/bin ; ln -sf troff gtroff )
+  ( cd usr/bin ; rm -rf glookbib )
+  ( cd usr/bin ; ln -sf lookbib glookbib )
+  ( cd usr/bin ; rm -rf gnroff )
+  ( cd usr/bin ; ln -sf nroff gnroff )
+  ( cd usr/bin ; rm -rf gneqn )
+  ( cd usr/bin ; ln -sf neqn gneqn )
+)
+
+# Install slack-desc:
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+
+# Build the package:
+cd $PKG
+pkghelpers_fixup
+pkghelpers_makepkg

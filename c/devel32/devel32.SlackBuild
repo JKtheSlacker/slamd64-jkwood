@@ -1,0 +1,94 @@
+#!/bin/sh
+
+VERSION=${VERSION:-1.0}
+ARCH=${ARCH:-x86_64} # 64-bit arch, not 32
+BUILD=${BUILD:-2}
+DISTRO=${DISTRO:-slamd64}
+
+SOURCEDIR=/tmp/devel32
+PKG=/tmp/package-devel32
+rm -rf $SOURCEDIR $PKG
+mkdir -p $SOURCEDIR $PKG
+
+CWD=`pwd`
+
+if [ "x$1" != "x" ]; then
+	PACKAGES=$1
+	PKGNAME=${1}32-tmp
+else
+	PACKAGES=`egrep -v '^#' $CWD/buildorder`
+	PKGNAME=devel32
+fi
+
+for package in $PACKAGES; do
+	echo "Building $package..."
+	cd $SOURCEDIR || exit 1
+	mkdir $package
+	cd $package || exit 1
+
+	# Copy stuff over
+	cp -a $CWD/sources/$package/. . || exit 1
+	# Fix symlinks
+	find -type l | xargs file | grep 'broken' | while read symlink; do
+		target=`echo $symlink | cut -f 2 -d '\`' | cut -f 1 -d "'"`
+		linkname=`echo $symlink | cut -f 1 -d ':'`
+		ln -sf $CWD/sources/$package/$target $linkname
+	done
+
+	# If there's no template SlackBuild, use the template one in sources/
+	if [ ! -e $package.SlackBuild ]; then
+		cp $CWD/sources/template.SlackBuild $package.SlackBuild || exit 1
+		if [ ! -e configure ]; then
+			cp $CWD/sources/template.configure configure || exit 1
+		fi
+	else
+		# Patch it to not make a separate package
+		if [ -e $CWD/diffs/$package.SlackBuild.diff.gz ]; then
+			zcat $CWD/diffs/$package.SlackBuild.diff.gz | patch -p0 --verbose || exit 1
+		fi
+	fi
+
+	# Build it
+	(
+		if [ -e /etc/profile.d/32dev.sh ]; then
+			. /etc/profile.d/32dev.sh
+		fi
+		LIBSUFFIX="/." \
+		sh $package.SlackBuild || exit 1
+	)
+
+	if [ $PKGNAME = "devel32" ]; then
+		(
+			cd /tmp
+			rm -rf $PKG-tmp
+			cp -a $PKG $PKG-tmp
+			cd $PKG-tmp
+			rm -rf usr/{share,include,doc} var
+			# Make a temporary package
+			makepkg -l y -c n ../devel32-tmp-$VERSION-${ARCH}_${DISTRO}-$BUILD.tgz
+			
+			# Install temporary package (this sorts out dependencies of things later in
+			# the build order
+			upgradepkg --reinstall --install-new ../devel32-tmp-$VERSION-${ARCH}_${DISTRO}-$BUILD.tgz
+		)
+	fi
+done
+
+# Remove the temporary package
+removepkg devel-tmp
+
+cd $PKG
+# Sort out conflicts with 64-bit stuff
+rm -rf usr/{share,include,doc,man,info,lib/pkgconfig} var
+if [ -e usr/bin ]; then
+	mkdir -p usr/bin/32
+	mv usr/bin/* usr/bin/32/
+fi
+
+find -type f | xargs file | grep ELF | cut -f 1 -d : | xargs strip --strip-unneeded
+
+mkdir install
+cat $CWD/slack-desc > install/slack-desc
+cat $CWD/doinst.sh > install/doinst.sh
+
+makepkg -l y -c n ../$PKGNAME-$VERSION-${ARCH}_${DISTRO}-$BUILD.tgz

@@ -1,0 +1,101 @@
+#!/bin/sh
+# Slackware build script for cmake.
+NAME=cmake
+
+# Get the current and temporary directories
+CWD=`pwd`
+if [ "$TMP" = "" ]; then
+  TMP=/tmp
+fi
+PKG=$TMP/package-$NAME
+
+VERSION=${VERSION:-2.4.6}
+ARCH=${ARCH:-x86_64}
+BUILD=${BUILD:-1}
+DISTRO=${DISTRO:-slamd64}
+
+if [ $DISTRO = slackware ]; then
+	PKGARCH=$ARCH
+else
+	PKGARCH=${ARCH}_${DISTRO}
+fi
+
+# No libraries, so no libsuffix hacks.
+
+if [ "$ARCH" = "i386" ]; then
+  SLKCFLAGS="-O2 -m32 -march=i386 -mcpu=i386"
+elif [ "$ARCH" = "i486" ]; then
+  SLKCFLAGS="-O2 -m32 -march=i486 -mtune=i686"
+elif [ "$ARCH" = "s390" ]; then
+  SLKCFLAGS="-O2"
+elif [ "$ARCH" = "x86_64" ]; then
+  SLKCFLAGS="-O2 -fPIC"
+fi
+
+if [ ! -d $TMP ]; then
+  mkdir -p $TMP # location to build the source
+fi
+
+# Clean up a previous build
+rm -rf $PKG
+mkdir -p $PKG
+
+# Decompress
+cd $TMP
+rm -rf $NAME-$VERSION
+tar xjvf $CWD/$NAME-$VERSION.tar.bz2 || exit 1
+cd $NAME-$VERSION
+
+# Fix
+chown -R root:root .
+find . -perm 666 -exec chmod 644 {} \;
+find . -perm 664 -exec chmod 644 {} \;
+find . -perm 600 -exec chmod 644 {} \;
+find . -perm 444 -exec chmod 644 {} \;
+find . -perm 400 -exec chmod 644 {} \;
+find . -perm 440 -exec chmod 644 {} \;
+find . -perm 777 -exec chmod 755 {} \;
+find . -perm 775 -exec chmod 755 {} \;
+find . -perm 511 -exec chmod 755 {} \;
+find . -perm 711 -exec chmod 755 {} \;
+find . -perm 555 -exec chmod 755 {} \;
+
+mkdir cmake-build
+cd cmake-build
+../bootstrap
+
+# Build
+CFLAGS="$SLKCFLAGS" \
+CXXFLAGS="$SLKCFLAGS" \
+  ../configure \
+  --prefix=/usr \
+  --docdir=/doc/$NAME-$VERSION \
+  $SLKCONFIGFLAGS \
+  --build=$ARCH-$DISTRO-linux
+
+make -j6 || exit 1
+make install DESTDIR=$PKG || exit 1
+
+# Gzip man pages
+find $PKG/usr/man -name "*.[123456789]" -exec gzip -9 {} \;
+
+# Strip binaries
+( cd $PKG
+  find . | xargs file | grep "executable" | grep ELF | cut -f 1 -d : | xargs strip --strip-unneeded 2> /dev/null
+  find . | xargs file | grep "shared object" | grep ELF | cut -f 1 -d : | xargs strip --strip-unneeded 2> /dev/null
+)
+
+# Copy Slackware package files
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+
+# Create package
+echo "Creating package"
+cd $PKG
+makepkg -l y -c n ../$NAME-$VERSION-$PKGARCH-$BUILD.tgz
+
+# Clean up
+if [ "$1" = "--cleanup" ]; then
+	rm -rf $TMP/$NAME-$VERSION
+	rm -rf $PKG
+fi

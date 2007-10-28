@@ -1,0 +1,15 @@
+#!/usr/bin/perl
+
+system("/usr/bin/mkdir", @ARGV); # sorry, still polute /
+
+@out = ();
+for(@ARGV) {
+	if (/^\//) {
+		push @out, "$ENV{DESTDIR}/$_";
+	}
+	else {
+		push @out, $_;
+	}
+}
+
+system("/usr/bin/mkdir", @out);

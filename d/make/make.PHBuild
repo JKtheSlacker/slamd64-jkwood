@@ -1,0 +1,39 @@
+#!/bin/sh
+# Set initial variables:
+PKGNAM=make
+VERSION=3.81
+BUILD=2
+
+. /etc/pkghelpers
+pkghelpers_env
+
+if [ ! -d $PKG ]; then
+  mkdir -p $PKG # place for the package to be built
+fi
+
+echo "+=============+"
+echo "| make-$VERSION |"
+echo "+=============+"
+cd $TMP
+tar xjvf $CWD/make-$VERSION.tar.bz2
+cd make-$VERSION
+chown -R root.root .
+CFLAGS=$SLKCFLAGS LDFLAGS=-s ./configure --prefix=/usr $ARCH-$DISTRO-linux
+make -j12 || exit 1
+make install DESTDIR=$PKG
+strip $PKG/usr/bin/make
+( cd $PKG/usr/bin
+  rm -f gmake
+  ln -sf make gmake )
+mkdir -p $PKG/usr/doc/make-$VERSION
+cp -a ABOUT-NLS AUTHORS COPYING INSTALL NEWS README README.customs \
+  $PKG/usr/doc/make-$VERSION/
+chmod 644 $PKG/usr/doc/make-$VERSION/*
+chown root.root $PKG/usr/doc/make-$VERSION/*
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+
+# Build the package:
+cd $PKG
+pkghelpers_fixup
+pkghelpers_makepkg

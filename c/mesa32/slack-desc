@@ -1,0 +1,19 @@
+# HOW TO EDIT THIS FILE:
+# The "handy ruler" below makes it easier to edit a package description.  Line
+# up the first '|' above the ':' following the base package name, and the '|'
+# on the right side marks the last column you can put a character in.  You must
+# make exactly 11 lines for the formatting to be correct.  It's also
+# customary to leave one space after the ':'.
+
+    |-----handy-ruler------------------------------------------------------|
+mesa32: mesa32 (a 32-bit 3-D graphics library)
+mesa32:
+mesa32: Mesa is a 3-D graphics library with an API very similar to that of
+mesa32: another well-known 3-D graphics library.  :-)  The Mesa libraries are
+mesa32: used by X to provide both software and hardware accelerated graphics.
+mesa32:
+mesa32: Mesa was written by Brian Paul.
+mesa32:
+mesa32: This package contains 32-bit binaries of mesa. For 64-bit binaries,
+mesa32: install the "mesa" package from x/.
+mesa32:

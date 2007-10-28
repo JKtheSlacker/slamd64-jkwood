@@ -1,0 +1,19 @@
+# HOW TO EDIT THIS FILE:
+# The "handy ruler" below makes it easier to edit a package description.  Line
+# up the first '|' above the ':' following the base package name, and the '|'
+# on the right side marks the last column you can put a character in.  You must
+# make exactly 11 lines for the formatting to be correct.  It's also
+# customary to leave one space after the ':'.
+
+     |-----handy-ruler------------------------------------------------------|
+bin86: bin86 (8086 assembler/loader)
+bin86:
+bin86: This is a complete 8086 assembler and loader which can make 32-bit
+bin86: code for the 386+ processors.  In the past it was used to compile the
+bin86: 16-bit bootsector and setup binaries for the kernel, but modern
+bin86: (2.4.x or newer) kernels use GNU ld instead.
+bin86:
+bin86: The bin86 package is needed to compile 2.2.x or earlier kernels.
+bin86:
+bin86:
+bin86:

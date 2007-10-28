@@ -1,0 +1,71 @@
+#!/bin/sh
+# Set initial variables:
+PKGNAM=netatalk
+VERSION=2.0.3
+BUILD=${BUILD:-2}
+
+. /etc/pkghelpers
+pkghelpers_env
+
+rm -rf $PKG
+mkdir -p $PKG
+( cd $PKG
+  explodepkg $CWD/_netatalk.tar.gz )
+
+cd $TMP
+rm -rf netatalk-$VERSION
+tar xjvf $CWD/netatalk-$VERSION.tar.bz2
+cd netatalk-$VERSION
+find . -type d -exec chmod 755 {} \;
+(cd etc/afpd; zcat $CWD/netatalk-cvs-linux26-quota-fix.diff.gz | patch -p0 --verbose || exit) # Fix taken from CVS to use 2.6 XFS headers for quota
+zcat $CWD/netatalk-linux26-quota-fix.diff.gz | patch -p1 --verbose || exit # Fix to fix the CVS patch with 2.6 vs xfsprogs headers installed (pick 2.6 headers first)
+zcat $CWD/netatalk.afpdconf.diff.gz | patch -p1 --verbose || exit
+zcat $CWD/netatalk.etc2ps.diff.gz | patch -p1 --verbose || exit
+chown -R root:root .
+LDFLAGS="$SLKLDFLAGS" \
+CFLAGS="$SLKCFLAGS" \
+./configure \
+  --prefix=/usr \
+  --libdir=/usr/lib$LIBSUFFIX \
+  --sysconfdir=/etc \
+  --libexecdir=/usr/sbin \
+  --localstatedir=/var \
+  --disable-static \
+  --disable-pam \
+  --with-shadow
+make -j12 || exit 1
+make install DESTDIR=$PKG
+# This is normally installed setuid root, but I'm not 100% sure I trust it yet.
+# I see it uses strcpy() in a few places...
+chmod 755 $PKG/usr/bin/afppasswd
+mkdir -p $PKG/install
+zcat $CWD/doinst.sh.gz > $PKG/install/doinst.sh
+cat $CWD/slack-desc > $PKG/install/slack-desc
+( cd $PKG/etc/netatalk
+  for file in AppleVolumes.default AppleVolumes.system afpd.conf afppasswd atalkd.conf netatalk.conf papd.conf ; do
+    mv $file ${file}.new
+    echo "config etc/netatalk/${file}.new" >> $PKG/install/doinst.sh
+  done
+)
+echo "rm -f etc/netatalk/afppasswd.new" >> $PKG/install/doinst.sh
+mkdir -p $PKG/usr/doc/netatalk-$VERSION
+cp -a \
+  CONTRIBUTORS COPYING COPYRIGHT NEWS README TODO VERSION \
+  doc \
+  $PKG/usr/doc/netatalk-$VERSION
+# -1, Redundant
+rm -rf $PKG/usr/doc/netatalk-$VERSION/doc/Makefile* \
+       $PKG/usr/doc/netatalk-$VERSION/doc/htmldocs \
+       $PKG/usr/doc/netatalk-$VERSION/doc/*.pdf
+
+# "make install" creates this directory with chmod 0777
+# I'd rather use 755, but I'll assume since this is a
+# new directory that it is needed for something.  This
+# will help it a bit anyway...
+chmod 1777 $PKG/var/spool/netatalk
+# If anyone can confirm that 755 would still work let me know.
+
+# Build the package:
+cd $PKG
+pkghelpers_fixup
+pkghelpers_makepkg

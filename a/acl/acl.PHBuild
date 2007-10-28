@@ -1,0 +1,79 @@
+#!/bin/sh
+PKGNAM=acl
+VERSION=2.2.39-1
+BUILD=2
+
+. /etc/pkghelpers
+pkghelpers_env
+
+if [ ! -d $TMP ]; then
+  mkdir -p $TMP
+fi
+rm -rf $PKG
+mkdir -p $PKG
+
+cd $TMP
+
+rm -rf acl-$(echo $VERSION | cut -f 1 -d '-')
+tar xzvf $CWD/acl_$VERSION.tar.gz
+cd acl-$(echo $VERSION | cut -f 1 -d '-')
+
+chown -R root:root .
+find . -perm 666 -exec chmod 644 {} \;
+find . -perm 664 -exec chmod 644 {} \;
+find . -perm 600 -exec chmod 644 {} \;
+find . -perm 444 -exec chmod 644 {} \;
+find . -perm 400 -exec chmod 644 {} \;
+find . -perm 440 -exec chmod 644 {} \;
+find . -perm 777 -exec chmod 755 {} \;
+find . -perm 775 -exec chmod 755 {} \;
+find . -perm 511 -exec chmod 755 {} \;
+find . -perm 711 -exec chmod 755 {} \;
+find . -perm 555 -exec chmod 755 {} \;
+
+# Add DESTDIR support and improve docs install location:
+zcat $CWD/acl.destdir.diff.gz | patch -p1 --verbose --backup --suffix=.orig || exit
+
+# Make sure you have the same version of autoconf as the
+# developers did...  ;-)
+autoconf
+
+./configure \
+  --prefix=/ \
+  --exec-prefix=/ \
+  --sbindir=/bin \
+  --bindir=/usr/bin \
+  --libdir=/lib$LIBSUFFIX \
+  --libexecdir=/usr/lib$LIBSUFFIX \
+  --includedir=/usr/include \
+  --mandir=/usr/man \
+  --datadir=/usr/share
+
+make -j12 || exit 1
+make install DESTDIR=$PKG
+make install-dev DESTDIR=$PKG
+make install-lib DESTDIR=$PKG
+
+mv $PKG/usr/share/doc $PKG/usr
+( cd $PKG/usr/doc ; mv acl acl-$VERSION )
+# It would be nice to keep the same timestamps that the files have in the source:
+cp -a \
+  README doc/COPYING doc/PORTING \
+  $PKG/usr/doc/acl-$VERSION
+
+strip -g $PKG/usr/lib$LIBSUFFIX/*.a
+
+# Remove bogus files:
+rm -f $PKG/lib$LIBSUFFIX/*.a $PKG/lib$LIBSUFFIX/libacl.so $PKG/lib$LIBSUFFIX/*.la $PKG/usr/lib$LIBSUFFIX/*.la
+# Make /usr/lib/libacl.so a symlink to /lib:
+( cd $PKG/usr/lib$LIBSUFFIX ; rm -f libacl.so ; ln -sf /lib$LIBSUFFIX/libacl.so.1 libacl.so )
+# Fix shared library perms:
+chmod 755 $PKG/lib$LIBSUFFIX/*
+
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+
+cd $PKG
+PKGVER=$(echo $VERSION | tr - _)
+pkghelpers_fixup
+pkghelpers_makepkg

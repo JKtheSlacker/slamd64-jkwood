@@ -1,0 +1,89 @@
+#!/bin/sh
+# Set initial variables:
+CWD=`pwd`
+if [ "$TMP" = "" ]; then
+  TMP=/tmp
+fi
+PKG=$TMP/package-xaw3d
+
+VERSION=1.5E
+ARCH=x86_64
+BUILD=2
+
+if [ ! -d $TMP ]; then
+  mkdir -p $TMP # location to build the source
+fi
+if [ ! -d $PKG ]; then
+  mkdir -p $PKG # place for the package to be built
+fi
+
+# Explode the package framework:
+cd $PKG
+explodepkg $CWD/_xaw3d.tar.gz
+
+echo "+============+"
+echo "| Xaw3d-1.5E |"
+echo "+============+"
+rm -rf xc
+cd $TMP
+tar xzvf $CWD/Xaw3d-1.5E.tar.gz 
+cd xc/lib/Xaw3d
+# Patch from NetBSD to fix potential overflow in window sizing (error seen under KDE by NetBSD)
+zcat $CWD/integer-overflow-kde.diff.gz | patch -p0 --verbose --backup --suffix=.orig || exit 1
+
+# Patch from Fedora to fix a crash in the i18n code (MultiSrc widget)
+zcat $CWD/Xaw3d-1.5-i18n.patch.gz | patch -p4 --verbose --backup --suffix=.orig || exit 1
+
+ln -s .. X11
+
+# Force Xaw3d to link to its local headers, not non-existant system ones!
+sed -i -e 's/<X11\/Xaw3d\/\(.*\)>/\"X11\/Xaw3d\/\1\"/g' *.h
+sed -i -e 's/<X11\/Xaw3d\/\(.*\)>/\"X11\/Xaw3d\/\1\"/g' *.c
+
+xmkmf
+make
+
+# Restore the headers so they can be installed and used safely by other applications
+sed -i -e 's/\"X11\/Xaw3d\/\(.*\)\"/<X11\/Xaw3d\/\1>/g' *.h
+sed -i -e 's/\"X11\/Xaw3d\/\(.*\)\"/<X11\/Xaw3d\/\1>/g' *.c
+
+mkdir -p $PKG/usr/lib64
+strip --strip-unneeded libXaw3d.so.8.0
+cat libXaw3d.so.8.0 > $PKG/usr/lib64/libXaw3d.so.8.0
+rm -rf $PKG/usr/X11R6/lib64
+
+mkdir -p $PKG/usr/doc/Xaw3d
+cp -a README.XAW3D $PKG/usr/doc/Xaw3d
+chown root:root $PKG/usr/doc/Xaw3d/README.XAW3D
+chmod 644 $PKG/usr/doc/Xaw3d/README.XAW3D
+
+# Install the headers
+mkdir -p $PKG/usr/X11R6/include/X11/Xaw3d
+for header in AllWidgets.h AsciiSink.h AsciiSinkP.h AsciiSrc.h AsciiSrcP.h \
+AsciiText.h AsciiTextP.h Box.h BoxP.h Cardinals.h Command.h CommandP.h \
+Dialog.h DialogP.h Form.h FormP.h Grip.h GripP.h Label.h LabelP.h Layout.h \
+LayoutP.h List.h ListP.h MenuButton.h MenuButtoP.h MultiSrc.h MultiSrcP.h \
+MultiSink.h MultiSinkP.h Paned.h PanedP.h Panner.h PannerP.h Porthole.h \
+PortholeP.h Repeater.h RepeaterP.h Reports.h Scrollbar.h ScrollbarP.h \
+Simple.h SimpleP.h SimpleMenu.h SimpleMenP.h Sme.h SmeP.h SmeBSB.h SmeBSBP.h \
+SmeLine.h SmeLineP.h SmeThreeD.h SmeThreeDP.h StripChart.h StripCharP.h \
+Template.c Template.h TemplateP.h Text.h TextP.h TextSink.h TextSinkP.h \
+TextSrc.h TextSrcP.h ThreeD.h ThreeDP.h Tip.h TipP.h Toggle.h ToggleP.h \
+ Tree.h TreeP.h VendorEP.h Viewport.h ViewportP.h Xaw3dP.h XawImP.h XawInit.h ;
+ do cp -a $header $PKG/usr/X11R6/include/X11/Xaw3d/$header
+ chown root:root $PKG/usr/X11R6/include/X11/Xaw3d/$header
+ chmod 644 $PKG/usr/X11R6/include/X11/Xaw3d/$header
+done
+
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+
+# Build the package:
+cd $PKG
+makepkg -l y -c n $TMP/xaw3d-$VERSION-$ARCH-$BUILD.tgz
+
+# Clean up the extra stuff:
+if [ "$1" = "--cleanup" ]; then
+  rm -rf $TMP/xc
+  rm -rf $PKG
+fi

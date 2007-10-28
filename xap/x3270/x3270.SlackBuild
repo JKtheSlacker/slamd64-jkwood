@@ -1,0 +1,72 @@
+#!/bin/sh
+CWD=`pwd`
+PKG=/tmp/package-x3270
+
+TARBVER=3.3.5
+VERSION=3.3.5
+ARCH=${ARCH:-x86_64}
+BUILD=1
+DISTRO=${DISTRO:-slamd64}
+
+if [ $DISTRO = slackware ]; then
+	PKGARCH=$ARCH
+else
+	PKGARCH=${ARCH}_${DISTRO}
+fi
+
+if [ $DISTRO = slamd64 ]; then
+	LIBSUFFIX=64
+	SLKLDFLAGS="-L/usr/lib64"
+else
+	LIBSUFFIX=
+	SLKLDFLAGS=
+fi
+
+rm -rf $PKG
+mkdir -p $PKG
+cd /tmp
+rm -rf x3270-$VERSION
+tar xjvf $CWD/x3270-$TARBVER.tar.bz2
+cd x3270-3.3
+chown -R root:root .
+find . -perm 777 -exec chmod 755 {} \;
+find . -perm 664 -exec chmod 644 {} \;
+find . -perm 444 -exec chmod 644 {} \;
+./configure \
+  --prefix=/usr \
+  --sysconfdir=/etc/X11 \
+  --build=$ARCH-$DISTRO-linux
+make -j10 || exit 1
+make install DESTDIR=$PKG
+mv $PKG/etc/X11/x3270/ibm_hosts $PKG/etc/X11/x3270/ibm_hosts.new
+find $PKG -name fonts.dir -exec rm {} \;
+if [ -d $PKG/usr/lib/X11/fonts/misc ]; then
+  mkdir -p $PKG/usr/share/fonts
+  mv $PKG/usr/lib/X11/fonts/misc $PKG/usr/share/fonts
+  rmdir $PKG/usr/lib/X11/fonts/misc
+  rmdir $PKG/usr/lib/X11/fonts
+  rmdir $PKG/usr/lib/X11
+  rmdir $PKG/usr/lib
+fi
+mkdir -p $PKG/etc/X11/app-defaults
+cat X3270.xad > $PKG/etc/X11/app-defaults/X3270
+( cd $PKG
+  find . | xargs file | grep "executable" | grep ELF | cut -f 1 -d : | xargs strip --strip-unneeded 2> /dev/null
+  find . | xargs file | grep "shared object" | grep ELF | cut -f 1 -d : | xargs strip --strip-unneeded 2> /dev/null
+)
+mkdir -p $PKG/usr/man/man{1,5}
+for file in x3270-script.man x3270.man x3270if.man ; do
+  cat $file | gzip -9c > $PKG/usr/man/man1/`basename $file .man`.1.gz
+done
+cat ibm_hosts.man | gzip -9c > $PKG/usr/man/man5/ibm_hosts.5.gz
+mkdir -p $PKG/usr/doc/x3270-$VERSION
+cp -a \
+  LICENSE README* Examples html \
+  $PKG/usr/doc/x3270-$VERSION
+mkdir -p $PKG/install
+zcat $CWD/doinst.sh.gz > $PKG/install/doinst.sh
+cat $CWD/slack-desc > $PKG/install/slack-desc
+
+cd $PKG
+makepkg -l y -c n ../x3270-$VERSION-$PKGARCH-$BUILD.tgz
+

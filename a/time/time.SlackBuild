@@ -1,0 +1,59 @@
+#!/bin/sh
+# Set initial variables:
+CWD=$(pwd)
+if [ "$TMP" = "" ]; then
+  TMP=/tmp
+fi
+PKG=$TMP/package-time
+
+VERSION=1.7
+ARCH=${ARCH:-x86_64}
+BUILD=1
+DISTRO=${DISTRO:-slamd64}
+
+if [ $DISTRO = slacwkare ]; then
+	PKGARCH=$ARCH
+else
+	PKGARCH=${ARCH}_${DISTRO}
+fi
+
+if [ "$ARCH" = "i386" ]; then
+  SLKCFLAGS="-O2 -march=i386 -mcpu=i686"
+elif [ "$ARCH" = "i486" ]; then
+  SLKCFLAGS="-O2 -march=i486 -mtune=i686"
+elif [ "$ARCH" = "s390" ]; then
+  SLKCFLAGS="-O2"
+elif [ "$ARCH" = "x86_64" ]; then
+  SLKCFLAGS="-O2"
+fi
+
+cd $TMP
+rm -rf time-${VERSION}
+tar xvzf $CWD/time-${VERSION}.tar.gz
+cd time-${VERSION}
+chown -R root:root .
+CFLAGS="$SLKCFLAGS" \
+./configure \
+  --prefix=/usr \
+  $ARCH-$DISTRO-linux
+make || exit 1
+mkdir -p $PKG/usr/bin
+cat time > $PKG/usr/bin/time
+chmod 755 $PKG/usr/bin/time
+mkdir -p $PKG/usr/info
+cat time.info | gzip -9c > $PKG/usr/info/time.info.gz
+mkdir -p $PKG/usr/doc/time-${VERSION}
+cp -a \
+  AUTHORS COPYING NEWS README \
+  $PKG/usr/doc/time-${VERSION}
+( cd $PKG
+  find . | xargs file | grep "executable" | grep ELF | cut -f 1 -d : | xargs strip --strip-unneeded 2> /dev/null
+  find . | xargs file | grep "shared object" | grep ELF | cut -f 1 -d : | xargs strip --strip-unneeded 2> /dev/null
+)
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+
+# Build the package:
+cd $PKG
+makepkg -l y -c n $TMP/time-$VERSION-$PKGARCH-$BUILD.tgz
+

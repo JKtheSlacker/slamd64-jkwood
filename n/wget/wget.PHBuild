@@ -1,0 +1,35 @@
+#!/bin/sh
+PKGNAM=wget
+VERSION=1.10.2
+BUILD=${BUILD:-2}
+
+. /etc/pkghelpers
+pkghelpers_env
+
+rm -rf $PKG
+mkdir -p $PKG
+
+cd $TMP
+rm -rf wget-$VERSION
+tar xjvf $CWD/wget-$VERSION.tar.bz2
+cd wget-$VERSION
+chown -R root.root .
+CFLAGS="$SLKCFLAGS" \
+./configure --prefix=/usr \
+  --sysconfdir=/etc \
+  ${ARCH}-$DISTRO-linux
+make -j12 || exit 1
+make install DESTDIR=$PKG
+mv $PKG/etc/wgetrc $PKG/etc/wgetrc.new
+gzip -9 $PKG/usr/info/* $PKG/usr/man/man?/*
+mkdir -p $PKG/usr/doc/wget-$VERSION
+cp -a \
+  AUTHORS COPYING MAILING-LIST NEWS PATCHES README README.cvs TODO \
+  $PKG/usr/doc/wget-$VERSION
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+
+cd $PKG
+zcat $CWD/doinst.sh.gz > install/doinst.sh
+pkghelpers_fixup
+pkghelpers_makepkg

@@ -1,0 +1,52 @@
+#!/bin/sh
+CWD=`pwd`
+TMP=/tmp
+PKG=$TMP/package-devel32
+mkdir -p $PKG/usr
+
+VERSION=1.2.14
+ARCH=${ARCH:-x86_64}
+BUILD=1
+
+cd $TMP
+rm -rf libpng-$VERSION
+tar xjvf $CWD/libpng-$VERSION.tar.bz2
+cd libpng-$VERSION
+chown -R root:root .
+find . -perm 664 -exec chmod 644 {} \;
+find . -perm 600 -exec chmod 644 {} \;
+find . -perm 444 -exec chmod 644 {} \;
+find . -perm 400 -exec chmod 644 {} \;
+find . -perm 440 -exec chmod 644 {} \;
+find . -perm 777 -exec chmod 755 {} \;
+find . -perm 775 -exec chmod 755 {} \;
+find . -perm 511 -exec chmod 755 {} \;
+find . -perm 711 -exec chmod 755 {} \;
+find . -perm 555 -exec chmod 755 {} \;
+
+# Need this to substitute macros, but we'll keep using the
+# pre-built Makefile for now anyway...
+./configure --prefix=/usr --libdir=/usr/lib
+
+# Might as well link to -lz -lm, since the ./configure seems
+# to be doing it that way now...  finally.  That'll prevent
+# a couple of emails a week.  :-)
+zcat $CWD/libpng.libs.diff.gz | patch -p1 --verbose || exit 1
+
+# Link the custom makefile:
+ln -sf scripts/makefile.linux ./Makefile
+
+make prefix=/usr LIBPATH=/usr/lib
+make install prefix=/usr LIBPATH=/usr/lib DESTDIR=$PKG
+
+rm -rf $PKG/usr/man
+
+# This symlink is needed to keep old applications running:
+# I guess the real lib used the major number 3, then 0 for
+# a short while, and now .3 again.  Hopefully it will stay
+# this way as it was .3 in Slackware 10.2.  One can hope.
+( cd $PKG/usr/lib
+  if [ ! -e libpng.so.0 -a -e libpng.so.3 ]; then
+    ln -sf libpng.so.3 libpng.so.0
+  fi
+)

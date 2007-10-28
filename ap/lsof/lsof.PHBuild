@@ -1,0 +1,51 @@
+#!/bin/sh
+# Set initial variables:
+PKGNAM=lsof
+VERSION=4.78
+BUILD=${BUILD:-1}
+
+. /etc/pkghelpers
+pkghelpers_env
+
+rm -rf $PKG
+mkdir -p $PKG # place for the package to be built
+
+cd $TMP
+rm -rf lsof_$VERSION
+tar xjvf $CWD/lsof_$VERSION.tar.bz2
+cd lsof_$VERSION
+tar xvf lsof_${VERSION}_src.tar
+cd lsof_${VERSION}_src
+
+chown -R root:root .
+find . -perm 666 -exec chmod 644 {} \;
+find . -perm 664 -exec chmod 644 {} \;
+find . -perm 600 -exec chmod 644 {} \;
+find . -perm 444 -exec chmod 644 {} \;
+find . -perm 400 -exec chmod 644 {} \;
+find . -perm 440 -exec chmod 644 {} \;
+find . -perm 777 -exec chmod 755 {} \;
+find . -perm 775 -exec chmod 755 {} \;
+find . -perm 511 -exec chmod 755 {} \;
+find . -perm 711 -exec chmod 755 {} \;
+find . -perm 555 -exec chmod 755 {} \;
+
+echo n | ./Configure linux
+make -j 12
+strip lsof
+mkdir -p $PKG/usr/bin
+cat lsof > $PKG/usr/bin/lsof
+# No, NOT suid.
+chmod 755 $PKG/usr/bin/lsof
+mkdir -p $PKG/usr/man/man8
+cat lsof.8 | gzip -9c > $PKG/usr/man/man8/lsof.8.gz
+mkdir -p $PKG/usr/doc/lsof-$VERSION
+cp -a 00* $PKG/usr/doc/lsof-$VERSION
+chmod 644 $PKG/usr/doc/lsof-$VERSION/*
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+
+# Build the package:
+cd $PKG
+pkghelpers_fixup
+pkghelpers_makepkg

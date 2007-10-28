@@ -1,0 +1,50 @@
+#!/bin/sh
+# Set initial variables:
+CWD=`pwd`
+if [ "$TMP" = "" ]; then
+  TMP=/tmp/netdate-build
+fi
+PKG=$TMP/package-netdate
+
+VERSION=bsd4
+ARCH=${ARCH:-x86_64}
+BUILD=1
+DISTRO=${DISTRO:-slamd64}
+
+if [ $DISTRO = slackware ]; then
+	PKGARCH=$ARCH
+else
+	PKGARCH=${ARCH}_${DISTRO}
+fi
+
+if [ ! -d $TMP ]; then
+  mkdir -p $TMP # location to build the source
+fi
+rm -rf $PKG
+mkdir -p $PKG
+
+cd $TMP
+rm -rf netdate
+tar xzvf $CWD/netdate.tar.gz
+cd netdate
+chown -R root:root .
+zcat $CWD/netdate.diff.gz | patch -p1 --backup || exit
+zcat $CWD/netdate.diff2.gz | patch -p1 --backup || exit
+make || exit 1
+strip netdate
+mkdir -p $PKG/usr/sbin
+cat netdate > $PKG/usr/sbin/netdate
+chmod 755 $PKG/usr/sbin/netdate
+mkdir -p $PKG/usr/man/man8
+cat netdate.8 | gzip -9c > $PKG/usr/man/man8/netdate.8.gz
+mkdir -p $PKG/usr/doc/netdate
+cp -a COPYRIGHT $PKG/usr/doc/netdate
+
+# Finish up the package:
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+
+# Build the package:
+cd $PKG
+makepkg -l y -c n $TMP/netdate-$VERSION-$PKGARCH-$BUILD.tgz
+

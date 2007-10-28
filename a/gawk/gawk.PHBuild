@@ -1,0 +1,65 @@
+#!/bin/sh
+# Set initial variables:
+PKGNAM=gawk
+VERSION=3.1.5
+BUILD=${BUILD:-4}
+
+. /etc/pkghelpers
+pkghelpers_env
+
+rm -rf $PKG
+mkdir -p $PKG
+
+if [ ! -d $TMP ]; then
+  mkdir -p $TMP # location to build the source
+fi
+rm -rf $PKG
+mkdir -p $PKG
+
+cd $TMP
+rm -rf gawk-$VERSION
+tar xjvf $CWD/gawk-$VERSION.tar.bz2
+cd gawk-$VERSION
+
+zcat $CWD/gawk.glibc.free.diff.gz | patch -p2 -l --verbose || exit 1
+zcat $CWD/gawk-3.1.5.fieldwidths.diff.gz | patch -p1 -l --verbose || exit 1
+
+chown -R root:root .
+CFLAGS="$SLKCFLAGS" \
+./configure \
+  --prefix=/usr \
+  $ARCH-$DISTRO-linux
+
+make -j12 || exit 1
+make install DESTDIR=$PKG || exit 1
+
+( cd $PKG/usr/bin
+  ln -sf gawk-$VERSION gawk
+  ln -sf pgawk-$VERSION pgawk
+)
+mkdir -p $PKG/bin
+mv $PKG/usr/bin/gawk* $PKG/bin
+mv $PKG/usr/bin/awk $PKG/bin
+( cd $PKG/usr/bin
+  ln -sf ../../bin/awk .
+  ln -sf ../../bin/gawk .
+  ln -sf ../../bin/gawk-$VERSION .
+)
+( cd $PKG/usr/man/man1
+  rm -f pgawk.1
+  ln -sf gawk.1.gz awk.1.gz
+  ln -sf gawk.1.gz pgawk.1.gz
+)
+mkdir -p $PKG/usr/doc/gawk-$VERSION
+cp -a \
+  ABOUT-NLS AUTHORS COPYING FUTURES INSTALL LIMITATIONS NEWS POSIX.STD PROBLEMS README README_d \
+  $PKG/usr/doc/gawk-$VERSION
+find $PKG/usr/doc/gawk-$VERSION -type d -exec chmod 755 {} \;
+find $PKG/usr/doc/gawk-$VERSION -type f -exec chmod 644 {} \;
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+
+# Build the package:
+cd $PKG
+pkghelpers_fixup
+pkghelpers_makepkg

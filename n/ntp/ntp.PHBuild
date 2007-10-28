@@ -1,0 +1,77 @@
+#!/bin/sh
+PKGNAM=ntp
+VERSION=4.2.4p0
+BUILD=${BUILD:-1}
+
+. /etc/pkghelpers
+pkghelpers_env
+
+rm -rf $PKG
+mkdir -p $PKG
+cd $TMP
+rm -rf ntp-${VERSION}*
+tar xjvf $CWD/ntp-${VERSION}*.tar.bz2
+cd ntp-${VERSION}*
+chown -R root:root .
+find . -perm 664 -exec chmod 644 {} \;
+find . -perm 777 -exec chmod 755 {} \;
+find . -perm 2777 -exec chmod 755 {} \;
+find . -perm 775 -exec chmod 755 {} \;
+find . -perm 2755 -exec chmod 755 {} \;
+find . -perm 774 -exec chmod 644 {} \;
+find . -perm 666 -exec chmod 644 {} \;
+find . -perm 600 -exec chmod 644 {} \;
+find . -perm 444 -exec chmod 644 {} \;
+find . -perm 400 -exec chmod 644 {} \;
+find . -perm 440 -exec chmod 644 {} \;
+find . -perm 511 -exec chmod 755 {} \;
+find . -perm 711 -exec chmod 755 {} \;
+find . -perm 555 -exec chmod 755 {} \;
+CFLAGS="$SLKCFLAGS" \
+./configure \
+  --prefix=/usr \
+  --libdir=/usr/lib$LIBSUFFIX \
+  --localstatedir=/var \
+  --sysconfdir=/etc \
+  --bindir=/usr/sbin \
+  --sbindir=/usr/sbin \
+  --program-prefix= \
+  --program-suffix= \
+  --build=$ARCH-$DISTRO-linux
+
+make -j12 || exit 1
+make install DESTDIR=$PKG || exit 1
+
+# Since the Makefile's install pays no heed to the --bindir settings,
+# we'll move things to where they've always been ourselves:
+mv $PKG/usr/bin/* $PKG/usr/sbin
+rmdir $PKG/usr/bin
+
+mkdir -p $PKG/etc/ntp
+cat $CWD/ntp.conf > $PKG/etc/ntp.conf.new
+cat $CWD/ntp.keys > $PKG/etc/ntp/ntp.keys.new
+chmod 600 $PKG/etc/ntp/ntp.keys.new
+touch $PKG/etc/ntp/step-tickers
+
+mkdir -p $PKG/etc/rc.d
+cat $CWD/rc.ntpd > $PKG/etc/rc.d/rc.ntpd.new
+
+mkdir -p $PKG/usr/doc/ntp-$VERSION
+cp -a \
+  COPYRIGHT NEWS README* TODO WHERE-TO-START \
+  *.y2kfixes clockstuff conf html scripts \
+  $PKG/usr/doc/ntp-$VERSION
+mkdir $PKG/usr/doc/ntp-$VERSION/util
+cp -a util/README $PKG/usr/doc/ntp-$VERSION/util
+mkdir $PKG/usr/doc/ntp-$VERSION/ntpdate
+cp -a ntpdate/README $PKG/usr/doc/ntp-$VERSION/ntpdate
+( cd $PKG/usr/doc/ntp-$VERSION
+  find . -type d -name .deps -exec rm -rf {} \; 2> /dev/null
+)
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+zcat $CWD/doinst.sh.gz > $PKG/install/doinst.sh
+
+cd $PKG
+pkghelpers_fixup
+pkghelpers_makepkg

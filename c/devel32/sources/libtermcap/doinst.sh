@@ -1,0 +1,1 @@
+../../../../l/libtermcap/doinst.sh

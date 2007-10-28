@@ -1,0 +1,43 @@
+#!/bin/sh
+
+TAR=tar-1.13
+$TAR --help 1> /dev/null 2> /dev/null
+if [ ! $? = 0 ]; then
+  TAR=tar
+fi
+if [ ! "`LC_MESSAGES=C $TAR --version`" = "tar (GNU tar) 1.13
+
+Copyright (C) 1988, 92,93,94,95,96,97,98, 1999 Free Software Foundation, Inc.
+This is free software; see the source for copying conditions.  There is NO
+warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+
+Written by John Gilmore and Jay Fenlason." ]; then
+  echo "WARNING: pkgtools are unstable with tar > 1.13."
+  echo "         You should provide a \"tar-1.13\" in your \$PATH."
+  sleep 5
+fi
+
+if [ $# = 0 ]; then
+ cat << EOF
+Usage: explodepkg package_name [package_name2, ...]
+
+Explodes a Slackware compatible software package (or any tar+gzip archive) in
+the current directory.  Equivalent to (for each package listed):
+
+   ( umask 000 ; tar xzvf package_name )
+
+Note: This should only be used for debugging or examining packages, not for 
+installing them. It doesn't execute installation scripts or update the package
+indexes in /var/log/packages|scripts.
+
+EOF
+fi
+for PKG in $* ; do
+ echo "Exploding package $PKG in current directory:"
+ ( umask 000 ; $TAR xzvf $PKG 2> /dev/null )
+ if [ -r install/doinst.sh ]; then
+  echo
+  echo "An installation script was detected in ./install/doinst.sh, but"
+  echo "was not executed."
+ fi
+done

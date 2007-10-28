@@ -1,0 +1,47 @@
+#!/bin/sh
+CWD=`pwd`
+TMP=${TMP:-/tmp}
+PKG=$TMP/package-lilo
+
+VERSION=${VERSION:-22.7.1}
+ARCH=${ARCH:-x86_64}
+BUILD=${BUILD:-1}
+
+rm -rf $PKG
+mkdir -p $PKG
+cd $TMP
+rm -rf lilo-$VERSION
+tar xzvf $CWD/lilo-$VERSION.src.tar.gz
+cd lilo-$VERSION
+chown -R root:root .
+make
+make install ROOT=$PKG
+# We don't need to add this empty directory:
+rmdir $PKG/etc
+# Add Slackware's 'liloconfig' utility:
+mkdir -p $PKG/sbin
+cp -a $CWD/liloconfig $PKG/sbin/liloconfig
+chmod 755 $PKG/sbin/liloconfig
+mkdir -p $PKG/var/log/setup
+cp -a $CWD/setup.liloconfig $PKG/var/log/setup/setup.liloconfig
+cp -a $CWD/text.lilohelp $PKG/var/log/setup/text.lilohelp
+chmod 755 $PKG/var/log/setup/setup.liloconfig
+chmod 644 $PKG/var/log/setup/text.lilohelp
+chown root:root $PKG/var/log/setup/setup.liloconfig $PKG/var/log/setup/text.lilohelp
+rm -rf $PKG/usr/doc/lilo-$VERSION
+mkdir -p $PKG/usr/doc/lilo-$VERSION
+cp -a CHANGES COPYING COPYRIGHT INCOMPAT QuickInst READM* doc sample \
+  $PKG/usr/doc/lilo-$VERSION
+if [ -r $CWD/lilo-$VERSION.lsm ]; then
+  cp -a $CWD/lilo-$VERSION.lsm $PKG/usr/doc/lilo-$VERSION
+fi
+if [ -r $CWD/lilo-$VERSION.announce.txt ]; then
+  cp -a $CWD/lilo-$VERSION.announce.txt $PKG/usr/doc/lilo-$VERSION
+fi
+gzip -9 $PKG/usr/man/man?/*.?
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+
+cd $PKG
+makepkg -l y -c n $TMP/lilo-$VERSION-$ARCH-$BUILD.tgz
+

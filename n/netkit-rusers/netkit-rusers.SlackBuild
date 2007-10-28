@@ -1,0 +1,65 @@
+#!/bin/sh
+# Set initial variables:
+CWD=`pwd`
+if [ "$TMP" = "" ]; then
+  TMP=/tmp
+fi
+PKG=$TMP/package-netkit-rusers
+
+VERSION=0.17
+ARCH=${ARCH:-x86_64}
+BUILD=1
+DISTRO=${DISTRO:-slamd64}
+
+if [ $DISTRO = slackware ]; then
+	PKGARCH=$ARCH
+else
+	PKGARCH=${ARCH}_${DISTRO}
+fi
+
+if [ ! -d $TMP ]; then
+  mkdir -p $TMP # location to build the source
+fi
+rm -rf $PKG
+mkdir -p $PKG
+
+cd $TMP
+tar xzvf $CWD/netkit-rusers-0.17.tar.gz
+cd netkit-rusers-0.17
+chown -R root:root .
+zcat $CWD/netkit-rusers-0.17.diff.gz | patch -p1 || exit
+./configure --prefix=/usr
+make RPCGEN="rpcgen -Y /usr/bin" || exit
+cd rpc.rusersd
+strip rusersd
+mkdir -p $PKG/usr/sbin
+cat rusersd > $PKG/usr/sbin/rpc.rusersd
+chmod 755 $PKG/usr/sbin/rpc.rusersd
+mkdir -p $PKG/usr/man/man8
+cat rpc.rusersd.8 | gzip -9c > $PKG/usr/man/man8/rpc.rusersd.8.gz
+cd ../rusers
+strip rusers
+mkdir -p $PKG/usr/bin
+cat rusers > $PKG/usr/bin/rusers
+chmod 755 $PKG/usr/bin/rusers
+mkdir -p $PKG/usr/man/man1
+cat rusers.1 | gzip -9c > $PKG/usr/man/man1/rusers.1.gz
+cd ../rup
+strip rup
+cat rup > $PKG/usr/bin/rup
+chmod 755 $PKG/usr/bin/rup
+cat rup.1 | gzip -9c > $PKG/usr/man/man1/rup.1.gz
+cd ..
+mkdir -p $PKG/usr/doc/netkit-rusers-0.17
+cp -a README $PKG/usr/doc/netkit-rusers-0.17
+chown root:root $PKG/usr/doc/netkit-rusers-0.17/*
+chmod 644 $PKG/usr/doc/netkit-rusers-0.17/*
+
+# Finish up the package:
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+
+# Build the package:
+cd $PKG
+makepkg -l y -c n $TMP/netkit-rusers-$VERSION-$PKGARCH-$BUILD.tgz
+

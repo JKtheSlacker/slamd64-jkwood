@@ -1,0 +1,60 @@
+#!/bin/sh
+PKGNAM=gettext
+VERSION=0.16.1
+BUILD=${BUILD:-1}
+
+. /etc/pkghelpers
+pkghelpers_env
+
+rm -rf $PKG
+mkdir -p $PKG
+cd $TMP
+rm -rf gettext-$VERSION
+tar xjvf $CWD/gettext-$VERSION.tar.bz2 || exit 1
+cd gettext-$VERSION
+chown -R root:root .
+find . -perm 664 -exec chmod 644 {} \;
+find . -perm 600 -exec chmod 644 {} \;
+find . -perm 444 -exec chmod 644 {} \;
+find . -perm 400 -exec chmod 644 {} \;
+find . -perm 440 -exec chmod 644 {} \;
+find . -perm 777 -exec chmod 755 {} \;
+find . -perm 775 -exec chmod 755 {} \;
+find . -perm 511 -exec chmod 755 {} \;
+find . -perm 711 -exec chmod 755 {} \;
+find . -perm 555 -exec chmod 755 {} \;
+cd gettext-runtime
+CFLAGS="$SLKCFLAGS" \
+CXXFLAGS="$SLKCFLAGS" \
+./configure \
+  --prefix=/usr \
+	--libdir=/usr/lib$LIBSUFFIX \
+  --infodir=/usr/info \
+  --disable-static \
+  --build=$ARCH-$DISTRO-linux
+
+make -j12 || exit 1
+make install DESTDIR=$PKG
+( cd $PKG/usr/share
+  mv man ..
+  mv doc ..
+)
+( cd $PKG/usr/doc
+  mkdir gettext-$VERSION
+  mv gettext/csharpdoc gettext/javadoc1 gettext/javadoc2 libasprintf gettext-$VERSION
+  rm -rf gettext
+  cd gettext-$VERSION
+  if [ -r $PKG/usr/share/gettext/ABOUT-NLS ]; then
+    rm -f ABOUT-NLS
+    ln -sf /usr/share/gettext/ABOUT-NLS .
+  fi
+)
+cp -a \
+  AUTHORS BUGS intl/COPYING.LIB-2.0 intl/COPYING.LIB-2.1 INSTALL NEWS README \
+  $PKG/usr/doc/gettext-$VERSION
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+
+cd $PKG
+pkghelpers_fixup
+pkghelpers_makepkg

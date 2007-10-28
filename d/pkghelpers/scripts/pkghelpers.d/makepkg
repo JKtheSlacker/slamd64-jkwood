@@ -1,0 +1,14 @@
+#!/bin/sh
+# Copyright 2007 Frederick Emmott <mail@fredemmott.co.uk>
+# Distributed under the GNU General Public License, version 2,
+# as published by the Free Software foundation, NOT any other
+# version.
+
+pkghelpers_makepkg() {
+	if (! (pkghelpers_checkpkg)); then
+		echo "Press enter to make the package anyway, or ctrl-c to quit."
+		read
+	fi
+
+	makepkg -l y -c n ../$PKGNAM-$PKGVER-$PKGARCH-$BUILD$TAG.tgz
+}

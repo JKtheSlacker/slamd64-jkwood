@@ -1,0 +1,101 @@
+#!/bin/sh
+PKGNAM=minicom
+VERSION=2.1
+BUILD=2
+
+. /etc/pkghelpers
+pkghelpers_env
+
+rm -rf $PKG
+mkdir -p $PKG
+
+# minicom
+cd $TMP
+rm -rf minicom-$VERSION
+tar xzvf $CWD/minicom-$VERSION.tar.gz
+cd minicom-$VERSION
+chown -R root.root .
+find . -perm 777 -exec chmod 755 {} \;
+find . -perm 664 -exec chmod 644 {} \;
+
+# Workaround a conflict with termcap.h
+zcat $CWD/wintcap.diff.gz | patch -p1 --verbose || exit 1
+CFLAGS="$SLKCFLAGS" \
+./configure \
+  --prefix=/usr \
+  --sysconfdir=/etc
+make -j10 || exit 1
+make install DESTDIR=$PKG || exit 1
+mkdir -p $PKG/etc
+zcat $CWD/minicom.users.gz > $PKG/etc/minicom.users.new
+zcat $CWD/minirc.dfl.gz > $PKG/etc/minirc.dfl.new
+gzip -9 $PKG/usr/man/man?/*.?
+mkdir -p $PKG/usr/doc/minicom-$VERSION
+cp -a \
+  ABOUT-NLS AUTHORS COPYING ChangeLog FILE_ID.DIZ INSTALL NEWS README TODO \
+  doc \
+  $PKG/usr/doc/minicom-$VERSION
+
+# lzrz
+# If autoconf causes failure here (which it probably will),
+# remove it temporarily and the build should work fine...
+cd $TMP
+tar xzvf $CWD/lrzsz_0.12.21.orig.tar.gz
+cd lrzsz-990823
+zcat $CWD/lrzsz_0.12.21-4.diff.gz | patch -p1 --verbose
+chown -R root.root .
+# Make x86_64 a valid machine type
+zcat $CWD/config.sub-x86_64.diff.gz | patch -p1 --verbose || exit 1
+./configure \
+  --prefix=/usr \
+  $ARCH-$DISTRO-linux
+make -j10 || exit 1
+cd src
+cat lrz > $PKG/usr/bin/lrz
+cat lsz > $PKG/usr/bin/lsz
+chmod 755 $PKG/usr/bin/l*z
+cd ../man
+for page in lrz.1 lsz.1 ; do
+  cat $page | gzip -9c > $PKG/usr/man/man1/$page.gz
+done
+echo '.so man1/lrz.1' | gzip -9c > $PKG/usr/man/man1/rz.1.gz
+echo '.so man1/lsz.1' | gzip -9c > $PKG/usr/man/man1/sz.1.gz
+cd ../po
+mkdir -p $PKG/usr/share/locale/de/LC_MESSAGES
+cat de.gmo > $PKG/usr/share/locale/de/LC_MESSAGES/lrzsz.mo
+cd ..
+mkdir -p $PKG/usr/doc/lrzsz-0.12.21
+cp -a ABOUT-NLS AUTHORS COMPATABILITY COPYING INSTALL NEWS README-alpha \
+  README.cvs README.gettext README.isdn4linux README.systems \
+  README.tests THANKS TODO $PKG/usr/doc/lrzsz-0.12.21
+
+
+( cd $PKG
+  ( cd usr/bin ; rm -rf rx )
+  ( cd usr/bin ; ln -sf  rz rx )
+  ( cd usr/bin ; rm -rf rb )
+  ( cd usr/bin ; ln -sf  rz rb )
+  ( cd usr/bin ; rm -rf sb )
+  ( cd usr/bin ; ln -sf  sz sb )
+  ( cd usr/bin ; rm -rf sx )
+  ( cd usr/bin ; ln -sf  sz sx )
+  ( cd usr/bin ; rm -rf rz )
+  ( cd usr/bin ; ln -sf lrz rz )
+  ( cd usr/bin ; rm -rf lrb )
+  ( cd usr/bin ; ln -sf lrz lrb )
+  ( cd usr/bin ; rm -rf lrx )
+  ( cd usr/bin ; ln -sf lrz lrx )
+  ( cd usr/bin ; rm -rf sz )
+  ( cd usr/bin ; ln -sf lsz sz )
+  ( cd usr/bin ; rm -rf lsb )
+  ( cd usr/bin ; ln -sf lsz lsb )
+  ( cd usr/bin ; rm -rf lrx )
+  ( cd usr/bin ; ln -sf lsz lrx )
+)
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+zcat $CWD/doinst.sh.gz > $PKG/install/doinst.sh
+
+cd $PKG
+pkghelpers_fixup
+pkghelpers_makepkg

@@ -1,0 +1,55 @@
+#!/bin/sh
+
+PKGNAM=gnupg
+VERSION=1.4.7
+BUILD=${BUILD:-2}
+
+. /etc/pkghelpers
+pkghelpers_env
+
+rm -rf $PKG
+mkdir -p $PKG
+
+cd $TMP
+rm -rf gnupg-$VERSION
+tar xjvf $CWD/gnupg-$VERSION.tar.bz2
+cd gnupg-$VERSION
+chown -R root:root .
+find . -perm 664 -exec chmod 644 {} \;
+find . -perm 600 -exec chmod 644 {} \;
+find . -perm 444 -exec chmod 644 {} \;
+find . -perm 400 -exec chmod 644 {} \;
+find . -perm 440 -exec chmod 644 {} \;
+find . -perm 777 -exec chmod 755 {} \;
+find . -perm 775 -exec chmod 755 {} \;
+find . -perm 511 -exec chmod 755 {} \;
+find . -perm 711 -exec chmod 755 {} \;
+find . -perm 555 -exec chmod 755 {} \;
+LDFLAGS="-lcurl" \
+CFLAGS="$SLKCFLAGS" \
+./configure \
+  --prefix=/usr \
+  --infodir=/usr/info \
+  --mandir=/usr/man \
+  $ARCH-$DISTRO-linux || exit 1
+make -j10 || exit 1
+make install DESTDIR=$PKG || exit 1
+
+rm -f $PKG/usr/info/dir
+gzip -9 $PKG/usr/info/*
+gzip -9 $PKG/usr/man/*/*
+mkdir -p $PKG/usr/doc/gnupg-$VERSION
+cp -a \
+  ABOUT-NLS AUTHORS BUGS COPYING INSTALL NEWS PROJECTS README THANKS TODO VERSION \
+  $PKG/usr/doc/gnupg-$VERSION
+( cd $PKG/usr/doc/gnupg-$VERSION
+  ln -sf /usr/share/gnupg/FAQ .
+  ln -sf /usr/share/gnupg/faq.html . )
+# Add slack-desc files:
+mkdir -p $PKG/install
+cat $CWD/slack-desc.gnupg > $PKG/install/slack-desc
+
+# Build the package:
+cd $PKG
+pkghelpers_fixup
+pkghelpers_makepkg

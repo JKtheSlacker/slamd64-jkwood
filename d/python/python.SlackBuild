@@ -1,0 +1,119 @@
+#!/bin/sh
+CWD=`pwd`
+PKG=/tmp/package-python
+rm -rf $PKG
+mkdir -p $PKG
+
+VERSION=2.5.1
+ARCH=${ARCH:-x86_64}
+BUILD=${BUILD:-2}
+DISTRO=${DISTRO:-slamd64}
+
+if [ $DISTRO = slackware ]; then
+	PKGARCH=$ARCH
+else
+	PKGARCH=${ARCH}_${DISTRO}
+fi
+
+if [ $DISTRO = slamd64 ]; then
+	LIBSUFFIX=${LIBSUFFIX:-64}
+fi
+
+# Location for Python site-packages:
+SITEPK=$PKG/usr/lib$LIBSUFFIX/python2.5/site-packages
+# same as above without $PKG
+TOOLSDIR=/usr/lib$LIBSUFFIX/python2.5/site-packages
+
+# Normally I don't trust -O3, but it is the Python default so
+# I'll assume that in this case it has been well tested.
+if [ "$ARCH" = "i386" ]; then
+  SLKCFLAGS="-O3 -march=i386 -mcpu=i686"
+elif [ "$ARCH" = "i486" ]; then
+  SLKCFLAGS="-O3 -march=i486 -mtune=i686"
+elif [ "$ARCH" = "s390" ]; then
+  SLKCFLAGS="-O3"
+elif [ "$ARCH" = "x86_64" ]; then
+  SLKCFLAGS="-O3 -fPIC"
+fi
+
+cd /tmp
+rm -rf Python-$VERSION
+tar xjvf $CWD/Python-$VERSION.tar.bz2 || exit 1
+cd Python-$VERSION
+if [ "x$LIBSUFFIX" != "x" ]; then
+	# Grab from http://cblfs.cross-lfs.org/index.php/Python
+	zcat $CWD/Python-$VERSION-multilib-1.diff.gz | patch -p1 --verbose || exit 1
+	zcat $CWD/additional.multilib.diff.gz | patch -p1 --verbose || exit 1
+	# Also grabbed from the above page	
+	sed -i -e "s:@@MULTILIB_DIR@@:lib$LIBSUFFIX:g" \
+    Lib/distutils/command/install.py \
+    Lib/distutils/sysconfig.py \
+    Lib/site.py \
+    Makefile.pre.in \
+    Modules/Setup.dist \
+    Modules/getpath.c \
+    setup.py || exit 1
+fi
+chown -R root:root .
+find . -type d -exec chmod 755 {} \;
+find . -type f -perm 775 -exec chmod 755 {} \;
+find . -type f -perm 664 -exec chmod 644 {} \;
+find . -type d -name CVS -exec rm -r {} \;
+OPT="$SLKCFLAGS" \
+./configure \
+  --prefix=/usr \
+	--libdir=/usr/lib$LIBSUFFIX \
+  --with-ncurses \
+  --with-threads \
+  --enable-ipv6 \
+  --enable-shared
+# And the "Ugly Hack of the Year Award" goes to...
+sed -i "s#LIBM);#LIBM) /usr/lib$LIBSUFFIX/libz.a;#" Makefile || exit 1
+make -j10 || exit 1
+make install DESTDIR=$PKG
+
+# Install some python-demo files:
+mkdir -p $PKG/usr/doc/python-$VERSION
+cp -a Demo $PKG/usr/doc/python-$VERSION
+
+# We'll install the python-tools under site-packages:
+mkdir -p $SITEPK
+( cd Tools ; cp -a * $SITEPK )
+mkdir -p $PKG/usr/doc/python-$VERSION
+mv $SITEPK/README $PKG/usr/doc/python-$VERSION/README.python-tools
+( cd $PKG/usr/doc/python-$VERSION
+  ln -sf $TOOLSDIR Tools
+)
+# Make a few useful symlinks:
+mkdir -p $PKG/usr/bin
+( cd $PKG/usr/bin
+  ln -sf $TOOLSDIR/modulator/modulator.py modulator
+  ln -sf $TOOLSDIR/pynche/pynche pynche
+  ln -sf $TOOLSDIR/i18n/msgfmt.py .
+  ln -sf $TOOLSDIR/i18n/pygettext.py .
+)
+
+# Install docs:
+mkdir -p $PKG/usr/doc/python-$VERSION
+cp -a README $PKG/usr/doc/python-$VERSION
+cp -a Misc $PKG/usr/doc/python-$VERSION
+( cd $PKG/usr/doc/python-$VERSION ; mkdir html )
+( cd $PKG/usr/doc/python-$VERSION/html
+  tar xjvf $CWD/html-$VERSION.tar.bz2
+  chown -R root:root .
+)
+( cd $PKG/usr/bin
+  rm -f python
+  ln -sf python2.5 python
+)
+( cd $PKG
+  find . | xargs file | grep "executable" | grep ELF | cut -f 1 -d : | xargs strip --strip-unneeded 2> /dev/null
+  find . | xargs file | grep "shared object" | grep ELF | cut -f 1 -d : | xargs strip --strip-unneeded 2> /dev/null
+)
+gzip -9 $PKG/usr/man/man1/*.?
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+
+cd $PKG
+makepkg -l y -c n /tmp/python-$VERSION-$PKGARCH-$BUILD.tgz
+

@@ -1,0 +1,113 @@
+#!/bin/sh
+# Build RPM (of all things) for Slackware.
+#
+# Actualy, I'm getting used to building it.  At least,
+# I'm getting plenty of practice since it's such a fragile,
+# non-portable piece of code...
+PKGNAM=rpm
+VERSION=4.2.1
+BUILD=3
+
+. /etc/pkghelpers
+pkghelpers_env
+
+rm -rf $PKG
+mkdir -p $PKG
+
+# First, check that beecrypt is installed since RPM needs it to build:
+if [ ! -d /usr/include/beecrypt ]; then
+  ./beecrypt.SlackBuild
+  installpkg /tmp/beecrypt-*-*-?.tgz
+fi
+cd /tmp
+rm -rf rpm-$VERSION
+tar xjvf $CWD/rpm-$VERSION.tar.bz2
+cd rpm-$VERSION
+chown -R root:root .
+find . -type d | xargs chmod 755
+find . -type f -perm 664 | xargs chmod 644
+zcat $CWD/rpm-$VERSION.diff.gz | patch -p1
+if [ "x$LIBSUFFIX" != "x" ]; then
+	zcat $CWD/lib$LIBSUFFIX.diff.gz | sed "s#lib64#lib$LIBSUFFIX#g" | patch -p1 --verbose
+fi
+# Install the docs before mangling them with our filters:
+mkdir -p $PKG/usr/doc/rpm-$VERSION
+cp -a \
+  ABOUT-NLS COPYING CREDITS GROUPS INSTALL README README.amiga RPM-GPG-KEY RPM-PGP-KEY TODO \
+  $PKG/usr/doc/rpm-$VERSION
+cp -a doc/manual $PKG/usr/doc/rpm-$VERSION
+  rm -f $PKG/usr/doc/rpm-$VERSION/manual/Makefile*
+# Change the /usr/src/redhat path to /usr/src/rpm.  This ain't redhat.
+find . -name "*.orig" | xargs rm --verbose
+for file in `find . -type f` ; do
+  echo "Filtering /src/redhat path in $file..."
+  cp -a $file $file.orig
+  cat $file.orig | sed "/\/src\/redhat/s//\/src\/rpm/" > $file
+done
+for file in `find . -type f` ; do
+  echo "Filtering {_usrsrc}/redhat path in $file..."
+  cp -a $file $file.orig
+  cat $file.orig | sed "/{_usrsrc}\/redhat/s//{_usrsrc}\/rpm/" > $file
+done
+find . -name "*.orig" | xargs rm --verbose
+# Using "rpm" for the vendor name cures the /usr/src bug.
+./configure \
+  --prefix=/usr \
+	--libdir=/usr/lib$LIBSUFFIX \
+  --with-pic \
+  --without-python \
+  --without-apidocs \
+  --without-dmalloc \
+  --without-efence \
+  --program-prefix="" --program-suffix="" \
+  $ARCH-rpm-linux
+# Do a plain build, and then strip things by hand.
+# Use -i since debugedit won't compile without a lot more cruft, and we don't need it anyway.
+make -i -j12
+make -i install DESTDIR=$PKG
+mv $PKG/usr/share/man $PKG/usr
+if [ "x$LIBSUFFIX" != "x" ]; then
+	# I can has crack kplx
+	mv $PKG/usr/lib$LIBSUFFIX$LIBSUFFIX/* /usr/lib$LIBSUFFIX
+	rmdir $PKG/usr/lib$LIBSUFFIX$LIBSUFFIX
+fi
+rmdir $PKG/usr/share
+# Stupid RPM should be taken out back and shot for installing making a chmod 755 /var/tmp:
+# rmdir $PKG/var/tmp
+# Sigh... have to maintain it for at least one build as an update...
+chmod 1777 $PKG/var/tmp
+# Filter all .la files (thanks much to Mark Post for the sed script):
+( cd $PKG
+  for file in `find . -type f -name "*.la"` ; do
+    cat $file | sed -e 's%-L/tmp/[[:graph:]]* % %g' > $TMP/tmp-la-file
+    cat $TMP/tmp-la-file > $file
+  done
+  rm $TMP/tmp-la-file
+)
+strip -g $PKG/usr/lib$LIBSUFFIX/*.a
+# Since rpm linked statically is generally segfaulting after each glibc
+# upgrade, these static libraries are very likely equally useless.
+rm -f $PKG/usr/lib$LIBSUFFIX/*.a
+# Here's a bug that's been around forever:
+( cd $PKG/usr/lib$LIBSUFFIX/rpm
+  if [ ! -r rpmpopt ]; then
+    if [ -r rpmpopt-$VERSION ]; then
+      ln -sf rpmpopt-$VERSION rpmpopt
+    fi
+  fi
+)
+mkdir -p $PKG/var/lib/rpm/tmp
+zcat $CWD/Packages.gz > $PKG/var/lib/rpm/tmp/Packages
+chown -R root:root $PKG/bin $PKG/usr/bin
+# We ship popt separately.
+rm -f $PKG/usr/include/popt.h
+rm -f $PKG/usr/man/man3/popt.3.gz
+rm -f $PKG/usr/lib$LIBSUFFIX/libpopt.*
+rm -f $PKG/usr/share/locale/*/LC_MESSAGES/popt.mo
+mkdir -p $PKG/install
+zcat $CWD/doinst.sh.gz > $PKG/install/doinst.sh
+cat $CWD/slack-desc > $PKG/install/slack-desc
+
+cd $PKG
+pkghelpers_fixup
+pkghelpers_makepkg

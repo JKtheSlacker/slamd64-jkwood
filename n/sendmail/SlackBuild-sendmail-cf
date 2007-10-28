@@ -1,0 +1,47 @@
+#!/bin/sh
+# Set initial variables:
+CWD=`pwd`
+if [ "$TMP" = "" ]; then
+  TMP=/tmp
+fi
+PKG=$TMP/package-sendmail-cf
+
+VERSION=8.14.1
+ARCH=noarch
+BUILD=1
+
+if [ ! -d $TMP ]; then
+  mkdir -p $TMP # location to build the source
+fi
+rm -rf $PKG
+mkdir -p $PKG
+
+echo "+====================+"
+echo "| sendmail.cf.$VERSION |"
+echo "+====================+"
+( cd $TMP/sendmail-$VERSION ; find . -name "*~" -print -exec rm {} \; )
+cd $PKG
+mkdir -p usr/share/sendmail/cf
+cd usr/share/sendmail/cf
+cp -a $TMP/sendmail-$VERSION/cf/README .
+cp -a $TMP/package-sendmail/usr/share/sendmail/README.linux .
+for dir in cf domain feature hack m4 mailer ostype sh siteconfig ; do
+  cp -a $TMP/sendmail-$VERSION/cf/$dir .
+done
+# Replace the sendmail Build script with a simple (working) one:
+cp -a $PKG/usr/share/sendmail/cf/cf/Build $PKG/usr/share/sendmail/cf/cf/Build.orig
+zcat $CWD/Build.gz > $PKG/usr/share/sendmail/cf/cf/Build
+chown -R root.root *
+
+mkdir -p $PKG/install
+cat $CWD/slack-desc.sendmail-cf > $PKG/install/slack-desc
+
+# Build the package:
+cd $PKG
+makepkg -l y -c n $TMP/sendmail-cf-$VERSION-${ARCH}_slamd64-$BUILD.tgz
+
+# Clean up the extra stuff:
+if [ "$1" = "--cleanup" ]; then
+  rm -rf $TMP/sendmail-$VERSION
+  rm -rf $PKG
+fi

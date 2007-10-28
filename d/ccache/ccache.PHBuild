@@ -1,0 +1,31 @@
+#!/bin/sh
+# Set initial variables:
+PKGNAM=ccache
+VERSION=2.4
+BUILD=${BUILD:-2}
+
+. /etc/pkghelpers
+pkghelpers_env
+
+rm -rf $PKG
+mkdir -p $PKG
+
+cd $TMP
+rm -rf ccache-$VERSION
+tar xzvf $CWD/ccache-$VERSION.tar.gz
+cd ccache-$VERSION
+chown -R root.root .
+./configure --prefix=/usr
+make -j12 || exit 1 
+make install DESTDIR=$PKG
+mkdir -p $PKG/usr/doc/ccache-$VERSION
+cp -a \
+  web/index.html README \
+  $PKG/usr/doc/ccache-$VERSION
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+
+# Build the package:
+cd $PKG
+pkghelpers_fixup
+pkghelpers_makepkg

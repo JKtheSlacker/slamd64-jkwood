@@ -1,0 +1,42 @@
+#!/bin/sh
+# Build gdbm-$VERSION for Slackware
+# by volkerdi@slackware.com, 2/2001
+PKGNAM=gdbm
+VERSION=1.8.3
+BUILD=2
+
+. /etc/pkghelpers
+pkghelpers_env
+
+cd $TMP
+rm -rf gdbm-$VERSION
+tar xzvf $CWD/gdbm-$VERSION.tar.gz
+cd gdbm-$VERSION
+chown -R root.root .
+find . -perm 700 -exec chmod 755 {} \;
+find . -perm 600 -exec chmod 644 {} \;
+CFLAGS="$SLKCFLAGS" \
+./configure --prefix=/usr --libdir=/usr/lib$LIBSUFFIX
+make -j12 || exit 1
+make install INSTALL_ROOT=$PKG
+
+# I'm not sure what out there would need the "libgdbm_compat" library,
+# but it causes versions of ndbm.h and dbm.h to be installed that break
+# compiling nearly everything with any dbm support (like python's dbm.so,
+# and mod_ssl).  Putting 'em in /usr/include/gdbm/ doesn't isolate them
+# enough, either.  File this one under "not worth it".
+#make install-compat INSTALL_ROOT=$PKG
+
+mkdir -p $PKG/usr/doc/gdbm-$VERSION
+cp -a \
+  COPYING ChangeLog NEWS README \
+  $PKG/usr/doc/gdbm-$VERSION
+gzip -9 $PKG/usr/info/gdbm.info
+gzip -9 $PKG/usr/man/man3/gdbm.3
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+
+# Build the package:
+cd $PKG
+pkghelpers_fixup
+pkghelpers_makepkg

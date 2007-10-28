@@ -1,0 +1,114 @@
+#!/bin/sh
+CWD=`pwd`
+TMP=${TMP:-/tmp}
+PKG=$TMP/package-irssi
+
+VERSION=0.8.11
+DIRCD=0.8.11
+ARCH=${ARCH:-x86_64}
+BUILD=${BUILD:-2}
+DISTRO=${DISTRO:-slamd64}
+
+if [ $DISTRO = slackware ]; then
+	PKGARCH=$ARCH
+else
+	PKGARCH=${ARCH}_${DISTRO}
+fi
+
+if [ "$ARCH" = "i386" ]; then
+  SLKCFLAGS="-O2 -march=i386 -mcpu=i686"
+elif [ "$ARCH" = "i486" ]; then
+  SLKCFLAGS="-O2 -march=i486 -mtune=i686"
+elif [ "$ARCH" = "s390" ]; then
+  SLKCFLAGS="-O2"
+elif [ "$ARCH" = "x86_64" ]; then
+  SLKCFLAGS="-O2 -fPIC"
+fi
+
+if [ ! -d $TMP ]; then
+  mkdir -p $TMP
+fi
+rm -rf $PKG
+mkdir -p $PKG
+cd $TMP
+rm -rf irssi-$VERSION
+tar xjvf $CWD/irssi-$VERSION.tar.bz2
+cd irssi-$DIRCD
+
+chown -R root:root .
+find . -perm 666 -exec chmod 644 {} \;
+find . -perm 664 -exec chmod 644 {} \;
+find . -perm 600 -exec chmod 644 {} \;
+find . -perm 444 -exec chmod 644 {} \;
+find . -perm 400 -exec chmod 644 {} \;
+find . -perm 440 -exec chmod 644 {} \;
+find . -perm 777 -exec chmod 755 {} \;
+find . -perm 775 -exec chmod 755 {} \;
+find . -perm 2775 -exec chmod 755 {} \;
+find . -perm 511 -exec chmod 755 {} \;
+find . -perm 711 -exec chmod 755 {} \;
+find . -perm 555 -exec chmod 755 {} \;
+
+CFLAGS="$SLKCFLAGS" \
+./configure \
+  --prefix=/usr \
+	--libdir=/usr/lib64 \
+  --mandir=/usr/man \
+  --sysconfdir=/etc \
+  --enable-ipv6 \
+  --with-textui \
+  --with-proxy \
+  --build=$ARCH-$DISTRO-linux
+
+make -j10 || exit 1
+make install DESTDIR=$PKG
+
+mv $PKG/etc/irssi.conf $PKG/etc/irssi.conf.new
+
+( cd $PKG
+  find . | xargs file | grep "executable" | grep ELF | cut -f 1 -d : | xargs strip --strip-unneeded 2> /dev/null
+  find . | xargs file | grep "shared object" | grep ELF | cut -f 1 -d : | xargs strip --strip-unneeded 2> /dev/null
+)
+
+# Compress and if needed symlink the man pages:
+if [ -d $PKG/usr/man ]; then
+  ( cd $PKG/usr/man
+    for manpagedir in $(find . -type d -name "man*") ; do
+      ( cd $manpagedir
+        for eachpage in $( find . -type l -maxdepth 1) ; do
+          ln -s $( readlink $eachpage ).gz $eachpage.gz
+          rm $eachpage
+        done
+        gzip -9 *.?
+      )
+    done
+  )
+fi
+
+rm -rf $PKG/usr/share/doc
+( cd $PKG
+  find . -name perllocal.pod | xargs rm -f
+)
+
+mkdir -p $PKG/usr/doc/irssi-$VERSION
+cp -a \
+  AUTHORS COPYING INSTALL NEWS README TODO \
+  $PKG/usr/doc/irssi-$VERSION
+mkdir -p $PKG/usr/doc/irssi-$VERSION/docs
+cp -a \
+  docs/* \
+  $PKG/usr/doc/irssi-$VERSION/docs
+
+rm -rf $PKG/usr/doc/irssi-$VERSION/docs/Make* \
+  $PKG/usr/doc/irssi-$VERSION/docs/*.1 \
+  $PKG/usr/doc/irssi-$VERSION/docs/help
+
+( cd $PKG/usr/doc/irssi-$VERSION/docs ; ln -sf /usr/share/irssi/help . )
+
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+zcat $CWD/doinst.sh.gz > $PKG/install/doinst.sh
+
+cd $PKG
+makepkg -l y -c n $TMP/irssi-$VERSION-$PKGARCH-$BUILD.tgz
+

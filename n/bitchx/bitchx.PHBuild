@@ -1,0 +1,93 @@
+#!/bin/sh
+# Ported from Slackware .build
+
+# Set initial variables:
+CWD=`pwd`
+PKG=/tmp/package-bitchx
+
+PKGNAM=bitchx
+TARNAM=ircii-pana
+SRCNAM=BitchX
+VERSION=1.1
+BUILD=${BUILD:-3}
+
+. /etc/pkghelpers
+pkghelpers_env
+
+rm -rf $PKG
+mkdir -p $PKG
+
+cd $TMP
+rm -rf $SRCNAM
+tar xzvf $CWD/${TARNAM}-${VERSION}-final.tar.gz
+cd $SRCNAM
+
+if [ $ARCH = "x86_64" ]; then
+  # I'm sorry - I've tried to find smaller, less intrusive patches for AMD64 support;
+  # there aren't any, and what patches I've tried were fairly large and intrusive anyway.
+  # So it's time to bite the bullet and accept this patch as the only way to get BitchX
+  # to build & run on AMD64.
+  zcat $CWD/ircii-pana_1.1-1.diff.gz | patch -p1 --verbose || exit 1 # Patch from Debian
+  zcat $CWD/ircii-pana.compile-fix.diff.gz | patch -p1 --verbose || exit 1 # Patch adapted from Debian bug
+else
+  zcat $CWD/ircii-pana.ncurses.diff.gz | patch -p1 --verbose || exit 1
+fi
+
+# Make sure ownerships and permissions are sane:
+chown -R root:root .
+find . -perm 664 -exec chmod 644 {} \;
+find . -perm 600 -exec chmod 644 {} \;
+find . -perm 444 -exec chmod 644 {} \;
+find . -perm 400 -exec chmod 644 {} \;
+find . -perm 440 -exec chmod 644 {} \;
+find . -perm 777 -exec chmod 755 {} \;
+find . -perm 775 -exec chmod 755 {} \;
+find . -perm 511 -exec chmod 755 {} \;
+find . -perm 711 -exec chmod 755 {} \;
+find . -perm 555 -exec chmod 755 {} \;
+
+# These are all fixed in 1.1  :-)
+#zcat $CWD/BitchX-$VERSION.diff.gz | patch -p1 --verbose
+#zcat $CWD/BitchX.DOS.diff.gz | patch -p1 --verbose
+#zcat $CWD/1.0c19-evil-server.patch.gz | patch -p1 --verbose
+# really old options we don't use anymore
+#./configure --prefix=/usr --enable-sound --enable-cdrom --with-ssl --with-plugins --with-gtk
+CFLAGS="$SLKCFLAGS" \
+./configure \
+  --prefix=/usr \
+  --libdir=/usr/lib$LIBSUFFIX \
+  --enable-cdrom \
+  --with-ssl \
+  --with-plugins \
+  --enable-ipv6 \
+  --build=$ARCH-$DISTRO-linux
+
+# Build and install:
+make -j12 || exit 1
+make prefix=$PKG/usr libdir=$PKG/usr/lib$LIBSUFFIX install || exit 1 # Inspired by Frugalware
+
+# Create /usr/bin/BitchX symlink
+( cd $PKG/usr/bin
+  ln -sf $SRCNAM-$VERSION-final $SRCNAM
+)
+
+# Add a documentation directory:
+mkdir -p $PKG/usr/doc/$PKGNAM-$VERSION
+cp -a \
+  README* COMPILE-PROBLEMS INST* IPv6-support doc/* \
+$PKG/usr/doc/$PKGNAM-$VERSION
+
+bzip2 -d $PKG/usr/man/man1/BitchX.1.bz2
+
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+
+cd $PKG
+pkghelpers_fixup
+pkghelpers_makepkg
+
+# Clean up the extra stuff:
+if [ "$1" = "--cleanup" ]; then
+  rm -rf $TMP/$SRCNAM
+  rm -rf $PKG
+fi

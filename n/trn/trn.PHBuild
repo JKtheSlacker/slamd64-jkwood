@@ -1,0 +1,50 @@
+#!/bin/sh
+# Set initial variables:
+PKGNAM=trn
+VERSION=3.6
+BUILD=2
+
+. /etc/pkghelpers
+pkghelpers_env
+
+if [ ! -d $PKG ]; then
+  mkdir -p $PKG # place for the package to be built
+fi
+
+# Explode the package framework:
+cd $PKG
+explodepkg $CWD/_trn.tar.gz
+
+echo "+============================================+"
+echo "| trn-$VERSION for NNTP (with mthreads/Overviews) |"
+echo "+============================================+"
+cd $TMP
+tar xzvf $CWD/trn-$VERSION.tar.gz
+cd trn-$VERSION
+#zcat $CWD/trn-$VERSION.nntp.diff.gz | patch -p1
+zcat $CWD/config.sh.gz > config.sh
+# Here, just take the defaults.  If you get a "whoa there!", use
+# the newly detected value, not the old one.
+./Configure -f config.sh
+make clean
+make || exit 1
+cat Pnews > $PKG/usr/bin/Pnews
+cat Rnmail > $PKG/usr/bin/Rnmail
+cat newsetup > $PKG/usr/bin/newsetup
+cat newsgroups > $PKG/usr/bin/newsgroups
+cat nntplist > $PKG/usr/bin/nntplist
+cat trn > $PKG/usr/bin/trn
+cat trn-artchk > $PKG/usr/bin/trn-artchk
+cat trn > $PKG/usr/bin/trn
+cat Pnews.1 | gzip -9c > $PKG/usr/man/man1/Pnews.1.gz
+cat Rnmail.1 | gzip -9c > $PKG/usr/man/man1/Rnmail.1.gz
+cat newsetup.1 | gzip -9c > $PKG/usr/man/man1/newsetup.1.gz
+cat newsgroups.1 | gzip -9c > $PKG/usr/man/man1/newsgroups.1.gz
+cat trn.1 | gzip -9c > $PKG/usr/man/man1/trn.1.gz
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+
+# Build the package:
+cd $PKG
+pkghelpers_fixup
+pkghelpers_makepkg

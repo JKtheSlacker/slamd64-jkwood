@@ -1,0 +1,37 @@
+#!/bin/sh
+PKGNAM=libidl
+VERSION=0.8.7
+BUILD=1
+
+. /etc/pkghelpers
+pkghelpers_env
+
+rm -rf $PKG
+mkdir -p $PKG
+cd /tmp
+rm -rf libIDL-$VERSION
+tar xjvf $CWD/libIDL-$VERSION.tar.bz2 || exit 1
+cd libIDL-$VERSION
+chown -R root:root .
+find . -perm 777 -exec chmod 755 {} \;
+find . -perm 664 -exec chmod 644 {} \;
+CFLAGS="$SLKCFLAGS" \
+./configure \
+  --prefix=/usr \
+	--libdir=/usr/lib$LIBSUFFIX \
+  --enable-static=no \
+  --sysconfdir=/etc \
+  --localstatedir=/var/lib \
+  --build=$ARCH-$DISTRO-linux
+make -j12 || exit 1
+make install DESTDIR=$PKG
+mkdir -p $PKG/usr/doc/libIDL-$VERSION
+cp -a \
+  AUTHORS BUGS COPYING HACKING MAINTAINERS NEWS README \
+  $PKG/usr/doc/libIDL-$VERSION
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+
+cd $PKG
+pkghelpers_fixup
+pkghelpers_makepkg

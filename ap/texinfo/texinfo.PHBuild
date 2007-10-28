@@ -1,0 +1,36 @@
+#!/bin/sh
+# Set initial variables:
+PKGNAM=texinfo
+VERSION=${VERSION:-4.8}
+BUILD=${BUILD:-2}
+
+. /etc/pkghelpers
+pkghelpers_env
+
+if [ ! -d $PKG ]; then
+  mkdir -p $PKG # place for the package to be built
+fi
+
+cd $TMP
+tar xjvf $CWD/texinfo-$VERSION.tar.bz2
+cd texinfo-$VERSION
+CFLAGS="$SLKCFLAGS" \
+./configure --prefix=/usr
+make -j12 || exit 1
+make install DESTDIR=$PKG
+# Be sure this is "fresh"
+zcat $CWD/dir.gz > $PKG/usr/info/dir
+strip $PKG/usr/bin/*
+mkdir -p $PKG/usr/doc/texinfo-$VERSION
+cp -a \
+  ABOUT-NLS AUTHORS COPYING COPYING.DOC INSTALL INTRODUCTION NEWS README TODO \
+  $PKG/usr/doc/texinfo-$VERSION
+chmod 644 $PKG/usr/doc/texinfo-$VERSION/*
+chown -R root.root $PKG/usr/doc/texinfo-$VERSION
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+
+# Build the package:
+cd $PKG
+pkghelpers_fixup
+pkghelpers_makepkg

@@ -1,0 +1,91 @@
+#!/bin/sh
+# Build this against 2.6.x kernel source and headers...
+
+VERSION=2.6.16-060323
+ARCH=${ARCH:-x86_64}
+BUILD=${BUILD:-2}
+DISTRO=${DISTRO:-slamd64}
+
+if [ $DISTRO = slackware ]; then
+	PKGARCH=$ARCH
+else
+	PKGARCH=${ARCH}_${DISTRO}
+fi
+
+if [ $DISTRO = slamd64 ]; then
+	export LIBSUFFIX=64
+else
+	LIBSUFFIX=
+fi
+
+CWD=$(pwd)
+if [ "$TMP" = "" ]; then
+  TMP=/tmp
+fi
+PKG=$TMP/package-iproute2
+rm -rf $PKG
+mkdir -p $PKG
+mkdir -p $PKG/usr/man/man8
+cd $TMP
+rm -rf iproute2-$VERSION
+tar xzvf $CWD/iproute2-$VERSION.tar.gz
+cd iproute2-$VERSION
+
+zcat $CWD/iproute2.dbpath.diff.gz | patch -p1 --verbose --backup --suffix=.orig || exit 1
+if [ $DISTRO = slamd64 ]; then
+  # Loosely based on a CLFS patch
+  zcat $CWD/iproute2-2.6.16-060323-lib64.diff.gz | patch -p1 --verbose --backup --suffix=.orig || exit 1
+fi
+
+chown -R root:root .
+find . -perm 666 -exec chmod 644 {} \;
+find . -perm 664 -exec chmod 644 {} \;
+find . -perm 600 -exec chmod 644 {} \;
+find . -perm 444 -exec chmod 644 {} \;
+find . -perm 400 -exec chmod 644 {} \;
+find . -perm 440 -exec chmod 644 {} \;
+find . -perm 777 -exec chmod 755 {} \;
+find . -perm 775 -exec chmod 755 {} \;
+find . -perm 511 -exec chmod 755 {} \;
+find . -perm 711 -exec chmod 755 {} \;
+find . -perm 555 -exec chmod 755 {} \;
+
+make || exit 1
+make install DESTDIR=$PKG || exit 1
+for file in $PKG/etc/iproute2/* ; do
+  mv $file ${file}.new
+done
+
+mkdir -p $PKG/var/lib/arpd
+
+( cd $PKG
+  find . | xargs file | grep "executable" | grep ELF | cut -f 1 -d : | xargs strip --strip-unneeded 2> /dev/null
+  find . | xargs file | grep "shared object" | grep ELF | cut -f 1 -d : | xargs strip --strip-unneeded 2> /dev/null
+)
+
+# Compress and if needed symlink the man pages:
+if [ -d $PKG/usr/man ]; then
+  ( cd $PKG/usr/man
+    for manpagedir in $(find . -type d -name "man*") ; do
+      ( cd $manpagedir
+        for eachpage in $( find . -type l -maxdepth 1) ; do
+          ln -s $( readlink $eachpage ).gz $eachpage.gz
+          rm $eachpage
+        done
+        gzip -9 *.?
+      )
+    done
+  )
+fi
+
+mv $PKG/usr/doc/iproute2 $PKG/usr/doc/iproute2-$VERSION
+cp -a RE* \
+  $PKG/usr/doc/iproute2-$VERSION
+
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+zcat $CWD/doinst.sh.gz > $PKG/install/doinst.sh
+
+cd $PKG
+makepkg -l y -c n $TMP/iproute2-$(echo $VERSION | tr - _)-$PKGARCH-$BUILD.tgz
+

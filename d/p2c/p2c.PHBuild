@@ -1,0 +1,64 @@
+#!/bin/sh
+# Sources:
+# ftp://ftp.pal.xgw.fi/pub/gnu/alpha/gnu/p2c-1.21alpha2.tar.gz
+# ftp://ftp.clara.net/pub/mirrors/gnu/hurd/p2c-1.21alpha2.tar.gz
+# ftp://ftp.obspm.fr/pub1/computing/gnu/hurd/p2c-1.21alpha2.tar.gz
+
+# Set initial variables:
+PKGNAM=p2c
+VERSION=1.21alpha2
+BUILD=2
+
+. /etc/pkghelpers
+pkghelpers_env
+
+if [ ! -d $PKG ]; then
+  mkdir -p $PKG # place for the package to be built
+fi
+
+rm -rf $PKG
+mkdir -p $PKG
+
+# Explode the package framework:
+cd $PKG
+explodepkg $CWD/_p2c.tar.gz
+
+echo "+================+"
+echo "| p2c-1.21alpha2 |"
+echo "+================+"
+cd $TMP
+rm -rf p2c-1.21alpha-07.Dec.93
+tar xzvf $CWD/p2c-1.21alpha2.tar.gz
+cd p2c-1.21alpha-07.Dec.93
+zcat $CWD/p2c-1.21alpha2.diff.gz | patch -p1 -E --verbose --backup --suffix=.orig
+# time.h patch for glibc > 2.2.2
+zcat $CWD/p2c-1.21alpha2.time.diff.gz | patch -p1 -E --verbose --backup --suffix=.orig
+find . -name "*.orig" | xargs rm --verbose
+cd src
+make || exit 1
+make p2cc || exit 1
+strip p2c
+cat p2c > $PKG/usr/bin/p2c
+cat p2cc > $PKG/usr/bin/p2cc
+cat libp2c.a > $PKG/usr/lib$LIBSUFFIX/libp2c.a
+cat p2c.man | gzip -9c > $PKG/usr/man/man1/p2c.1.gz
+cat p2cc.man | gzip -9c > $PKG/usr/man/man1/p2cc.1.gz
+cat sys.p2crc > $PKG/usr/lib$LIBSUFFIX/p2c/p2crc
+cat loc.p2crc > $PKG/usr/lib$LIBSUFFIX/p2c/loc.p2crc
+cat system.imp > $PKG/usr/lib$LIBSUFFIX/p2c/system.imp
+cat system.m2 > $PKG/usr/lib$LIBSUFFIX/p2c/system.m2
+cat turbo.imp > $PKG/usr/lib$LIBSUFFIX/p2c/turbo.imp
+cat string.pas > $PKG/usr/lib$LIBSUFFIX/p2c/string.pas
+cat p2c.h > $PKG/usr/include/p2c/p2c.h
+cd ..
+mkdir -p $PKG/usr/doc/p2c-1.21alpha2
+cp -a README ftp.README examples $PKG/usr/doc/p2c-1.21alpha2
+( cd $PKG/usr/doc/p2c-1.21alpha2/examples ; rm -r c )
+chown -R root:root $PKG/usr/doc/p2c-1.21alpha2
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+
+# Build the package:
+cd $PKG
+pkghelpers_fixup
+pkghelpers_makepkg

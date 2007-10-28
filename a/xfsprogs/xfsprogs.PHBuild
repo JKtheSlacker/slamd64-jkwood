@@ -1,0 +1,79 @@
+#!/bin/sh
+PKGNAM=xfsprogs
+VERSION=2.8.16-1
+BUILD=1
+
+PKGVER=$(echo $VERSION | tr - _)
+
+. /etc/pkghelpers
+pkghelpers_env
+
+rm -rf $PKG
+mkdir -p $PKG
+
+cd $TMP
+rm -rf xfsprogs-$(echo $VERSION | cut -f 1 -d '-')
+tar xzvf $CWD/xfsprogs_$VERSION.tar.gz
+cd xfsprogs-$(echo $VERSION | cut -f 1 -d '-')
+
+chown -R root:root .
+find . -perm 666 -exec chmod 644 {} \;
+find . -perm 664 -exec chmod 644 {} \;
+find . -perm 600 -exec chmod 644 {} \;
+find . -perm 444 -exec chmod 644 {} \;
+find . -perm 400 -exec chmod 644 {} \;
+find . -perm 440 -exec chmod 644 {} \;
+find . -perm 777 -exec chmod 755 {} \;
+find . -perm 775 -exec chmod 755 {} \;
+find . -perm 511 -exec chmod 755 {} \;
+find . -perm 711 -exec chmod 755 {} \;
+find . -perm 555 -exec chmod 755 {} \;
+
+# Make sure you have the same version of autoconf as the
+# developers did...  ;-)
+autoconf
+
+./configure \
+  --prefix=/usr \
+  --libdir=/lib$LIBSUFFIX \
+  --libexecdir=/usr/lib$LIBSUFFIX \
+  --sbindir=/sbin \
+  --bindir=/usr/sbin \
+  --enable-shared=yes \
+  --enable-gettext=yes \
+  --enable-shared-uuid=yes \
+  --mandir=/usr/man \
+  --datadir=/usr/share
+
+make -j12 || exit 1
+make install DIST_ROOT=$PKG
+make install-dev DIST_ROOT=$PKG
+make install-lib DIST_ROOT=$PKG
+
+mv $PKG/usr/share/doc $PKG/usr
+mv $PKG/usr/doc/xfsprogs $PKG/usr/doc/xfsprogs-$VERSION
+# It would be nice to keep the same timestamps that the files have in the source:
+cp -a \
+  README doc/COPYING doc/CREDITS doc/PORTING \
+  $PKG/usr/doc/xfsprogs-$VERSION
+
+# Remove bogus files:
+rm -f $PKG/lib$LIBSUFFIX/*.a $PKG/lib$LIBSUFFIX/*.so $PKG/lib$LIBSUFFIX/*.la $PKG/usr/lib$LIBSUFFIX/*.la
+# Make /usr/lib/libhandle.so a symlink to /lib/libhandle.so.1:
+if [ -f $PKG/lib$LIBSUFFIX/libhandle.so.1 ]; then
+  ( cd $PKG/usr/lib$LIBSUFFIX ; rm -f libhandle.so ; ln -sf /lib$LIBSUFFIX/libhandle.so.1 libhandle.so )
+else
+  exit 1
+  # and fix your script!  ;-)
+fi
+# Fix shared library perms:
+chmod 755 $PKG/lib$LIBSUFFIX/*
+
+strip -g $PKG/usr/lib$LIBSUFFIX/*.a
+
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+
+cd $PKG
+pkghelpers_fixup
+pkghelpers_makepkg

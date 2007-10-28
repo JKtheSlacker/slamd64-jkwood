@@ -1,0 +1,41 @@
+#!/bin/sh
+PKGNAM=libwpd
+VERSION=0.8.9
+BUILD=1
+
+. /etc/pkghelpers
+pkghelpers_env
+
+rm -rf $PKG
+mkdir -p $PKG
+
+cd $TMP
+rm -rf libwpd-$VERSION
+tar xjvf $CWD/libwpd-$VERSION.tar.bz2
+cd libwpd-$VERSION
+chown -R root:root .
+find . -perm 666 -exec chmod 644 {} \;
+find . -perm 664 -exec chmod 644 {} \;
+CFLAGS="$SLKCFLAGS" \
+CXXFLAGS="$SLKCFLAGS" \
+./configure \
+  --prefix=/usr \
+	--libdir=/usr/lib$LIBSUFFIX \
+  $ARCH-$DISTRO-linux
+make -j112
+make install DESTDIR=$PKG
+mkdir -p $PKG/usr/doc/libwpd-$VERSION
+cp -a \
+  CHANGES COPYING CREDITS HACKING INSTALL README TODO \
+  $PKG/usr/doc/libwpd-$VERSION
+
+# Developers may find these docs in the source interesting, but most users won't:
+rm -rf $PKG/usr/share/doc
+rmdir $PKG/usr/share
+
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+
+cd $PKG
+pkghelpers_fixup
+pkghelpers_makepkg

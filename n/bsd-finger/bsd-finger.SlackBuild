@@ -1,0 +1,59 @@
+#!/bin/sh
+# Set initial variables:
+CWD=`pwd`
+if [ "$TMP" = "" ]; then
+  TMP=/tmp
+fi
+PKG=$TMP/package-bsd-finger
+
+VERSION=0.17
+ARCH=${ARCH:-x86_64}
+BUILD=1
+DISTRO=${DISTRO:-slamd64}
+
+if [ $DISTRO = slackware ]; then
+	PKGARCH=$ARCH
+else
+	PKGARCH=${ARCH}_${DISTRO}
+fi
+
+if [ ! -d $TMP ]; then
+  mkdir -p $TMP # location to build the source
+fi
+rm -rf $PKG
+mkdir -p $PKG
+
+cd $TMP
+tar xzvf $CWD/bsd-finger-0.17.tar.gz
+cd bsd-finger-0.17
+chown -R root:root .
+zcat $CWD/bsd-finger-0.17.diff.gz | patch -p1 || exit
+./configure --prefix=/usr
+make
+cd finger
+strip finger
+mkdir -p $PKG/usr/bin
+cat finger > $PKG/usr/bin/finger
+chmod 755 $PKG/usr/bin/finger
+mkdir -p $PKG/usr/man/man{1,8}
+cat finger.1 | gzip -9c > $PKG/usr/man/man1/finger.1.gz
+cd ../fingerd
+strip fingerd
+mkdir -p $PKG/usr/sbin
+cat fingerd > $PKG/usr/sbin/in.fingerd
+chmod 755 $PKG/usr/sbin/in.fingerd
+cat fingerd.8 | gzip -9c > $PKG/usr/man/man8/in.fingerd.8.gz
+cd ..
+mkdir -p $PKG/usr/doc/bsd-finger-0.17
+cp -a README $PKG/usr/doc/bsd-finger-0.17
+chown root:root $PKG/usr/doc/bsd-finger-0.17/*
+chmod 644 $PKG/usr/doc/bsd-finger-0.17/*
+
+# Finish up the package:
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+
+# Build the package:
+cd $PKG
+makepkg -l y -c n $TMP/bsd-finger-$VERSION-$PKGARCH-$BUILD.tgz
+

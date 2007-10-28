@@ -1,0 +1,150 @@
+#!/bin/sh
+CWD=`pwd`
+if [ "$TMP" = "" ]; then
+  TMP=/tmp
+fi
+PKG=$TMP/package-udev
+
+VERSION=${VERSION:-111}
+ARCH=${ARCH:-x86_64}
+BUILD=${BUILD:-3}
+DISTRO=${DISTRO:-slamd64}
+
+if [ $DISTRO = slackware ]; then
+	PKGARCH=$ARCH
+else
+	PKGARCH=${ARCH}_${DISTRO}
+fi
+
+if [ $DISTRO = slamd64 ]; then
+	LIBSUFFIX=${LIBSUFFIX:-64}
+fi
+
+rm -rf $PKG
+mkdir -p $PKG/lib/udev
+cd $TMP
+rm -rf udev-$VERSION
+tar xjvf $CWD/udev-$VERSION.tar.bz2 || exit 1
+cd udev-$VERSION
+
+chown -R root:root .
+find . -perm 666 -exec chmod 644 {} \;
+find . -perm 664 -exec chmod 644 {} \;
+find . -perm 600 -exec chmod 644 {} \;
+find . -perm 444 -exec chmod 644 {} \;
+find . -perm 400 -exec chmod 644 {} \;
+find . -perm 440 -exec chmod 644 {} \;
+find . -perm 777 -exec chmod 755 {} \;
+find . -perm 775 -exec chmod 755 {} \;
+find . -perm 511 -exec chmod 755 {} \;
+find . -perm 711 -exec chmod 755 {} \;
+find . -perm 555 -exec chmod 755 {} \;
+
+make EXTRAS="extras/ata_id extras/cdrom_id \
+		extras/firmware extras/floppy extras/path_id \
+		extras/scsi_id extras/usb_id \
+		extras/edd_id extras/volume_id" || exit 1
+make install DESTDIR=$PKG
+
+# Copy all helper programs to /lib/udev 
+cp -a extras/firmware/firmware.sh $PKG/lib/udev
+cp -a extras/path_id/path_id $PKG/lib/udev
+cp -a extras/scsi_id/scsi_id $PKG/lib/udev
+cp -a extras/scsi_id/scsi_id.config $PKG/etc
+cp -a extras/ata_id/ata_id $PKG/lib/udev
+cp -a extras/usb_id/usb_id $PKG/lib/udev
+cp -a extras/edd_id/edd_id $PKG/lib/udev
+cp -a extras/cdrom_id/cdrom_id $PKG/lib/udev
+( cd extras/volume_id ; make install-bin usrlibdir=/usr/lib$LIBSUFFIX libdir=/lib$LIBSUFFIX DESTDIR=$PKG )
+
+#scsi_id is needed by multipath
+mkdir -p $PKG/sbin
+( cd $PKG
+  ln -s /lib/udev/scsi_id sbin/scsi_id
+)
+
+#vol_id is needed by multipath, too
+( cd $PKG
+  ln -s /lib/udev/vol_id sbin/vol_id
+)
+
+mv $PKG/usr/share/man $PKG/usr
+rmdir $PKG/usr/share
+
+( cd $PKG
+  find . | xargs file | grep "executable" | grep ELF | cut -f 1 -d : | xargs strip --strip-unneeded 2> /dev/null
+  find . | xargs file | grep "shared object" | grep ELF | cut -f 1 -d : | xargs strip --strip-unneeded 2> /dev/null
+)
+
+rm -r $PKG/etc/udev
+mkdir -p $PKG/etc/udev/rules.d \
+	 $PKG/lib/firmware \
+	 $PKG/etc/modprobe.d \
+         $PKG/etc/rc.d
+
+# Yes, these will clobber existing config files.
+cp -a $CWD/config/udev.conf $PKG/etc/udev/udev.conf
+cp -a $CWD/config/rules.d/50-udev.rules $PKG/etc/udev/rules.d/50-udev.rules
+
+cp -a $CWD/config/rc.d/rc.udev.new $PKG/etc/rc.d/rc.udev.new
+cp -a $CWD/config/modprobe.d/blacklist.new $PKG/etc/modprobe.d/blacklist.new
+cp -a $CWD/config/modprobe.d/isapnp.new $PKG/etc/modprobe.d/isapnp.new
+
+chmod 644 $PKG/etc/udev/udev.conf \
+  $PKG/etc/udev/rules.d/50-udev.rules \
+  $PKG/etc/modprobe.d/blacklist.new \
+  $PKG/etc/modprobe.d/isapnp.new
+
+chmod 755 $PKG/etc/rc.d/rc.udev.new
+
+chown root:root $PKG/etc/udev/udev.conf \
+  $PKG/etc/udev/rules.d/50-udev.rules \
+  $PKG/etc/modprobe.d/blacklist.new \
+  $PKG/etc/modprobe.d/isapnp.new \
+  $PKG/etc/rc.d/rc.udev.new
+
+# Add extra device nodes to the package that udev doesn't make:
+tar -xvzf $CWD/udev-fixed-devices.tar.gz -C $PKG/
+
+# Add various helper scripts:
+for file in $CWD/config/scripts/* ; do
+  cp -a $file $PKG/lib/udev/
+done
+
+chmod 755 $PKG/lib/udev/*
+chmod -x $PKG/lib/udev/rc.optical-symlinks
+chown root:root $PKG/lib/udev/*
+
+mkdir -p $PKG/usr/doc/udev-$VERSION
+cp -a \
+  COPYING FAQ README TODO RELEASE-NOTES \
+  docs \
+  $PKG/usr/doc/udev-$VERSION
+
+# Copy manpages of helper applications in /extra
+find extras/ -name "*\.8" -exec cp -a {} $PKG/usr/man/man8 \;
+
+# Compress and fix manpage symlinks:
+if [ -d $PKG/usr/man ]; then
+  ( cd $PKG/usr/man
+    for manpagedir in $(find . -type d -name "man*") ; do
+      ( cd $manpagedir
+        for eachpage in $( find . -type l -maxdepth 1) ; do
+          ln -s $( readlink $eachpage ).gz $eachpage.gz
+          rm $eachpage
+        done
+        gzip -9 *.?
+      )
+    done
+  )
+fi
+
+# Fix pkgconfig files
+sed -i "s#/lib\$#/lib$LIBSUFFIX#" $PKG/usr/lib$LIBSUFFIX/pkgconfig/*.pc
+
+mkdir -p $PKG/install
+cat $CWD/doinst.sh > $PKG/install/doinst.sh
+cat $CWD/slack-desc > $PKG/install/slack-desc
+
+cd $PKG
+makepkg -l y -c y ../udev-$VERSION-$PKGARCH-$BUILD.tgz

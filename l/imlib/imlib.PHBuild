@@ -1,0 +1,32 @@
+#!/bin/sh
+PKGNAM=imlib
+VERSION=1.9.15
+BUILD=3
+
+. /etc/pkghelpers
+pkghelpers_env
+
+cd /tmp
+rm -rf imlib-$VERSION
+tar xjvf $CWD/imlib-$VERSION.tar.bz2
+cd imlib-$VERSION
+chown -R root:root .
+find . -perm 777 -exec chmod 755 {} \;
+CFLAGS="$SLKCFLAGS" \
+./configure --prefix=/usr \
+						--libdir=/usr/lib$LIBSUFFIX \
+            --sysconfdir=/etc
+make -j12 || exit 1
+make install DESTDIR=$PKG
+mkdir -p $PKG/usr/doc/imlib-$VERSION
+cp -a \
+  ABOUT-NLS AUTHORS COPYING COPYING.LIB ChangeLog INSTALL NEWS README \
+  doc \
+  $PKG/usr/doc/imlib-$VERSION
+rm -f $PKG/usr/doc/imlib-$VERSION/doc/Makefile*
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+
+cd /tmp/package-imlib
+pkghelpers_fixup
+pkghelpers_makepkg

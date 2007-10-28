@@ -1,0 +1,26 @@
+#!/bin/sh
+# This script is called from binutils.SlackBuild...
+PKG=/tmp/package-binutils
+
+VERSION=2.4.11
+
+CWD=`pwd`
+TMP=/tmp
+cd $TMP
+rm -rf ksymoops-$VERSION
+tar xjvf $CWD/ksymoops-$VERSION.tar.bz2
+cd ksymoops-$VERSION
+zcat $CWD/ksymoops.dynamic.bfd.diff.gz | patch -p1
+chown -R root:root .
+find . -perm 777 -exec chmod 755 {} \;
+find . -perm 664 -exec chmod 644 {} \;
+make
+mkdir -p $PKG/usr/bin
+cat ksymoops > $PKG/usr/bin/ksymoops
+chmod 755 $PKG/usr/bin/ksymoops
+mkdir -p $PKG/usr/man/man8
+cat ksymoops.8 | gzip -9c > $PKG/usr/man/man8/ksymoops.8.gz
+mkdir -p $PKG/usr/doc/ksymoops-$VERSION
+cp -a \
+  COPYING Changelog INSTALL README* \
+  $PKG/usr/doc/ksymoops-$VERSION

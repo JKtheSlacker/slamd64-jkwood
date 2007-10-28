@@ -1,0 +1,19 @@
+# HOW TO EDIT THIS FILE:
+# The "handy ruler" below makes it easier to edit a package description.  Line
+# up the first '|' above the ':' following the base package name, and the '|' on
+# the right side marks the last column you can put a character in.  You must make
+# exactly 11 lines for the formatting to be correct.  It's also customary to
+# leave one space after the ':'.
+
+        |-----handy-ruler------------------------------------------------------|
+alsa-lib32: alsa-lib32 (Advanced Linux Sound Architecture 32-bit library)
+alsa-lib32:
+alsa-lib32: The Advanced Linux Sound Architecture (ALSA) provides audio and MIDI
+alsa-lib32: functionality to the Linux operating system.  This is the ALSA library
+alsa-lib32: (libasound) which is used by audio applications.
+alsa-lib32:
+alsa-lib32: For more information, see http://alsa-project.org
+alsa-lib32:
+alsa-lib32: This package contains 32-bit binaries.
+alsa-lib32:
+alsa-lib32:

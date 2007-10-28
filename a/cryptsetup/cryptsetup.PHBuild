@@ -1,0 +1,120 @@
+#!/bin/sh
+# $Id: cryptsetup.SlackBuild,v 1.1 2007/05/26 11:13:09 root Exp root $
+# Copyright (c) 2007 Eric Hameleers <alien@slackware.com>
+# Copyright (c) 2007 Frederick Emmott <mail@fredemmott.co.uk>
+# -----------------------------------------------------------------------------
+#
+# Slackware SlackBuild script 
+# ===========================
+# By:        Eric Hameleers <alien@slackware.com>
+# For:       cryptsetup
+# Descr:     Utility for setting up encrypted filesystems
+# URL:       http://luks.endorphin.org/dm-crypt
+# Needs:     libgpg-error, libgcrypt, device-mapper, 2.6 kernel
+# Changelog:
+# 1.0.4-1:   08/Feb/2007 by Eric Hameleers <alien@slackware.com>
+#            * Initial build of cryptsetup-luks.
+# 1.0.5-1:   26/May/2007 by Eric Hameleers <alien@slackware.com>
+#            * Update. From this release onwards, cryptsetup-luks becomes
+#              cryptsetup. Hence, it replaces the original main branch
+#              (with it's only 0.1 release in 2004).
+# 1.0.5-1:   2007-06-02:  Slightly modified by PJV and merged into
+#              Slackware-current.  No package version change.
+# 1.0.5-2:   2007-06-20:  Added --localedir option.  <PJV>
+# 
+# Run 'sh cryptsetup.SlackBuild --cleanup' to build a Slackware package.
+# The package (.tgz) plus descriptive .txt file are created in /tmp .
+# Install using 'installpkg'. 
+#
+# -----------------------------------------------------------------------------
+
+# --- INIT ---
+# Set initial variables:
+
+. /etc/pkghelpers
+
+PKGNAM=cryptsetup
+VERSION=${VERSION:-1.0.5}
+BUILD=${BUILD:-1}
+
+pkghelpers_env
+
+DOCS="AUTHORS COPYING ChangeLog INSTALL NEWS README TODO"
+
+rm -rf $PKG
+mkdir $PKG
+
+cd $TMP/tmp-$PKGNAM
+
+tar xfv $CWD/$PKGNAM-$VERSION.tar.*
+
+ 
+cd ${PKGNAM}-${VERSION}
+
+chown -R root:root .
+chmod -R u+w,go+r-w,a-s .
+
+LDFLAGS="$SLKLDFLAGS" \
+CFLAGS="$SLKCFLAGS" \
+./configure --prefix=/usr \
+            --libdir=/usr/lib$LIBSUFFIX \
+            --localstatedir=/var \
+            --sysconfdir=/etc \
+            --datarootdir=/usr \
+            --datadir=/usr/share \
+            --localedir=/usr/share/locale \
+            --enable-libgcrypt \
+            --enable-libdevmapper \
+            --program-prefix="" \
+            --program-suffix="" \
+            --build=$ARCH-$DISTRO-linux \
+            2>&1 | tee $OUTPUT/configure-${PKGNAM}.log
+make 2>&1 | tee $OUTPUT/make-${PKGNAM}.log
+
+make DESTDIR=$PKG install 2>&1 |tee $OUTPUT/install-${PKGNAM}.log
+
+# 
+# Next, make the static version that we will use for mkinitrd:
+#
+
+make clean
+LDFLAGS="$SLKLDFLAGS" \
+CFLAGS="$SLKCFLAGS" \
+./configure --prefix=/usr \
+            --libdir=/usr/lib$LIBSUFFIX \
+            --localstatedir=/var \
+            --sysconfdir=/etc \
+            --datarootdir=/usr \
+            --datadir=/usr/share \
+            --disable-libgcrypt \
+            --enable-libdevmapper \
+            --enable-static \
+            --disable-shared \
+            --disable-shared-library \
+            --program-prefix="" \
+            --program-suffix="" \
+            --build=$ARCH-$DISTRO-linux \
+            2>&1 | tee $OUTPUT/configure-${PKGNAM}-static.log
+make 2>&1 | tee $OUTPUT/make-${PKGNAM}-static.log
+
+# I have to do one old-school thing to leave a mark here:
+mkdir -p $PKG/sbin
+cat src/cryptsetup > $PKG/sbin/cryptsetup.static
+chmod 755 $PKG/sbin/cryptsetup.static
+
+# Remove unneeded empty directory:
+#rmdir $PKG/usr/lib/cryptsetup
+
+# Documentation
+mkdir -p $PKG/usr/doc/$PKGNAM-$VERSION
+cp -a $DOCS $PKG/usr/doc/$PKGNAM-$VERSION || true
+chmod -R a-w $PKG/usr/doc/$PKGNAM-$VERSION/*
+
+# Add a package description
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+
+# Build the package:
+cd $PKG
+pkghelpers_fixup
+pkghelpers_makepkg

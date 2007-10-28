@@ -1,0 +1,74 @@
+#!/bin/sh
+PKGNAM=elvis
+VERSION=2.2_0
+BUILD=2
+
+. /etc/pkghelpers
+pkghelpers_env
+
+cd /tmp
+PKG=/tmp/package-elvis
+rm -rf $PKG
+mkdir -p $PKG/usr
+rm -rf elvis-$VERSION
+tar xjvf $CWD/elvis-$VERSION.tar.bz2
+cd elvis-$VERSION
+chown -R root.root .
+# Time for a kludge (i.e. don't suggest this kind of thing be
+# done as a rule... I don't know why I'm crazy today).
+# First we build and install this with a bogus --prefix, and
+# then build it again and replace the binaries.
+# (to prevent compiling in /tmp/package-elvis/ paths)
+./configure \
+  --without-x \
+  --without-gnome \
+  --bindir=$PKG/usr/bin \
+  --datadir=$PKG/usr/share/elvis-$VERSION \
+  --docdir=$PKG/usr/share/elvis-$VERSION/doc \
+  --verbose
+make -j 12
+make install
+# Now we make the real binaries:
+make clean
+./configure \
+  --without-x \
+  --without-gnome \
+  --bindir=/usr/bin \
+  --datadir=/usr/share/elvis-$VERSION \
+  --docdir=/usr/share/elvis-$VERSION/doc \
+  --verbose
+make -j12
+# And install them:
+cat elvis > $PKG/usr/bin/elvis
+cat elvtags > $PKG/usr/bin/elvtags
+cat ref > $PKG/usr/bin/ref
+chown -R root:root $PKG/usr/bin
+# Turn off color highlighting by default.  I can't imagine editing files
+# like that all day...  (this coming from the inventor of /etc/(DIR|LS)_COLORS ;-)
+cp -a $CWD/elvis.clr* $PKG/usr/share/elvis-$VERSION
+chown root:root $PKG/usr/share/elvis-$VERSION/elvis.clr*
+# Install the man pages:
+mkdir -p $PKG/usr/man/man1
+( cd doc
+  cat ctags.man | gzip -9c > $PKG/usr/man/man1/elvtags.1.gz
+  cat elvfmt.man | gzip -9c > $PKG/usr/man/man1/elvfmt.1.gz
+  cat elvis.man | gzip -9c > $PKG/usr/man/man1/elvis.1.gz
+  cat ref.man | gzip -9c > $PKG/usr/man/man1/ref.1.gz
+)
+cp -a \
+  BUGS COPYING INSTALL README.html \
+  $PKG/usr/share/elvis-$VERSION
+# If this is actually useful for anything, fill me in on what it's for:
+rm -f $PKG/usr/share/elvis-$VERSION/tags
+rm -f $PKG/usr/share/elvis-$VERSION/doc/*.man
+rm -f $PKG/usr/share/elvis-$VERSION/doc/printdoc.bat
+# Add /usr/bin/ex and /usr/bin/vi symlinks.
+( cd $PKG/usr/bin ; ln -sf elvis ex ; ln -sf elvis vi )
+mkdir $PKG/usr/doc
+( cd $PKG/usr/doc ; ln -sf /usr/share/elvis-$VERSION . )
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+
+cd $PKG
+pkghelpers_fixup
+pkghelpers_makepkg

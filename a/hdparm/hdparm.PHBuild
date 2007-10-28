@@ -1,0 +1,34 @@
+#!/bin/sh
+PKGNAM=hdparm
+VERSION=${VERSION:-7.6}
+BUILD=${BUILD:-1}
+
+. /etc/pkghelpers
+pkghelpers_env
+
+rm -rf $PKG
+mkdir -p $PKG
+
+cd $TMP
+rm -rf hdparm-$VERSION
+tar xjvf $CWD/hdparm-$VERSION.tar.bz2
+cd hdparm-$VERSION
+chown -R root:root .
+make
+strip hdparm
+mkdir -p $PKG/usr/sbin
+cat hdparm > $PKG/usr/sbin/hdparm
+chmod 755 $PKG/usr/sbin/hdparm
+mkdir -p $PKG/usr/man/man8
+cat hdparm.8 | gzip -9c > $PKG/usr/man/man8/hdparm.8.gz
+mkdir -p $PKG/usr/doc/hdparm-$VERSION
+cp -a \
+  LICENSE.TXT README.acoustic hdparm.lsm contrib \
+  $PKG/usr/doc/hdparm-$VERSION
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+
+# Build the package:
+cd $PKG
+pkghelpers_fixup
+pkghelpers_makepkg

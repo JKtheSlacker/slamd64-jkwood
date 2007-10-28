@@ -1,0 +1,59 @@
+#!/bin/sh
+
+PKGNAM=curl
+VERSION=7.16.2
+BUILD=${BUILD:-1}
+
+. /etc/pkghelpers
+pkghelpers_env
+
+# Uncomment to build a no-SSL version:
+#SSLOPT=--without-ssl
+
+rm -rf $PKG
+mkdir -p $PKG
+cd $TMP
+rm -rf curl-$VERSION
+tar xjvf $CWD/curl-$VERSION.tar.bz2
+cd curl-$VERSION
+
+chown -R root:root .
+find . -perm 666 -exec chmod 644 {} \;
+find . -perm 664 -exec chmod 644 {} \;
+find . -perm 600 -exec chmod 644 {} \;
+find . -perm 444 -exec chmod 644 {} \;
+find . -perm 400 -exec chmod 644 {} \;
+find . -perm 440 -exec chmod 644 {} \;
+find . -perm 777 -exec chmod 755 {} \;
+find . -perm 775 -exec chmod 755 {} \;
+find . -perm 511 -exec chmod 755 {} \;
+find . -perm 711 -exec chmod 755 {} \;
+find . -perm 555 -exec chmod 755 {} \;
+
+CFLAGS="$SLKCFLAGS" \
+./configure \
+  --prefix=/usr \
+	--libdir=/usr/lib$LIBSUFFIX \
+  --mandir=/usr/man \
+  $SSLOPT
+make -j10 || exit 1
+make install DESTDIR=$PKG || exit 1
+
+strip -g $PKG/usr/lib$LIBSUFFIX/libcurl.a
+
+mkdir -p $PKG/usr/doc/curl-$VERSION
+cp -a \
+  CHANGES COPYING README UPGRADE \
+  $PKG/usr/doc/curl-$VERSION
+( cd docs
+  rm -rf Makefile* curl-config.1 curl-config.html curl.1 curl.html libcurl
+  cp -a \
+    BUGS CONTRIBUTE FAQ FEATURES INSTALL INTERNALS MANUAL README.win32 RESOURCES THANKS TODO examples \
+    $PKG/usr/doc/curl-$VERSION )
+
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+
+cd $PKG
+pkghelpers_fixup
+pkghelpers_makepkg

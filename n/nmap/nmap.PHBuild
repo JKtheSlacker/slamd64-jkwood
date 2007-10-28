@@ -1,0 +1,85 @@
+#!/bin/sh
+PKGNAM=nmap
+VERSION=4.20
+BUILD=${BUILD:-1}
+
+. /etc/pkghelpers
+pkghelpers_env
+
+rm -rf $PKG
+mkdir -p $PKG
+
+cd $TMP
+rm -rf nmap-$VERSION
+tar xjvf $CWD/nmap-$VERSION.tar.bz2 || exit 1
+cd nmap-$VERSION
+
+chown -R root:root .
+find . -perm 666 -exec chmod 644 {} \;
+find . -perm 664 -exec chmod 644 {} \;
+find . -perm 600 -exec chmod 644 {} \;
+find . -perm 444 -exec chmod 644 {} \;
+find . -perm 400 -exec chmod 644 {} \;
+find . -perm 440 -exec chmod 644 {} \;
+find . -perm 777 -exec chmod 755 {} \;
+find . -perm 775 -exec chmod 755 {} \;
+find . -perm 511 -exec chmod 755 {} \;
+find . -perm 711 -exec chmod 755 {} \;
+find . -perm 555 -exec chmod 755 {} \;
+
+CFLAGS=-O2 \
+./configure \
+  --prefix=/usr \
+	--libdir=/usr/lib$LIBSUFFIX \
+  --build=$ARCH-$DISTRO-linux
+
+make -j12 || exit 1
+
+make prefix=$PKG/usr install
+zcat $CWD/nmapfe.desktop.gz > $PKG/usr/share/applications/nmapfe.desktop
+mkdir -p $PKG/usr/share/pixmaps
+cat $CWD/nmap.png > $PKG/usr/share/pixmaps/nmap.png
+strip $PKG/usr/bin/*
+mkdir -p $PKG/usr/doc/nmap-$VERSION
+cp -a \
+  COPYING COPYING.OpenSSL HACKING INSTALL \
+  $PKG/usr/doc/nmap-$VERSION
+( cd docs
+  # It looks like all of these translations are gone from the 4.00+ tarball, and
+  # most of them are not available on the web site.  Sorry -- I didn't do it.
+  if [ -f nmap_german.1 ] ; then
+    mkdir -p $PKG/usr/man/de/man1
+    cat nmap_german.1 | gzip -9c > $PKG/usr/man/de/man1/nmap.1.gz
+  fi
+  if [ -f nmap_spanish.1 ] ; then
+    mkdir -p $PKG/usr/man/es/man1
+    cat nmap_spanish.1 | gzip -9c > $PKG/usr/man/es/man1/nmap.1.gz
+  fi
+  if [ -f nmap_french.1 ] ; then
+    mkdir -p $PKG/usr/man/fr/man1
+    cat nmap_french.1 | gzip -9c > $PKG/usr/man/fr/man1/nmap.1.gz
+  fi
+  if [ -f nmap_italian.1 ] ; then
+    mkdir -p $PKG/usr/man/it/man1
+    cat nmap_italian.1 | gzip -9c > $PKG/usr/man/it/man1/nmap.1.gz
+  fi
+  if [ -f nmap_lithuanian.1 ] ; then
+    mkdir -p $PKG/usr/man/lt/man1
+    cat nmap_lithuanian.1 | gzip -9c > $PKG/usr/man/lt/man1/nmap.1.gz
+  fi
+  if [ -f nmap_portuguese.1 ] ; then
+    mkdir -p $PKG/usr/man/pt/man1
+    cat nmap_portuguese.1 | gzip -9c > $PKG/usr/man/pt/man1/nmap.1.gz
+  fi
+  if [ -f nmap_russian.1 ] ; then
+    mkdir -p $PKG/usr/man/ru/man1
+    cat nmap_russian.1 | gzip -9c > $PKG/usr/man/ru/man1/nmap.1.gz
+  fi
+)
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+
+# Build the package:
+cd $PKG
+pkghelpers_fixup
+pkghelpers_makepkg

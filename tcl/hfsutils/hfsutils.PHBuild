@@ -1,0 +1,44 @@
+#!/bin/sh
+# Build hfsutils for slackintosh
+# <adrian@blinkenlights.ch>
+# Modified for slamd64
+# <mail@fredemmott.co.uk>
+PKGNAM=hfsutils
+VERSION=${VERSION:-3.2.6}
+BUILD=${BUILD:-2}
+
+. /etc/pkghelpers
+pkghelpers_env
+
+rm -rf $PKG
+mkdir -p $PKG
+
+cd $TMP
+rm -rf hfsutils-$VERSION
+tar xzvf $CWD/hfsutils-$VERSION.tar.gz
+
+cd hfsutils-$VERSION
+chown -R root.root .
+CFLAGS="$SLKCFLAGS" ./configure --prefix=/usr 
+	--libdir=/usr/$LIBDIR \
+  $ARCH-$DISTRO-linux
+
+
+# Build screen:
+make || exit 1
+
+sleep 1
+
+#Copy stuff
+mkdir -p $TMP/package-hfsutils/usr/bin
+find . -perm -755 -name "h*"|cpio -pvmd $TMP/package-hfsutils/usr/bin
+
+# Prepare package:
+strip --strip-unneeded $PKG/usr/bin/h*
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+
+# Build package:
+cd $PKG
+pkghelpers_fixup
+pkghelpers_makepkg

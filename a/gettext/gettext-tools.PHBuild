@@ -1,0 +1,65 @@
+#!/bin/sh
+PKGNAM=gettext-tools
+VERSION=0.16.1
+BUILD=${BUILD:-1}
+
+. /etc/pkghelpers
+pkghelpers_env
+
+rm -rf $PKG
+mkdir -p $PKG
+cd $TMP
+rm -rf gettext-$VERSION
+tar xjvf $CWD/gettext-$VERSION.tar.bz2 || exit 1
+cd gettext-$VERSION
+chown -R root:root .
+find . -perm 664 -exec chmod 644 {} \;
+find . -perm 600 -exec chmod 644 {} \;
+find . -perm 444 -exec chmod 644 {} \;
+find . -perm 400 -exec chmod 644 {} \;
+find . -perm 440 -exec chmod 644 {} \;
+find . -perm 777 -exec chmod 755 {} \;
+find . -perm 775 -exec chmod 755 {} \;
+find . -perm 511 -exec chmod 755 {} \;
+find . -perm 711 -exec chmod 755 {} \;
+find . -perm 555 -exec chmod 755 {} \;
+CFLAGS="$SLKCFLAGS" \
+CXXFLAGS="$SLKCFLAGS" \
+./configure \
+  --prefix=/usr \
+	--libdir=/usr/lib$LIBSUFFIX \
+  --disable-static \
+  --infodir=/usr/info \
+  --build=$ARCH-$DISTRO-linux
+make -j12 || exit 1
+cd gettext-tools
+make install DESTDIR=$PKG
+
+( cd $PKG/usr/share
+  mv man ..
+  mv doc ..
+)
+( cd $PKG/usr/doc
+  mv gettext gettext-tools-$VERSION
+  cd gettext-tools-$VERSION
+  # These take up a ton of space otherwise
+  tar cf examples.tar examples
+  bzip2 -9 examples.tar
+  rm -rf examples
+  # Move the HTML docs into a subdirectory:
+  mkdir html
+  mv *.html html
+  # This file isn't in the package, but it's in one you have to install, or there will be
+  # bigger problems than this dead link:
+  rm -f ABOUT-NLS
+  ln -sf /usr/share/gettext/ABOUT-NLS .
+)
+cp -a \
+  AUTHORS ../COPYING INSTALL NEWS README \
+  $PKG/usr/doc/gettext-tools-$VERSION
+mkdir -p $PKG/install
+cat $CWD/slack-desc.gettext-tools > $PKG/install/slack-desc
+
+cd $PKG
+pkghelpers_fixup
+pkghelpers_makepkg

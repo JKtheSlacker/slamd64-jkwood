@@ -1,0 +1,30 @@
+#!/bin/sh
+# Set initial variables:
+
+PKGNAM=etc
+VERSION=11.1
+ARCH=noarch
+BUILD=4
+
+. /etc/pkghelpers
+pkghelpers_env
+
+cd $TMP
+rm -rf $PKG
+mkdir $PKG
+
+# Explode the package framework:
+cd $PKG
+explodepkg $CWD/_etc.tar.gz
+cp -a $CWD/termcap-BSD.gz etc/termcap-BSD.gz
+gzip -d --force etc/termcap-BSD.gz
+chown root:root etc/termcap-BSD
+chmod 644 etc/termcap-BSD
+zcat $CWD/nsswitch.conf.gz > $PKG/etc/nsswitch.conf.new
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+
+# Build the package:
+cd $PKG
+
+pkghelpers_makepkg

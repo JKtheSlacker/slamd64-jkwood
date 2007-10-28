@@ -1,0 +1,175 @@
+#!/bin/sh
+# Build samba for Slackware.
+CWD=`pwd`
+TMP=/tmp
+PKG=$TMP/package-samba
+rm -rf $PKG
+mkdir -p $PKG
+
+VERSION=3.0.26a
+ARCH=${ARCH:-x86_64}
+BUILD=${BUILD:-1}
+DISTRO=${DISTRO:-slamd64}
+
+if [ $DISTRO = slackware ]; then
+	PKGARCH=$ARCH
+else
+	PKGARCH=${ARCH}_${DISTRO}
+fi
+
+if [ $DISTRO = slamd64 ]; then
+	LIBSUFFIX=${LIBSUFFIX:-64}
+fi
+
+cd $TMP
+rm -rf samba-$VERSION
+tar xjvf $CWD/samba-$VERSION.tar.bz2
+cd samba-$VERSION
+
+chown -R root:root .
+find . -perm 775 -exec chmod 755 {} \;
+find . -perm 664 -exec chmod 644 {} \;
+
+cd source
+if [ "$ARCH" = "i386" ]; then
+  SLKCFLAGS="-O2 -march=i386 -mcpu=i686"
+elif [ "$ARCH" = "i486" ]; then
+  SLKCFLAGS="-O2 -march=i486 -mtune=i686"
+elif [ "$ARCH" = "s390" ]; then
+  SLKCFLAGS="-O2"
+elif [ "$ARCH" = "x86_64" ]; then
+  SLKCFLAGS="-O2 -fPIC"
+fi
+
+zcat $CWD/samba.lib64.diff.gz | patch -p2 --verbose || exit 1 # otherwise, --with-fhs overrides --libdir
+
+# Some of these options could be auto-detected, but declaring them
+# here doesn't hurt and helps document what features we're trying to
+# build in.
+CFLAGS="$SLKCFLAGS" ./configure \
+  --enable-cups \
+  --enable-static=no \
+  --enable-shared=yes \
+  --with-fhs \
+  --with-acl-support=yes \
+  --with-automount \
+  --prefix=/usr \
+  --localstatedir=/var \
+  --bindir=/usr/bin \
+  --sbindir=/usr/sbin \
+  --with-lockdir=/var/cache/samba \
+  --sysconfdir=/etc \
+  --with-configdir=/etc/samba \
+  --with-privatedir=/etc/samba/private \
+  --with-swatdir=/usr/share/swat \
+  --with-smbmount \
+  --with-quotas \
+  --with-syslog \
+  --with-utmp \
+  --with-libsmbclient \
+  --with-winbind \
+  --with-ldap \
+	--libdir=/usr/lib$LIBSUFFIX \
+  $ARCH-$DISTRO-linux
+
+# -j options don't seem to work...
+make || exit 1
+
+mkdir -p \
+         $PKG/usr/doc/samba-$VERSION \
+         $PKG/var/spool/samba \
+         $PKG/var/log/samba \
+         $PKG/etc/samba/private \
+         $PKG/var/cache/samba
+chmod 700 $PKG/etc/samba/private
+chmod 1777 $PKG/var/spool/samba
+
+make install DESTDIR=$PKG || exit 1
+
+# Install libnss_win* libraries:
+mkdir -p $PKG/lib$LIBSUFFIX
+cp -a nsswitch/libnss_winbind.so $PKG/lib$LIBSUFFIX/libnss_winbind.so.2
+cp -a nsswitch/libnss_wins.so $PKG/lib$LIBSUFFIX/libnss_wins.so.2
+( cd $PKG/lib$LIBSUFFIX
+  ln -sf libnss_winbind.so.2 libnss_winbind.so
+  ln -sf libnss_wins.so.2 libnss_wins.so
+)
+
+# Add some (u)mount links:
+mkdir -p $PKG/sbin
+( cd $PKG/sbin
+  rm -f mount.smbfs ; ln -sf /usr/bin/smbmount mount.smbfs
+  rm -f mount.cifs ; ln -sf /usr/sbin/mount.cifs mount.cifs
+  # smbumount was giving me problems so it seems wise to play it safe
+  #rm -f umount.smbfs ; ln -sf /usr/bin/smbumount umount.smbfs
+  #rm -f umount.cifs ; ln -sf /usr/sbin/umount.cifs umount.cifs
+)
+
+# Make sure libsmbclient gets installed:
+mkdir -p $PKG/usr/lib$LIBSUFFIX/samba
+( cd $PKG/usr/lib$LIBSUFFIX/samba
+  rm -f libsmbclient.a
+  mv libsmbclient.so ../libsmbclient.so.0.0
+  ln -sf ../libsmbclient.so.0.0 libsmbclient.so
+  cd ..
+  rm -f libsmbclient.so.0 libsmbclient.so libsmbclient.a
+  ln -sf libsmbclient.so.0.0 libsmbclient.so.0
+  ln -sf libsmbclient.so.0.0 libsmbclient.so
+)
+chown root:root $PKG/usr/include/libsmbclient.h
+chmod 644 $PKG/usr/include/libsmbclient.h
+  
+cat $CWD/smb.conf.default > $PKG/etc/samba/smb.conf-sample
+
+if [ ! -r $PKG/usr/bin/smbget ]; then
+  rm -f $PKG/usr/share/man/man1/smbget.1
+  rm -f $PKG/usr/share/swat/help/smbget.1.html
+fi
+
+# We'll add rc.samba to the init directory, but chmod 644 so that it doesn't
+# start by default:
+mkdir -p $PKG/etc/rc.d
+cat $CWD/rc.samba > $PKG/etc/rc.d/rc.samba.new
+chmod 644 $PKG/etc/rc.d/rc.samba.new
+
+mv $PKG/usr/share/man $PKG/usr
+gzip -9 $PKG/usr/man/man?/*.?
+( cd $PKG
+  find . | xargs file | grep "executable" | grep ELF | cut -f 1 -d : | xargs strip --strip-unneeded 2> /dev/null
+  find . | xargs file | grep "shared object" | grep ELF | cut -f 1 -d : | xargs strip --strip-unneeded 2> /dev/null
+)
+
+cd ..
+cp -a COPYING Manifest README Read-Manifest-Now Roadmap WHATSNEW.txt docs examples \
+  $PKG/usr/doc/samba-$VERSION
+# These are installed elsewhere:
+rm -rf $PKG/usr/doc/samba-$VERSION/docs/htmldocs \
+       $PKG/usr/doc/samba-$VERSION/docs/manpages
+mkdir -p $PKG/usr/doc/samba-$VERSION/docs
+( cd $PKG/usr/doc/samba-$VERSION/docs
+  ln -sf /usr/share/swat/help htmldocs
+  ln -sf /usr/share/swat/using_samba using_samba
+)
+# I'm sorry, but when all this info is included in HTML, adding 7MB worth of
+# PDF files just to have extra artwork is more fluff than I'll agree to.
+rm -f $PKG/usr/doc/samba-$VERSION/docs/*.pdf
+# Also redundant also:
+rm -rf $PKG/usr/doc/samba-$VERSION/docs/docbook
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+zcat $CWD/doinst.sh.gz > $PKG/install/doinst.sh
+
+cat << EOF
+
+*** Be sure the package contains:
+
+drwx------   2 root     root         1024 Mar 12 13:21 /etc/samba/private
+drwxr-xr-x   2 root     root         4096 May  3 15:46 /var/cache/samba/
+drwxr-xr-x    2 root     root          48 Aug 29 13:06 /var/log/samba/
+drwxrwxrwt   2 root     root         1024 Mar 12 13:21 /var/spool/samba/
+
+EOF
+
+cd $PKG
+makepkg -l y -c n $TMP/samba-$VERSION-$PKGARCH-$BUILD.tgz
+

@@ -1,0 +1,54 @@
+#!/bin/sh
+# Set initial variables:
+PKGNAM=slocate
+VERSION=3.1
+BUILD=2
+
+. /etc/pkghelpers
+pkghelpers_env
+
+rm -rf $PKG
+mkdir -p $PKG
+
+# Explode the package framework:
+cd $PKG
+explodepkg $CWD/_slocate.tar.gz
+
+cd $TMP
+rm -rf slocate-$VERSION
+tar xzvf $CWD/slocate-$VERSION.tar.gz
+cd slocate-$VERSION
+chown -R root:root .
+find . -perm 664 -exec chmod 644 {} \;
+find . -perm 640 -exec chmod 644 {} \;
+find . -perm 600 -exec chmod 644 {} \;
+find . -perm 444 -exec chmod 644 {} \;
+find . -perm 400 -exec chmod 644 {} \;
+find . -perm 440 -exec chmod 644 {} \;
+find . -perm 777 -exec chmod 755 {} \;
+find . -perm 775 -exec chmod 755 {} \;
+find . -perm 750 -exec chmod 755 {} \;
+find . -perm 2750 -exec chmod 755 {} \;
+find . -perm 511 -exec chmod 755 {} \;
+find . -perm 711 -exec chmod 755 {} \;
+find . -perm 555 -exec chmod 755 {} \;
+cd src
+make -j12 CFLAGS="$SLKCFLAGS" || exit 1
+cd ..
+strip --strip-unneeded src/slocate
+mkdir -p $PKG/usr/bin
+cat src/slocate > $PKG/usr/bin/slocate
+mkdir -p $PKG/usr/man/man1
+cat doc/slocate.1 | gzip -9c > $PKG/usr/man/man1/slocate.1.gz
+cat doc/updatedb.1 | gzip -9c > $PKG/usr/man/man1/updatedb.1.gz
+mkdir -p $PKG/usr/doc/slocate-$VERSION
+cp -a \
+  Changelog LICENSE README WISHLIST \
+  $PKG/usr/doc/slocate-$VERSION
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+
+# Build the package:
+cd $PKG
+pkghelpers_fixup
+pkghelpers_makepkg

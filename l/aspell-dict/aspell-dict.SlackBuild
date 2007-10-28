@@ -1,0 +1,37 @@
+CWD=`pwd`
+PKG=/tmp/package-aspell-dict
+BUILD=4
+for file in aspell*bz2 ; do
+  NAME=`echo $file | cut -f 1-2 -d -`-`echo $file | cut -f 3- -d - | rev | cut -b9- | rev | tr '[\-]' '[_]'`
+  rm -rf $PKG
+  mkdir -p $PKG
+  cd /tmp
+  tar xjf $CWD/$file
+  cd `basename $file .tar.bz2`
+  chown -R root.root .
+  ./configure
+  make
+  make install DESTDIR=$PKG
+  # Use a uniform package name.
+  NAME=$(echo $NAME | sed 's/aspell5/aspell/' | sed 's/aspell6/aspell/')
+  mkdir -p $PKG/usr/doc/${NAME}
+  cp -a \
+    README Copyright \
+    $PKG/usr/doc/${NAME}
+  chmod 644 $PKG/usr/doc/${NAME}/*
+  mkdir $PKG/install
+  SLACKDESC=$(echo $NAME | cut -f 1-2 -d -)
+  echo "${SLACKDESC}: ${SLACKDESC}" > $PKG/install/slack-desc
+  echo "${SLACKDESC}:" >> $PKG/install/slack-desc
+  echo "${SLACKDESC}: $(head -n 1 README)." >> $PKG/install/slack-desc
+  echo "${SLACKDESC}:" >> $PKG/install/slack-desc
+  echo "${SLACKDESC}:" >> $PKG/install/slack-desc
+  echo "${SLACKDESC}:" >> $PKG/install/slack-desc
+  echo "${SLACKDESC}:" >> $PKG/install/slack-desc
+  echo "${SLACKDESC}:" >> $PKG/install/slack-desc
+  echo "${SLACKDESC}:" >> $PKG/install/slack-desc
+  echo "${SLACKDESC}:" >> $PKG/install/slack-desc
+  echo "${SLACKDESC}:" >> $PKG/install/slack-desc
+  cd $PKG
+  makepkg -l y -c n /tmp/${NAME}-noarch_slamd64-$BUILD.tgz
+done

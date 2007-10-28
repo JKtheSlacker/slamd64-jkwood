@@ -1,0 +1,66 @@
+#!/bin/sh
+CWD=`pwd`
+PKG=/tmp/package-shared-mime-info
+
+VERSION=0.21
+ARCH=${ARCH:-x86_64}
+BUILD=2
+DISTRO=${DISTRO:-slamd64}
+
+if [ $DISTRO = slackware ]; then
+	PKGARCH=$ARCH
+else
+	PKGARCH=${ARCH}_${DISTRO}
+fi
+
+if [ $DISTRO = slamd64 ]; then
+	LIBSUFFIX=${LIBSUFFIX:-64}
+fi
+
+rm -rf $PKG
+mkdir -p $PKG
+cd /tmp
+rm -rf shared-mime-info-$VERSION
+tar xjvf $CWD/shared-mime-info-$VERSION.tar.bz2 || exit 1
+cd shared-mime-info-$VERSION
+chown -R root:root .
+find . -perm 777 -exec chmod 755 {} \;
+find . -perm 664 -exec chmod 644 {} \;
+./configure \
+  --prefix=/usr \
+  --mandir=/usr/man \
+  --build=$ARCH-$DISTRO-linux
+make
+make install DESTDIR=$PKG
+mkdir -p $PKG/usr/lib$LIBSUFFIX
+mv $PKG/usr/share/pkgconfig $PKG/usr/lib$LIBSUFFIX
+
+mkdir -p $PKG/var/log/setup
+cat << EOF > $PKG/var/log/setup/setup.07.update-mime-database
+#BLURB="Run update-mime-database."
+chroot . update-mime-database /usr/share/mime 1> /dev/null 2> /dev/null
+EOF
+chmod 755 $PKG/var/log/setup/setup.07.update-mime-database
+
+gzip -9 $PKG/usr/man/man?/*.?
+( cd $PKG
+  find . | xargs file | grep "executable" | grep ELF | cut -f 1 -d : | xargs strip --strip-unneeded 2> /dev/null
+  find . | xargs file | grep "shared object" | grep ELF | cut -f 1 -d : | xargs strip --strip-unneeded 2> /dev/null
+)
+mkdir -p $PKG/usr/doc/shared-mime-info-$VERSION
+cp -a \
+  COPYING NEWS README \
+  $PKG/usr/doc/shared-mime-info-$VERSION
+chmod 644 $PKG/usr/doc/shared-mime-info-$VERSION/*
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+cat << EOF > $PKG/install/doinst.sh
+#!/bin/sh
+if [ -x /usr/bin/update-mime-database ]; then
+  chroot . update-mime-database /usr/share/mime 1> /dev/null 2> /dev/null
+fi
+EOF
+
+cd $PKG
+makepkg -l y -c n ../shared-mime-info-$VERSION-$PKGARCH-$BUILD.tgz
+

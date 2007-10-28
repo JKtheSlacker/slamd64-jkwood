@@ -1,0 +1,1 @@
+zcat $CWD/patch/libXt/01_use_extern_C_in_headers.diff.gz | patch -p1 --verbose || sleep 3000

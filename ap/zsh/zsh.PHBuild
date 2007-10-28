@@ -1,0 +1,42 @@
+#!/bin/sh
+# Set initial variables:
+
+PKGNAM=zsh
+VERSION=4.3.2
+BUILD=1
+
+. /etc/pkghelpers
+pkghelpers_env
+
+rm -rf $PKG
+mkdir -p $PKG
+
+cd $TMP
+rm -rf zsh-$VERSION
+tar xjvf $CWD/zsh-$VERSION.tar.bz2
+tar xjvf $CWD/zsh-$VERSION-doc.tar.bz2
+cd zsh-$VERSION
+chown -R root:root .
+CFLAGS="$SLKCFLAGS" \
+./configure \
+	--prefix=/usr \
+	--libdir=/usr/lib$LIBSUFFIX \
+	$ARCH-$DISTRO-linux
+make || exit 1 # -j == breakage
+make install DESTDIR=$PKG
+mv $PKG/usr/bin $PKG
+( cd $PKG/bin ; ln -sf zsh zsh-$VERSION )
+mkdir -p $PKG/etc
+mkdir $PKG/install
+zcat $CWD/doinst.sh.gz > $PKG/install/doinst.sh
+mkdir -p $PKG/usr/doc/zsh-$VERSION/html-docs
+cp -a INSTALL LICENCE META-FAQ README $PKG/usr/doc/zsh-$VERSION
+cp -a Doc/*.html $PKG/usr/doc/zsh-$VERSION/html-docs
+mkdir -p $PKG/usr/info
+cp -a Doc/*info* $PKG/usr/info
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+
+cd $PKG
+pkghelpers_fixup
+pkghelpers_makepkg

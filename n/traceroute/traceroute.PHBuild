@@ -1,0 +1,40 @@
+#!/bin/sh
+# Set initial variables:
+PKGNAM=traceroute
+VERSION=1.4a12
+BUILD=2
+
+. /etc/pkghelpers
+pkghelpers_env
+
+rm -rf $PKG
+mkdir -p $PKG # place for the package to be built
+
+cd $TMP
+rm -rf traceroute-$VERSION
+tar xzvf $CWD/traceroute-$VERSION.tar.gz
+cd traceroute-$VERSION
+chown -R root.root .
+zcat $CWD/traceroute_$VERSION-5.diff.gz | patch -p1 --verbose --backup --suffix=.orig
+zcat $CWD/traceroute.no.domain.strip.diff.gz | patch -p1 --verbose --backup --suffix=.orig
+./configure --prefix=/usr
+zcat $CWD/makefile.diff.gz | patch -p0 --verbose
+make -j12 || exit 1
+strip traceroute
+mkdir -p $PKG/usr/bin
+cat traceroute > $PKG/usr/bin/traceroute
+chmod 4711 $PKG/usr/bin/traceroute
+mkdir -p $PKG/usr/man/man8
+gzip -9c traceroute.8 > $PKG/usr/man/man8/traceroute.8.gz
+mkdir -p $PKG/usr/doc/traceroute-$VERSION
+cp -a \
+  CHANGES FILES INSTALL README VERSION \
+  $PKG/usr/doc/traceroute-$VERSION
+chmod 644 $PKG/usr/doc/traceroute-$VERSION/*
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+
+# Build the package:
+cd $PKG
+pkghelpers_fixup
+pkghelpers_makepkg

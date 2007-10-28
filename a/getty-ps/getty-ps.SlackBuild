@@ -1,0 +1,69 @@
+#!/bin/sh
+# Set initial variables:
+CWD=`pwd`
+if [ "$TMP" = "" ]; then
+  TMP=/tmp
+fi
+PKG=$TMP/package-getty-ps
+
+VERSION=2.1.0b
+ARCH=${ARCH:-x86_64}
+BUILD=1
+DISTRO=${DISTRO:-slamd64}
+
+if [ $DISTRO = slackware ]; then
+	PKGARCH=$ARCH
+else
+	PKGARCH=${ARCH}_${DISTRO}
+fi
+
+if [ ! -d $TMP ]; then
+  mkdir -p $TMP # location to build the source
+fi
+if [ ! -d $PKG ]; then
+  mkdir -p $PKG # place for the package to be built
+fi
+
+cd $TMP
+tar xzvf $CWD/getty_ps-$VERSION.tar.gz
+cd getty_ps-$VERSION
+zcat $CWD/getty.bugfixes.diff.gz | patch -p1 --verbose || exit
+chown -R root:root .
+sed -i s/send/send2/ funcs.c # Hack around sys/net header defined 'send'
+make clean
+rm getty uugetty
+make -j10
+strip getty uugetty
+mkdir $PKG/sbin
+cat getty > $PKG/sbin/getty
+cat uugetty > $PKG/sbin/uugetty
+chmod 755 $PKG/sbin/*
+mkdir $PKG/etc
+cat Examples/gettydefs > $PKG/etc/gettydefs
+#cat Examples/ttytype > $PKG/etc/ttytype
+mkdir $PKG/etc/default
+cp -a Examples/default/* $PKG/etc/default
+chown root:root $PKG/etc/default/*
+mkdir -p $PKG/usr/man/man1
+cat man/getty.1 | gzip -9c > $PKG/usr/man/man1/getty.1.gz
+( cd $PKG/usr/man/man1 ; ln -sf getty.1.gz uugetty.1.gz )
+mkdir -p $PKG/usr/man/man5
+cat man/gettydefs.5 | gzip -9c > $PKG/usr/man/man5/gettydefs.5.gz
+mkdir -p $PKG/usr/doc/getty-ps-$VERSION
+cp -a \
+  ANNOUNCE ChangeLog README.* Examples *.lsm INSTALL \
+  $PKG/usr/doc/getty-ps-$VERSION
+find $PKG/usr/doc/getty-ps-$VERSION -type d -exec chmod 755 {} \;
+find $PKG/usr/doc/getty-ps-$VERSION -type f -exec chmod 644 {} \;
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+
+# Build the package:
+cd $PKG
+makepkg -l y -c n $TMP/getty-ps-$VERSION-$PKGARCH-$BUILD.tgz
+
+# Clean up the extra stuff:
+if [ "$1" = "--cleanup" ]; then
+  rm -rf $TMP/getty_ps-$VERSION
+  rm -rf $PKG
+fi

@@ -1,0 +1,52 @@
+#!/bin/sh
+# Set initial variables:
+PKGNAM=mpfr
+VERSION=2.2.1
+BUILD=${BUILD:-1}
+
+. /etc/pkghelpers
+pkghelpers_env
+
+rm -rf $PKG
+mkdir -p $PKG
+
+# Determine patchlevel:
+PATCHLEVEL=$(/bin/ls $CWD/patches/* 2> /dev/null | rev | cut -f 1 -d / | cut -b4- | rev | cut -b6- | tail -n 1 )
+if [ "$PATCHLEVEL" = "" ]; then
+  PATCHLEVEL=0
+fi
+
+cd $TMP
+rm -rf mpfr-$VERSION
+tar xjvf $CWD/mpfr-$VERSION.tar.bz2 || exit 1
+cd mpfr-$VERSION
+chown -R root:root .
+for file in $CWD/patches/* ; do
+  ( zcat $file 2> /dev/null | patch -p1 --verbose --batch || exit 1 )
+  if [ ! $? = 0 ]; then
+    exit 1
+  fi
+done
+CFLAGS="$SLKCFLAGS" \
+./configure \
+  --prefix=/usr \
+	--libdir=/usr/lib$LIBSUFFIX \
+  --infodir=/usr/info \
+  --enable-static=yes \
+  --enable-shared=yes \
+  $ARCH-$DISTRO-linux
+make -j12 || exit 1
+make install DESTDIR=$PKG
+# Hardly a savings doing this...
+#strip -g $PKG/usr/lib/*.a
+mkdir -p $PKG/usr/doc/mpfr-$VERSION
+cp -a \
+  AUTHORS BUGS COPYING COPYING.LIB FAQ.html INSTALL NEWS README TODO VERSION \
+  $PKG/usr/doc/mpfr-$VERSION
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+
+cd $PKG
+PKGVER=${VERSION}p${PATCHLEVEL}
+pkghelpers_fixup
+pkghelpers_makepkg

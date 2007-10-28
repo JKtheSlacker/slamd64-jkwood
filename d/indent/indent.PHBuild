@@ -1,0 +1,48 @@
+#!/bin/sh
+# Set initial variables:
+PKGNAM=indent
+VERSION=2.2.9
+BUILD=2
+
+. /etc/pkghelpers
+pkghelpers_env
+
+if [ ! -d $PKG ]; then
+  mkdir -p $PKG # place for the package to be built
+fi
+
+cd $TMP
+tar xjvf $CWD/indent-$VERSION.tar.bz2
+cd indent-$VERSION
+chown -R root.root .
+# GCC4 fix
+sed -i 's#extern FILE \*output#static FILE *output#' src/indent.h || exit 1
+CFLAGS="$SLKCFLAGS" \
+./configure --prefix=/usr $ARCH-$DISTRO-linux
+make -j12 || exit 1
+strip src/indent
+mkdir -p $PKG/usr/bin
+cat src/indent > $PKG/usr/bin/indent
+chmod 755 $PKG/usr/bin/indent
+mkdir -p $PKG/usr/info
+cat doc/indent.info | gzip -9c > $PKG/usr/info/indent.info.gz
+mkdir -p $PKG/usr/man/man1
+cat man/indent.1 | gzip -9c > $PKG/usr/man/man1/indent.1.gz
+( cd po
+  for locale in *.gmo ; do
+    mkdir -p $PKG/usr/share/locale/`basename $locale .gmo`/LC_MESSAGES
+    cat $locale > $PKG/usr/share/locale/`basename $locale .gmo`/LC_MESSAGES/indent.mo
+  done
+)
+mkdir -p $PKG/usr/doc/indent-$VERSION
+cp -a \
+  AUTHORS COPYING* INSTALL NEWS README \
+  $PKG/usr/doc/indent-$VERSION
+chmod 644 $PKG/usr/doc/indent-$VERSION/*
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+
+# Build the package:
+cd $PKG
+pkghelpers_fixup
+pkghelpers_makepkg

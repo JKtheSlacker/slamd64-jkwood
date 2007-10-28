@@ -1,0 +1,8 @@
+#!/usr/bin/perl
+
+system("/usr/bin/ln", @ARGV); # sorry, still polute /
+
+$foo = pop @ARGV;
+push @ARGV, "$ENV{DESTDIR}/$foo";
+
+system("/usr/bin/ln", @ARGV);

@@ -1,0 +1,34 @@
+#!/bin/sh
+PKGNAM=audiofile
+VERSION=0.2.6
+BUILD=${BUILD:-2}
+
+. /etc/pkghelpers
+pkghelpers_env
+
+rm -rf $PKG
+
+cd /tmp
+tar xjvf $CWD/audiofile-$VERSION.tar.bz2
+cd audiofile-$VERSION
+chown -R root.root .
+find . -perm 666 -exec chmod 644 {} \;
+find . -perm 664 -exec chmod 644 {} \;
+CFLAGS=$SLKCFLAGS \
+./configure \
+  --prefix=/usr \
+  --libdir=/usr/lib$LIBSUFFIX \
+  --sysconfdir=/etc \
+  $ARCH-$DISTRO-linux
+make -j12 || exit 1
+make install DESTDIR=$PKG
+mkdir -p $PKG/usr/doc/audiofile-$VERSION
+cp -a \
+  COPYING TODO README ChangeLog docs/* \
+  $PKG/usr/doc/audiofile-$VERSION
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+
+cd $PKG
+pkghelpers_fixup
+pkghelpers_makepkg

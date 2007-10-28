@@ -1,0 +1,47 @@
+#!/bin/sh
+CWD=`pwd`
+
+VERSION=1.2.3
+ARCH=x86_64
+BUILD=2
+DISTRO=${DISTRO:-slamd64}
+
+if [ $DISTRO = slackware ]; then
+	PKGARCH=$ARCH
+else
+	PKGARCH=${ARCH}_${DISTRO}
+fi
+
+if [ $DISTRO = slamd64 ]; then
+	LIBSUFFIX=${LIBSUFFIX:-64}
+fi
+
+TMP=/tmp
+BUILDDIR=$TMP/termcap-compat-$VERSION
+PKGDIR=$TMP/package-devel32
+rm -rf $BUILDDIR
+
+cd $TMP
+tar xzvf $CWD/termcap-compat_$VERSION.tar.gz
+cd $BUILDDIR
+chown -R root.root .
+zcat $CWD/termcap-compat_$VERSION.diff.gz | patch -p1 --verbose --backup --suffix=.orig
+zcat $CWD/termcap.h.diff.gz | patch -p0 --verbose --backup --suffix=.orig
+zcat $CWD/termcap.bufsize.diff.gz | patch -p1 --verbose --backup --suffix=.orig
+make
+
+mkdir -p $PKGDIR/{lib$LIBSUFFIX,usr/{lib$LIBSUFFIX,include,info}}
+cp $BUILDDIR/libtermcap.so.* $PKGDIR/lib$LIBSUFFIX/
+cp $BUILDDIR/libtermcap.a $PKGDIR/usr/lib$LIBSUFFIX/
+cp $BUILDDIR/termcap.h $PKGDIR/usr/include/
+cp $BUILDDIR/termcap.info* $PKGDIR/usr/info/
+
+# Tidy-up a little
+rm -rf $PKGDIR/usr/info
+rm -rf $PKGDIR/usr/include
+cd $PKGDIR/lib$LIBSUFFIX
+ldconfig .
+chown root:root libtermcap*
+
+( cd $PKGDIR;	find -type f | xargs file | grep ELF | cut -f 1 -d : | xargs strip --strip-unneeded )
+

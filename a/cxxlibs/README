@@ -1,0 +1,4 @@
+oldgcc/ originally was source/d/gcc from slackware 10.2 (GCC 3.3.6), now butchered
+completely, to just build gcc and g++, and not make any package or install any files.
+
+This builds us 32 and 64-bit libstdc++.so.5.0.7 :D

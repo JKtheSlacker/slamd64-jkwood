@@ -1,0 +1,67 @@
+#!/bin/sh
+# Set initial variables:
+PKGNAM=infozip
+VERSION=5.52
+ZIP=2.31
+BUILD=${BUILD:-2}
+
+. /etc/pkghelpers
+pkghelpers_env
+
+rm -rf $PKG
+mkdir -p $PKG
+
+# Explode the package framework:
+cd $PKG
+explodepkg $CWD/_infozip.tar.gz
+
+cd $TMP
+rm -rf zip-$ZIP
+tar xzvf $CWD/zip`echo $ZIP | tr -d .`.tar.gz
+cd zip-$ZIP
+chown -R root:root .
+mkdir -p $PKG/usr/doc/zip-$ZIP
+cp -a BUGS CHANGES INSTALL MANUAL README TODO WHATSNEW WHERE \
+      $PKG/usr/doc/zip-$ZIP
+chmod 644 $PKG/usr/doc/zip-$ZIP/*
+make -f unix/Makefile generic_gcc
+mkdir -p $PKG/usr/bin
+cat zip > $PKG/usr/bin/zip
+cat zipnote > $PKG/usr/bin/zipnote
+cat zipsplit > $PKG/usr/bin/zipsplit
+cat zipcloak > $PKG/usr/bin/zipcloak
+mkdir -p $PKG/usr/man/man1
+for page in man/zip.1 ; do
+  cat $page | gzip -9c > $PKG/usr/man/man1/`basename $page`.gz
+done
+
+cd $TMP
+rm -rf unzip-$VERSION
+tar xzvf $CWD/unzip`echo $VERSION | tr -d .`.tar.gz
+cd unzip-$VERSION
+chown -R root:root .
+mkdir -p $PKG/usr/doc/unzip-$VERSION
+cp -a BUGS COPYING Contents History.`echo $VERSION | tr -d .` INSTALL README ToDo WHERE \
+      $PKG/usr/doc/unzip-$VERSION
+chmod 644 $PKG/usr/doc/unzip-$VERSION/*
+# noasm needed for non-x86 targets
+make -f unix/Makefile linux_noasm
+cat unzip > $PKG/usr/bin/unzip
+cat unzipsfx > $PKG/usr/bin/unzipsfx
+cat funzip > $PKG/usr/bin/funzip
+cat unix/zipgrep > $PKG/usr/bin/zipgrep
+( cd $PKG/usr/bin ; ln -sf unzip zipinfo )
+chmod 755 $PKG/usr/bin/*
+chown -R root:root $PKG/usr/bin
+cd man
+for page in funzip.1 unzip.1 unzipsfx.1 zipgrep.1 zipinfo.1 ; do
+  cat $page | gzip -9c > $PKG/usr/man/man1/$page.gz
+done
+cd ..
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+
+# Build the package:
+cd $PKG
+pkghelpers_fixup
+pkghelpers_makepkg

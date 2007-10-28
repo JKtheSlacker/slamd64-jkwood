@@ -1,0 +1,12 @@
+          |-----handy-ruler------------------------------------------------------|
+emacs-misc: emacs-misc (Miscellaneous files for Emacs)
+emacs-misc:
+emacs-misc: This package contains the architecture-independent files used by or
+emacs-misc: with Emacs.  This includes various text files containing documentation
+emacs-misc: for GNU Emacs, or of interest to Emacs users.
+emacs-misc:
+emacs-misc:
+emacs-misc:
+emacs-misc:
+emacs-misc:
+emacs-misc:

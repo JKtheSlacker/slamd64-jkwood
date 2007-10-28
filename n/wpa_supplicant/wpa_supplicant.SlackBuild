@@ -1,0 +1,244 @@
+#!/bin/sh
+# Copyright (c) 2006,2007 Eric Hameleers <alien@slackware.com>
+#
+# Redistribution and use of this script, with or without modification, is
+# permitted provided that the following conditions are met:
+#
+# 1. Redistributions of this script must retain the above copyright
+#    notice, this list of conditions and the following disclaimer.
+#
+#  THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR IMPLIED
+#  WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+#  MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.  IN NO
+#  EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+#  SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+#  PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+#  OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+#  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+#  OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+#  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+#
+# -----------------------------------------------------------------------------
+
+PRGNAM=wpa_supplicant
+VERSION=${VERSION:-0.5.7}
+ARCH=${ARCH:-x86_64}
+BUILD=${BUILD:-1}
+DISTRO=${DISTRO:-slamd64}
+
+if [ $DISTRO = slackware ]; then
+	PKGARCH=$ARCH
+else
+	PKGARCH=${ARCH}_${DISTRO}
+fi
+
+CWD=`pwd`
+
+# Place to build (TMP) package (PKG) and output (OUTPUT) the program:
+TMP=${TMP:-/tmp/build}
+PKG=$TMP/package-$PRGNAM
+OUTPUT=${OUTPUT:-/tmp}
+
+DOCS="ChangeLog COPYING README* examples wpa_supplicant.conf.sample"
+
+# Support for some of the wireless drivers needs the header files of those
+# drivers.
+# Change these *_INCLUDES variables to where _your_ driver include directory
+# is located. If any of these directories is found, support for the driver
+# will be added to wpa_supplicant.
+# My madwifi package for Slackware installs the headers here:
+MADWIFI_INCLUDES="/usr/include/madwifi"
+HERMES_INCLUDES=""
+BROADCOM_INCLUDES=""
+
+case "$ARCH" in
+  i386)      SLKCFLAGS="-O2 -march=i386 -mtune=i686"
+             SLKLDFLAGS=""; LIBDIRSUFFIX=""
+             ;;
+  i486)      SLKCFLAGS="-O2 -march=i486 -mtune=i686"
+             SLKLDFLAGS=""; LIBDIRSUFFIX=""
+             ;;
+  s390)      SLKCFLAGS="-O2"
+             SLKLDFLAGS=""; LIBDIRSUFFIX=""
+             ;;
+  powerpc)   SLKCFLAGS="-O2"
+             SLKLDFLAGS=""; LIBDIRSUFFIX=""
+             ;;
+  x86_64)    SLKCFLAGS="-O2 -fPIC"
+             SLKLDFLAGS="-L/usr/lib64"; LIBDIRSUFFIX="64"
+             ;;
+  athlon-xp) SLKCFLAGS="-march=athlon-xp -O3 -pipe -fomit-frame-pointer"
+             SLKLDFLAGS=""; LIBDIRSUFFIX=""
+             ;;
+esac
+
+if [ ! -d $TMP/tmp-$PRGNAM ]; then
+  mkdir -p $TMP/tmp-$PRGNAM # location to build the source
+else
+  rm -rf $TMP/tmp-$PRGNAM/*
+fi
+
+if [ ! -d $PKG ]; then
+  mkdir -p $PKG  # place for the package to be built
+else
+  rm -rf $PKG/*  # erase content of previous package creation
+fi
+
+if [ ! -d $OUTPUT ]; then
+  mkdir -p $OUTPUT  # place for the package to be saved
+fi
+
+echo "++"
+echo "|| $PRGNAM-$VERSION"
+echo "++"
+
+cd $TMP/tmp-$PRGNAM
+
+if ! [ -f $CWD/${PRGNAM}-${VERSION}.defconfig ]; then
+  echo "Could not find ${PRGNAM}-${VERSION}.defconfig!"
+  echo "You need to create that file using ${PRGNAM}-${VERSION}/defconfig as example."
+  exit 1
+fi
+
+tar xjvf $CWD/${PRGNAM}-${VERSION}.tar.bz2
+cd ${PRGNAM}-${VERSION}
+
+# Create the configuration file for wpa_supplicant:
+cat $CWD/${PRGNAM}-${VERSION}.defconfig > .config
+if [ ! -z $MADWIFI_INCLUDES -a -d $MADWIFI_INCLUDES ]; then
+  echo "Adding madwifi driver (Atheros) support"
+  cat <<-EOT >> .config
+	CONFIG_DRIVER_MADWIFI=y
+	CFLAGS += -I${MADWIFI_INCLUDES}
+	EOT
+fi
+if [ ! -z $HERMES_INCLUDES -a -d $HERMES_INCLUDES ]; then
+  echo "Adding hermes driver (Agere) support"
+  cat <<-EOT >> .config
+	CONFIG_DRIVER_HERMES=y
+	CFLAGS += -I${HERMES_INCLUDES}
+	EOT
+fi
+if [ ! -z $BROADCOM_INCLUDES -a -d $BROADCOM_INCLUDES ]; then
+  echo "Adding broadcom driver support"
+  cat <<-EOT >> .config
+	CONFIG_DRIVER_BROADCOM=y
+	CFLAGS += -I${BROADCOM_INCLUDES}
+	EOT
+fi
+
+chown -R root:root .
+chmod -R u+w,go+r-w,a-s .
+
+echo Building ...
+
+make
+# Build the GUI client
+make wpa_gui
+# Make man pages if needed
+pushd doc/docbook
+if ! ls *.? >/dev/null 2>&1 ; then
+  make man
+fi
+popd
+
+# Do not build the developer docs
+#PATH=".:$PATH" make docs
+
+# This goes in the doc directory later on:
+cp wpa_supplicant.conf wpa_supplicant.conf.sample
+
+# Install binaries
+mkdir -p $PKG/usr/sbin
+cp wpa_supplicant wpa_passphrase wpa_cli wpa_gui/wpa_gui $PKG/usr/sbin/
+
+# Install man pages
+for m in 5 8; do
+  mkdir -p $PKG/usr/man/man${m}
+  cp doc/docbook/*.${m} $PKG/usr/man/man${m}/
+done
+
+# Install configuration file
+mkdir -p $PKG/etc
+cat <<-_EOT_ > $PKG/etc/wpa_supplicant.conf.new
+	# See /usr/doc/${PRGNAM}-${VERSION}/wpa_supplicant.conf.sample
+	# for many more options that you can use in this file.
+	
+	# This line enables the use of wpa_cli which is used by rc.wireless
+	# if possible (to check for successful association)
+	ctrl_interface=/var/run/wpa_supplicant
+	# By default, only root (group 0) may use wpa_cli
+	ctrl_interface_group=0
+	eapol_version=1
+	ap_scan=1
+	fast_reauth=1
+	
+	# WPA protected network, supply your own ESSID and WPAPSK here:
+	network={
+	  scan_ssid=0
+	  ssid="your_essid_here"
+	  proto=WPA
+	  key_mgmt=WPA-PSK
+	  pairwise=CCMP TKIP
+	  group=CCMP TKIP WEP104 WEP40
+	  psk=your_psk_here
+	}
+	
+	# Plaintext connection (no WPA, no IEEE 802.1X),
+	# nice for hotel/airport types of WiFi network.
+	# You'll need a recent version of wireless-tools for this!
+	network={
+	  ssid="any"
+	  key_mgmt=NONE
+	  priority=2
+	}
+	_EOT_
+
+# 'doinst.sh' script:
+mkdir -p $PKG/install 2>/dev/null
+cat <<EOINS > $PKG/install/doinst.sh
+# Handle the incoming configuration files:
+config() {
+  for infile in \$1; do
+    NEW="\$infile"
+    OLD="\`dirname \$NEW\`/\`basename \$NEW .new\`"
+    # If there's no config file by that name, mv it over:
+    if [ ! -r \$OLD ]; then
+      mv \$NEW \$OLD
+    elif [ "\`cat \$OLD | md5sum\`" = "\`cat \$NEW | md5sum\`" ]; then
+      # toss the redundant copy
+      rm \$NEW
+    fi
+    # Otherwise, we leave the .new copy for the admin to consider...
+  done
+}
+config etc/wpa_supplicant.conf.new
+
+EOINS
+
+mkdir -p $PKG/usr/doc/$PRGNAM-$VERSION
+cp -a $DOCS $PKG/usr/doc/$PRGNAM-$VERSION
+chmod -R a-w $PKG/usr/doc/$PRGNAM-$VERSION/*
+
+# This should only be read/write by root:
+chmod 600 $PKG/etc/wpa_supplicant.conf.new
+
+find $PKG/usr/man -type f -name "*.?" -exec gzip -9f {} \;
+
+pushd $PKG
+find . | xargs file | grep "executable" | grep ELF | cut -f 1 -d : | xargs strip --strip-unneeded 2> /dev/null
+find . | xargs file | grep "shared object" | grep ELF | cut -f 1 -d : | xargs strip --strip-unneeded 2> /dev/null
+popd
+
+chmod -R o-w $PKG
+
+cat $CWD/slack-desc > $PKG/install/slack-desc
+
+cd $PKG
+makepkg --linkadd y --chown n $OUTPUT/${PRGNAM}-${VERSION}-${PKGARCH}-${BUILD}.tgz
+
+# Clean up the extra stuff:
+if [ "$1" = "--cleanup" ]; then
+  rm -rf $TMP/tmp-$PRGNAM
+  rm -rf $PKG
+fi

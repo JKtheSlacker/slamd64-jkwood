@@ -1,0 +1,76 @@
+#!/bin/sh
+# Set initial variables:
+CWD=`pwd`
+if [ "$TMP" = "" ]; then
+  TMP=/tmp
+fi
+PKG=$TMP/package-xv
+
+VERSION=3.10a
+ARCH=${ARCH:-x86_64}
+BUILD=2
+DISTRO=${DISTRO:-slamd64}
+
+if [ $DISTRO = slackware ]; then
+	PKGARCH=$ARCH
+else
+	PKGARCH=${ARCH}_${DISTRO}
+fi
+
+if [ $DISTRO = slamd64 ]; then
+	LIBSUFFIX=64
+	SLKLDFLAGS="-L/usr/lib64"
+else
+	LIBSUFFIX=
+	SLKLDFLAGS=
+fi
+
+if [ ! -d $TMP ]; then
+  mkdir -p $TMP # location to build the source
+fi
+rm -rf $PKG
+mkdir -p $PKG
+
+cd $TMP
+rm -rf xv-3.10
+tar xzvf $CWD/xv-3.10.tar.gz
+cd xv-3.10
+chown -R root:root .
+zcat $CWD/xv-3.10a.patch.gz | patch -p0 --verbose --backup --suffix=.orig || exit
+bzcat $CWD/xv-3.10a-jumbo-fix-patch-20050410.txt.bz2 | patch -p1 --verbose --backup --suffix=.orig || exit
+bzcat $CWD/xv-3.10a-jumbo-enh-patch-20050501.txt.bz2 | patch -p1 --verbose --backup --suffix=.orig || exit
+zcat $CWD/xv.prefix.diff.gz | patch -p1 --verbose --backup --suffix=.orig || exit
+LDFLAGS="$SLKLDFLAGS" make -f Makefile.std
+strip --strip-unneeded bggen vdcomp xcmap xv xvpictoppm
+mkdir -p $PKG/usr/bin
+cat bggen > $PKG/usr/bin/bggen
+cat vdcomp > $PKG/usr/bin/vdcomp
+cat xcmap > $PKG/usr/bin/xcmap
+cat xv > $PKG/usr/bin/xv
+cat xvpictoppm > $PKG/usr/bin/xvpictoppm
+chmod 755 $PKG/usr/bin/*
+mkdir -p $PKG/usr/man/man1
+for page in docs/xv.man docs/bggen.man docs/xcmap.man docs/xvp2p.man ; do
+  cat $page | gzip -9c > $PKG/usr/man/man1/`basename $page .man`.1.gz
+done
+mkdir -p $PKG/usr/doc/xv-3.10a
+cp -a \
+  BUGS IDEAS INSTALL README README.jumbo README.pcd \
+  $PKG/usr/doc/xv-3.10a
+( cd docs
+  cp -a \
+    penn.policy xv.blurb xv.ann xvdocs.ps \
+    $PKG/usr/doc/xv-3.10a
+    bzip2 -9 $PKG/usr/doc/xv-3.10a/xvdocs.ps )
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+
+# Build the package:
+cd $PKG
+makepkg -l y -c n $TMP/xv-$VERSION-$PKGARCH-$BUILD.tgz
+
+# Clean up the extra stuff:
+if [ "$1" = "--cleanup" ]; then
+  rm -rf $TMP/xv-3.10
+  rm -rf $PKG
+fi

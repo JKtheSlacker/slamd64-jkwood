@@ -1,0 +1,168 @@
+#!/bin/sh
+# CUPS build script by volkerdi@slackware.com.
+
+# Set initial variables:
+CWD=`pwd`
+if [ "$TMP" = "" ]; then
+  TMP=/tmp
+fi
+PKG=$TMP/package-cups
+
+VERSION=1.2.11
+ARCH=${ARCH:-x86_64}
+BUILD=${BUILD:-2}
+
+if [ ! -d $TMP ]; then
+  mkdir -p $TMP # location to build the source
+fi
+rm -rf $PKG
+mkdir -p $PKG
+
+cd $TMP
+rm -rf cups-$VERSION
+tar xjvf $CWD/cups-$VERSION-source.tar.bz2
+cd cups-$VERSION
+# enforce clue
+sed -i 's#$exec_prefix/lib/cups#$libdir/cups#g' configure
+./configure \
+	--libdir=/usr/lib64 \
+  --disable-pam
+make -j10 IMGLIBS="-lpng -lz -lm -ltiff -ljpeg" || exit 1 # Something's broken :)
+mkdir -p $PKG/etc/cups
+mkdir -p $PKG/var/spool
+make BUILDROOT=$PKG install
+
+# I'm added so many things like /etc/init.d/ to Slackware that CUPS
+# is now installing init scripts to the Red Hat locations.  We'll move
+# them to the usual locations:
+mkdir -p $PKG/etc/rc.d
+mv $PKG/etc/init.d/cups $PKG/etc/rc.d/rc.cups.new
+chmod 644 $PKG/etc/rc.d/rc.cups.new
+# Clear out the additions:
+rm -rf $PKG/etc/init.d $PKG/etc/rc{0,2,3,5}.d
+
+# I'm not sure if overwriting this blindly could have ill effects,
+# but it never hurts to play it safe.  According to the dbus-daemon
+# manpage, only files ending in .conf will be used, so there won't
+# be any unintended doubling up.
+mv $PKG/etc/dbus-1/system.d/cups.conf $PKG/etc/dbus-1/system.d/cups.conf.new
+
+# For full CUPS SMB support, you'll need to install the cups-samba
+# package from the source in this directory.  There's no easy way
+# to add that to a package build, and the requests aren't pouring in,
+# so you'll have to install it yourself.  It's easy to do.
+
+# However, this will get you the most useful SMB support for free.
+# Thanks to Boris Kurktchiev for the tip.  :-)
+( cd $PKG/usr/lib/cups/backend
+  if [ ! -r smb ]; then
+    ln -sf /usr/bin/smbspool smb
+  fi
+)
+
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+
+# Fix manpages:
+( cd $PKG/usr/share/man
+  find . -type d -name "cat*" | xargs rm -rf
+)
+( cd $PKG/usr/share ; mv man .. )
+# Compress and if needed symlink the man pages:
+if [ -d $PKG/usr/man ]; then
+  ( cd $PKG/usr/man
+    for manpagedir in $(find . -type d -name "man*") ; do
+      ( cd $manpagedir
+        for eachpage in $( find . -type l -maxdepth 1) ; do
+          ln -s $( readlink $eachpage ).gz $eachpage.gz
+          rm $eachpage
+        done
+        gzip -9 *.?
+      )
+    done
+  )
+fi
+
+# Adjust for BSD init scripts.  Note that rc.cups will have to be
+# started from somewhere, like rc.M or rc.inet2.
+( cd $PKG/etc/rc.d
+  mv init.d/cups rc.cups
+  rm -r init.d rc?.d )
+
+# Handle this as a config file, and non-executable in a default install:
+mv $PKG/etc/rc.d/rc.cups $PKG/etc/rc.d/rc.cups.new
+chmod 644 $PKG/etc/rc.d/rc.cups.new
+
+# Adjust/expand docs:
+( mkdir -p $PKG/usr/doc
+  mv $PKG/usr/share/doc/cups $PKG/usr/doc/cups-$VERSION
+  rmdir $PKG/usr/share/doc
+  cd $PKG/usr/doc
+  ln -sf cups-$VERSION cups )
+
+# I'm sorry, but PDF files are almost as bloated and annoying as
+# MS Word documents.  We'll retain the HTML files in /usr/doc.
+( cd $PKG/usr/doc
+  find . -name "*.pdf" -exec rm -f {} \; )
+
+# Apply no-clobber fix to conffiles:
+( cd $PKG/etc/cups
+  for file in * ; do
+    if [ -f $file ]; then
+      mv $file $file.new
+    fi
+  done )
+
+# Strip stuff:
+( cd $PKG
+  find . | xargs file | grep "executable" | grep ELF | cut -f 1 -d : | xargs strip --strip-unneeded 2> /dev/null
+  find . | xargs file | grep "shared object" | grep ELF | cut -f 1 -d : | xargs strip --strip-unneeded 2> /dev/null
+)
+
+# Use symlinks to certain binaries so that CUPS and LPRng can coexist:
+SUFFIX=cups
+for file in \
+usr/bin/cancel \
+usr/bin/lp \
+usr/bin/lpq \
+usr/bin/lpr \
+usr/bin/lprm \
+usr/bin/lpstat \
+usr/sbin/lpc ; do
+  ( cd $PKG
+    mv ${file} ${file}-${SUFFIX}
+    ( cd `dirname ${file}` ; ln -sf `basename ${file}`-${SUFFIX} `basename ${file}` )
+  )
+done
+# Now fix the associated man pages:
+mv $PKG/usr/man/man1/cancel.1.gz $PKG/usr/man/man1/cancel-${SUFFIX}.1.gz
+mv $PKG/usr/man/man1/lp.1.gz $PKG/usr/man/man1/lp-${SUFFIX}.1.gz
+mv $PKG/usr/man/man1/lpq.1.gz $PKG/usr/man/man1/lpq-${SUFFIX}.1.gz
+mv $PKG/usr/man/man1/lpr.1.gz $PKG/usr/man/man1/lpr-${SUFFIX}.1.gz
+mv $PKG/usr/man/man1/lprm.1.gz $PKG/usr/man/man1/lprm-${SUFFIX}.1.gz
+mv $PKG/usr/man/man1/lpstat.1.gz $PKG/usr/man/man1/lpstat-${SUFFIX}.1.gz
+mv $PKG/usr/man/man8/lpc.8.gz $PKG/usr/man/man8/lpc-${SUFFIX}.8.gz
+( cd $PKG/usr/man/man1
+  ln -sf cancel-${SUFFIX}.1.gz cancel.1.gz
+  ln -sf lp-${SUFFIX}.1.gz lp.1.gz
+  ln -sf lpq-${SUFFIX}.1.gz lpq.1.gz
+  ln -sf lpr-${SUFFIX}.1.gz lpr.1.gz
+  ln -sf lprm-${SUFFIX}.1.gz lprm.1.gz
+  ln -sf lpstat-${SUFFIX}.1.gz lpstat.1.gz
+)
+( cd $PKG/usr/man/man8
+  ln -sf lpc-${SUFFIX}.8.gz lpc.8.gz
+)
+
+# Add the doinst.sh that installs the .new conffiles:
+zcat $CWD/doinst.sh.gz > $PKG/install/doinst.sh
+
+# Build the package:
+cd $PKG
+makepkg -l y -c n $TMP/cups-$VERSION-${ARCH}_slamd64-$BUILD.tgz
+
+# Clean up the extra stuff:
+if [ "$1" = "--cleanup" ]; then
+  rm -rf $TMP/cups-$VERSION
+  rm -rf $PKG
+fi

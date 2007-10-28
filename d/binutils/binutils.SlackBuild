@@ -1,0 +1,163 @@
+#!/bin/sh
+CWD=$(pwd)
+TMP=/tmp
+PKG=$TMP/package-binutils
+rm -rf $PKG
+mkdir -p $PKG/usr
+
+VERSION=2.17.50.0.17
+ARCH=${ARCH:-x86_64}
+DISTRO=${DISTRO:-slamd64}
+BUILD=${BUILD:-1}
+
+if [ $DISTRO = slackware ]; then
+	PKGARCH=$ARCH
+else
+	PKGARCH=${ARCH}_${DISTRO}
+fi
+
+if [ "$ARCH" = "i386" ]; then
+  SLKCFLAGS="-O2 -march=i386 -mcpu=i686"
+elif [ "$ARCH" = "i486" ]; then
+  SLKCFLAGS="-O2 -march=i486 -mtune=i686"
+elif [ "$ARCH" = "s390" ]; then
+  SLKCFLAGS="-O2"
+elif [ "$ARCH" = "x86_64" ]; then
+  SLKCFLAGS="-O2 -fPIC"
+else
+  SLKCFLAGS="-O2"
+fi
+
+cd $TMP
+rm -rf binutils-$VERSION
+tar xjvf $CWD/binutils-$VERSION.tar.bz2
+cd binutils-$VERSION
+chown -R root:root .
+find . -perm 664 -exec chmod 644 {} \;
+find . -perm 600 -exec chmod 644 {} \;
+find . -perm 444 -exec chmod 644 {} \;
+find . -perm 400 -exec chmod 644 {} \;
+find . -perm 440 -exec chmod 644 {} \;
+find . -perm 777 -exec chmod 755 {} \;
+find . -perm 775 -exec chmod 755 {} \;
+find . -perm 511 -exec chmod 755 {} \;
+find . -perm 711 -exec chmod 755 {} \;
+find . -perm 555 -exec chmod 755 {} \;
+
+LIBSUFFIX=
+
+if [ $DISTRO = slamd64 ]; then # or any other multilib distro
+	zcat $CWD/binutils-2.17-genscripts_multilib-1.diff.gz | patch -p1 --verbose || exit 1
+	LIBSUFFIX=64
+fi
+
+if [ $ARCH = i386 -o \
+     $ARCH = i486 -o \
+     $ARCH = i586 -o \
+     $ARCH = i686 -o \
+     $ARCH = x86_64 ]; then
+echo "Building for an x86(_64) glibc2-based Linux system for $DISTRO (libdir: /usr/lib$LIBSUFFIX)..."
+CFLAGS="$SLKCFLAGS" \
+./configure \
+  --prefix=/usr \
+	--libdir=/usr/lib$LIBSUFFIX \
+  --enable-shared \
+  --enable-targets=$ARCH-$DISTRO-linux,$ARCH-$DISTRO-linux-gnulibc1,$ARCH-$DISTRO-linux-gnuaout \
+  --enable-64-bit-bfd \
+  $ARCH-$DISTRO-linux || exit 1
+else # make no assumptions
+echo "Building for an $ARCH system for $DISTRO (libdir: /usr/lib$LIBSUFFIX)..."
+CFLAGS="$SLKCFLAGS" \
+./configure \
+  --prefix=/usr \
+  --enable-shared \
+	--libdir=/usr/lib$LIBSUFFIX \
+  --enable-64-bit-bfd \
+  $ARCH-$DISTRO-linux || exit 1
+fi
+
+make clean || exit 1
+make -j6 || exit 1
+make info || exit 1
+# Needed to link ksymoops:
+make install || exit 1
+# We need to clear ldscripts/ because binutils doesn't implement DESTDIR everywhere:
+rm -rf /usr/lib${LIBSUFFIX}/ldscripts /usr/${ARCH}-${DISTRO}-linux/lib/ldscripts
+# Repopulate it:
+make install || exit 1
+# Install into the $PKG location:
+make install DESTDIR=$PKG || exit 1
+# Add fresh ldscripts:
+cp -a /usr/${ARCH}-${DISTRO}-linux/lib/ldscripts $PKG/usr/lib${LIBSUFFIX}
+
+# Missing?
+cp -a gas/doc/as.1 $PKG/usr/man/man1
+
+# "make install" skips this, but binutils.spec doesn't.  Sneaky, huh?
+cp -a include/libiberty.h $PKG/usr/include/libiberty.h
+
+mkdir -p $PKG/usr/doc/binutils-$VERSION
+install -m 644 -o root -g root $CWD/release.binutils-* $PKG/usr/doc/binutils-$VERSION
+cp -a COPYING* ChangeLog.linux MAI* README* $PKG/usr/doc/binutils-$VERSION
+
+rm -rf $PKG/usr/info
+mkdir -p $PKG/usr/info
+find . -name "as.info*" -exec cp -a {} $PKG/usr/info \;
+find . -name "bfd.info*" -exec cp -a {} $PKG/usr/info \;
+find . -name "ld.info*" -exec cp -a {} $PKG/usr/info \;
+find . -name "gasp.info*" -exec cp -a {} $PKG/usr/info \;
+find . -name "gprof.info*" -exec cp -a {} $PKG/usr/info \;
+find . -name "binutils.info*" -exec cp -a {} $PKG/usr/info \;
+gzip -9 $PKG/usr/info/*
+
+( cd $PKG/usr/bin ; mv strings strings-GNU )
+( cd $PKG/usr/man/man1 ; mv strings.1 strings-GNU.1 )
+
+# Add slack-desc:
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+
+# Now we must remember to adjust ldscripts (real dir is /usr/lib/ldscripts/,
+# links go in /usr/*-linux/lib/ ), and the bin links:
+mkdir -p $PKG/usr/${ARCH}-${DISTRO}-linux/lib
+( cd $PKG/usr/${ARCH}-${DISTRO}-linux/lib ; rm -rf ldscripts ; ln -sf /usr/lib${LIBSUFFIX}/ldscripts . )
+mkdir -p $PKG/usr/${ARCH}-${DISTRO}-linux/bin
+( cd $PKG/usr/${ARCH}-${DISTRO}-linux/bin
+  for file in * ; do
+    if [ -r "/usr/bin/$file" ]; then
+      rm $file
+      ln -sf /usr/bin/$file .
+    fi
+  done
+)
+
+# Docs adjustment:
+( cd $PKG/usr/man/man1
+  rm -f dlltool.1 windres.1
+  for file in addr2line.1 ar.1 as.1 c++filt.1 gprof.1 ld.1 nlmconv.1 nm.1 objcopy.1 objdump.1 ranlib.1 readelf.1 size.1 strings-GNU.1 strip.1 ; do
+    gzip -9 --force $file
+  done
+)
+
+# By adding ksymoops to the binutils package, we can use the dynamic
+# libbfd and make the binary about 500K smaller.
+
+cd $CWD
+sh ./ksymoops.build
+
+( cd $PKG
+  find -type f | xargs file | grep ELF | cut -f 1 -d : | xargs strip --strip-unneeded 2> /dev/null
+  find -type f | xargs file | grep ELF | cut -f 1 -d : | xargs strip --strip-unneeded 2> /dev/null
+)
+
+cd $PKG
+makepkg -l y -c n $TMP/binutils-$VERSION-$PKGARCH-$BUILD.tgz
+
+cat << EOF
+
+#############################
+oprofile links to libbfd so
+be sure to recompile that
+#############################
+
+EOF

@@ -1,0 +1,48 @@
+#!/bin/sh
+
+PKGNAM=xchat
+VERSION=2.8.2
+BUILD=2
+
+. /etc/pkghelpers
+
+pkghelpers_env
+
+rm -rf $PKG
+mkdir -p $PKG/usr
+
+
+cd $TMP
+rm -rf xchat-$VERSION
+tar xjvf $CWD/xchat-$VERSION.tar.bz2
+cd xchat-$VERSION
+if [ -d $CWD/patches ]; then
+  for file in $CWD/patches/*.diff.gz ; do
+    zcat $file | patch -p1 --verbose || exit 1
+  done
+fi
+chown -R root:root .
+find . -perm 666 -exec chmod 644 {} \;
+find . -perm 664 -exec chmod 644 {} \;
+CFLAGS="$SLKCFLAGS" \
+./configure \
+  --prefix=/usr \
+  --libdir=/usr/lib$LIBSUFFIX \
+  --enable-tcl=/usr/lib$LIBSUFFIX \
+  --localstatedir=/var/lib \
+  --enable-ipv6 \
+  $ARCH-$DISTRO-linux
+make -j12 || exit 1
+make install DESTDIR=$PKG
+
+mkdir -p $PKG/usr/doc/xchat-$VERSION
+cp -a \
+  AUTHORS COPYING HACKING INSTALL README \
+  $PKG/usr/doc/xchat-$VERSION
+
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+
+cd $PKG
+pkghelpers_fixup
+pkghelpers_makepkg

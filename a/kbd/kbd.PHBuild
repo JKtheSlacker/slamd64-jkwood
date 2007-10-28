@@ -1,0 +1,74 @@
+#!/bin/sh
+PKGNAM=kbd
+VERSION=1.12
+BUILD=3
+
+. /etc/pkghelpers
+pkghelpers_env
+
+rm -rf $PKG
+mkdir -p $PKG
+# Add some extra fonts:
+( cd $PKG ; explodepkg $CWD/extraf.tgz )
+rm -rf kbd-$VERSION
+tar xjvf $CWD/kbd-$VERSION.tar.bz2
+cd kbd-$VERSION
+chown -R root.root .
+find . -perm 600 -exec chmod 644 {} \;
+find . -perm 666 -exec chmod 644 {} \;
+find . -perm 777 -exec chmod 755 {} \;
+# (I think this never made it in upstream, but the patch no longer
+# applies... I'm looking into it.  -P. )
+# Apply a euro fix for the nl.map from the map's author:
+zcat $CWD/nl.euro.diff.gz | patch -p1
+./configure --prefix=/usr
+make -j12
+make install DESTDIR=$PKG
+( cd $PKG/usr/bin ; rm -f loadkeys ; ln -sf ../../bin/loadkeys . )
+mkdir -p $PKG/var/log/setup
+cat $CWD/setup.setconsolefont > $PKG/var/log/setup/setup.setconsolefont
+chmod 755 $PKG/var/log/setup/setup.setconsolefont
+cat $CWD/setconsolefont > $PKG/usr/bin/setconsolefont
+chmod 755 $PKG/usr/bin/setconsolefont
+mkdir -p $PKG/usr/doc/kbd-$VERSION
+cp -a \
+  CHANGES COPYING CREDITS README doc/* \
+  $PKG/usr/doc/kbd-$VERSION
+mkdir -p $PKG/usr/doc/kbd-$VERSION/openvt
+cp -a openvt/README* $PKG/usr/doc/kbd-$VERSION/openvt
+rm -f $PKG/usr/doc/kbd-$VERSION/kbd.FAQ.sgml
+# This is the keymap for Speakup (http://linux-speakup.org) users:
+cat $CWD/speakupmap.map.gz > $PKG/usr/share/kbd/keymaps/i386/qwerty/speakupmap.map.gz
+# Another keymap for Speakup from Thomas Ward, for JFW users.
+tar xzvf $CWD/speakup-jfw.tar.gz
+( cd speakup-jfw
+  cat speakup-jfw.map | gzip -9c > $PKG/usr/share/kbd/keymaps/i386/qwerty/speakup-jfw.map.gz
+  cat readme > $PKG/usr/share/kbd/keymaps/i386/qwerty/speakup-jfw.readme )
+mkdir -p $PKG/etc/rc.d
+cat << EOF > $PKG/etc/rc.d/rc.font.new
+#!/bin/sh
+#
+# This selects your default screen font from among the ones in
+# /usr/share/kbd/consolefonts.
+#
+setfont -v
+EOF
+chmod 755 $PKG/etc/rc.d/rc.font.new
+chown -R root:bin $PKG/bin $PKG/usr/bin
+mkdir -p $PKG/install
+cat << EOF > $PKG/install/doinst.sh
+#if [ -r etc/rc.d/rc.font ]; then
+#  rm -f etc/rc.d/rc.font.new
+#else
+#  mv etc/rc.d/rc.font.new etc/rc.d/rc.font
+#fi
+EOF
+mv $PKG/usr/share/man $PKG/usr
+( cd $PKG/usr/man
+  find . -name "*.?" -type f | xargs gzip -9
+)
+cat $CWD/slack-desc > $PKG/install/slack-desc
+
+cd $PKG
+pkghelpers_fixup
+pkghelpers_makepkg

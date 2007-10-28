@@ -1,0 +1,42 @@
+#!/bin/sh
+# Set initial variables:
+PKGNAM=inetd
+VERSION=1.79s
+BUILD=2
+
+. /etc/pkghelpers
+pkghelpers_env
+
+rm -rf $PKG
+if [ ! -d $PKG ]; then
+  mkdir -p $PKG # place for the package to be built
+fi
+
+# Explode the package framework:
+cd $PKG
+explodepkg $CWD/_inetd.tar.gz
+
+echo "+====================+"
+echo "| inetd-OpenBSD-1.79 |"
+echo "+====================+"
+cd $TMP
+rm -rf inetd
+tar xzvf $CWD/inetd-OpenBSD-1.79.tar.gz
+cd inetd
+zcat $CWD/inetd-OpenBSD-1.79.diff.gz | patch -p1 --backup --suffix=.orig --verbose -E
+zcat $CWD/inetd.loopingdos.diff.gz | patch -p1 --backup --suffix=.orig --verbose -E
+
+# GCC 4 fix
+sed -i 's#(type)\([a-z]\)=(type)\([a-z]\)#\1=(type)\2#g' inetd.c
+
+make || exit 1
+strip inetd
+cat inetd > $PKG/usr/sbin/inetd
+cat inetd.8 | gzip -9c > $PKG/usr/man/man8/inetd.8.gz
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+
+# Build the package:
+cd $PKG
+pkghelpers_fixup
+pkghelpers_makepkg

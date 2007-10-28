@@ -1,0 +1,70 @@
+#!/bin/sh
+# Set initial variables:
+
+PKGNAM=pciutils
+VERSION=${VERSION:-2.2.5}
+BUILD=${BUILD:-1}
+
+. /etc/pkghelpers
+pkghelpers_env
+
+rm -rf $PKG
+mkdir -p $PKG
+
+cd $TMP
+rm -rf pciutils-$VERSION
+tar xjvf $CWD/pciutils-$VERSION.tar.bz2 || exit 1
+cd pciutils-$VERSION
+
+chown -R root:root .
+find . -perm 666 -exec chmod 644 {} \;
+find . -perm 664 -exec chmod 644 {} \;
+find . -perm 600 -exec chmod 644 {} \;
+find . -perm 444 -exec chmod 644 {} \;
+find . -perm 400 -exec chmod 644 {} \;
+find . -perm 440 -exec chmod 644 {} \;
+find . -perm 777 -exec chmod 755 {} \;
+find . -perm 775 -exec chmod 755 {} \;
+find . -perm 511 -exec chmod 755 {} \;
+find . -perm 711 -exec chmod 755 {} \;
+find . -perm 555 -exec chmod 755 {} \;
+
+# Change prefix from /usr/local to /usr:
+zcat $CWD/pciutils.prefix.diff.gz | patch -p1 --verbose || exit 1
+
+make -j10 || exit 1
+
+mkdir -p $PKG/sbin
+cat lspci > $PKG/sbin/lspci
+cat setpci > $PKG/sbin/setpci
+chmod 755 $PKG/sbin/*
+mkdir -p $PKG/usr/sbin
+# Put pci.ids in /usr/share, do NOT compress by default:
+zcat $CWD/pciutils.ids.dest.diff.gz | patch -p1 --verbose || exit 1
+# Fetch the latest pci.ids:
+sh update-pciids.sh
+mkdir -p $PKG/usr/share
+cat /usr/share/pci.ids > $PKG/usr/share/pci.ids
+cat update-pciids.sh > $PKG/usr/sbin/update-pciids
+chmod 755 $PKG/usr/sbin/update-pciids
+mkdir -p $PKG/usr/include/pci
+for file in config.h header.h pci.h types.h ; do
+  cp -a lib/$file $PKG/usr/include/pci
+done
+mkdir -p $PKG/usr/lib$LIBSUFFIX
+cat lib/libpci.a > $PKG/usr/lib$LIBSUFFIX/libpci.a
+mkdir -p $PKG/usr/man/man8
+gzip -9c lspci.8 > $PKG/usr/man/man8/lspci.8.gz
+gzip -9c setpci.8 > $PKG/usr/man/man8/setpci.8.gz
+mkdir -p $PKG/usr/doc/pciutils-$VERSION
+cp -a \
+  README ChangeLog TODO \
+  $PKG/usr/doc/pciutils-$VERSION
+chmod 644 $PKG/usr/doc/pciutils-$VERSION/*
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+
+# Build the package:
+cd $PKG
+pkghelpers_fixup
+pkghelpers_makepkg

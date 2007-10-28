@@ -1,0 +1,40 @@
+#!/bin/sh
+# Set initial variables:
+PKGNAM=mpg321
+VERSION=0.2.10
+BUILD=2
+
+. /etc/pkghelpers
+pkghelpers_env
+
+if [ ! -d $PKG ]; then
+  mkdir -p $PKG # place for the package to be built
+fi
+
+echo "+==============+"
+echo "| mpg321-$VERSION |"
+echo "+==============+"
+cd $TMP
+tar xzvf $CWD/mpg321-$VERSION.tar.gz
+cd mpg321-$VERSION
+CFLAGS="$SLKCFLAGS" ./configure --prefix=/usr $ARCH-$DISTRO-linux
+make -j12 || exit 1
+strip mpg321
+mkdir -p $PKG/usr/bin
+cat mpg321 > $PKG/usr/bin/mpg321
+chmod 755 $PKG/usr/bin/mpg321
+( cd $PKG/usr/bin ; rm -f mpg123 ; ln -sf mpg321 mpg123 )
+mkdir -p $PKG/usr/man/man1
+cat mpg321.1 | gzip -9c > $PKG/usr/man/man1/mpg321.1.gz
+mkdir -p $PKG/usr/doc/mpg321-$VERSION
+cp -a \
+  AUTHORS BUGS COPYING ChangeLog HACKING INSTALL NEWS README README.remote THANKS TODO \
+  $PKG/usr/doc/mpg321-$VERSION
+chown -R root.root $PKG/usr/doc/mpg321-$VERSION
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+
+# Build the package:
+cd $PKG
+pkghelpers_fixup
+pkghelpers_makepkg

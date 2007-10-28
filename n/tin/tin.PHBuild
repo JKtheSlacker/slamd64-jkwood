@@ -1,0 +1,62 @@
+#!/bin/sh
+# Set initial variables:
+PKGNAM=tin
+VERSION=1.8.2
+BUILD=2
+
+. /etc/pkghelpers
+pkghelpers_env
+rm -rf $PKG
+mkdir -p $PKG
+
+cd $TMP
+rm -rf tin-$VERSION
+tar xjvf $CWD/tin-$VERSION.tar.bz2
+cd tin-$VERSION
+chown -R root.root .
+./configure \
+ --prefix=/usr \
+  --with-metamail=/usr/bin/metamail \
+  --with-ispell=/usr/bin/ispell \
+  --with-defaults-dir=/etc/tin \
+  --with-libdir=/var/lib/news \
+  --with-ncurses
+make clean
+make build || exit 1
+make install DESTDIR=$PKG
+make install_sysdefs DESTDIR=$PKG
+cat << EOF > $PKG/etc/tin/README
+
+To complete TIN setup, edit /etc/nntpserver to the name of your NNTP server,
+then edit tin.defaults to set your domain name (and other options).
+
+Happy newsreading! :^)
+
+EOF
+mkdir -p $PKG/usr/doc/tin-$VERSION
+cp -a \
+  README doc/* tools \
+  $PKG/usr/doc/tin-$VERSION
+( cd $PKG/usr/doc/tin-$VERSION
+  rm -f CHANGES.old *.1 *.3 *.5
+)
+# Clutter reduction (these are in the tools dir)
+rm -f $PKG/usr/bin/metamutt \
+   $PKG/usr/bin/opt-case.pl \
+   $PKG/usr/bin/url_handler.sh \
+   $PKG/usr/bin/w2r.pl
+chmod 644 $PKG/usr/man/man?/*.?
+( cd $PKG/usr/man/man1
+  mv opt-case.pl.1 w2r.pl.1 $PKG/usr/doc/tin-$VERSION/tools
+)
+( cd $PKG/usr/man/man1
+  rm -f *.1
+  ln -sf tin.1.gz rtin.1.gz
+)
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+
+# Build the package:
+cd $PKG
+pkghelpers_fixup
+pkghelpers_makepkg

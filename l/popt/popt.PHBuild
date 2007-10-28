@@ -1,0 +1,34 @@
+#!/bin/sh
+PKGNAM=popt
+VERSION=1.7
+BUILD=3
+
+. /etc/pkghelpers
+pkghelpers_env
+
+rm -rf $PKG
+mkdir -p $PKG/usr
+
+cd /tmp
+tar xzvf $CWD/popt-$VERSION.tar.gz
+cd popt-$VERSION
+chown -R root.root .
+find . -perm 664 -exec chmod 644 {} \;
+find . -perm 775 -exec chmod 755 {} \;
+CFLAGS="$SLKCFLAGS" \
+./configure --prefix=/usr \
+            --libdir=/usr/lib$LIBSUFFIX \
+            --sysconfdir=/etc
+make -j12 || exit 1
+make install DESTDIR=$PKG
+strip $PKG/usr/bin/*
+mkdir -p $PKG/usr/doc/popt-$VERSION
+cp -a \
+  COPYING README \
+  $PKG/usr/doc/popt-$VERSION
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+
+cd $PKG
+pkghelpers_fixup
+pkghelpers_makepkg

@@ -1,0 +1,19 @@
+# HOW TO EDIT THIS FILE:
+# The "handy ruler" below makes it easier to edit a package description.  Line
+# up the first '|' above the ':' following the base package name, and the '|'
+# on the right side marks the last column you can put a character in.  You must
+# make exactly 11 lines for the formatting to be correct.  It's also
+# customary to leave one space after the ':'.
+
+          |-----handy-ruler------------------------------------------------------|
+gimp-print: gimp-print (IJS printer driver for Ghostscript and CUPS)
+gimp-print:
+gimp-print: Gimp-Print is the print facility for the Gimp, and in addition a suite
+gimp-print: of drivers that may be used with common UNIX spooling systems using
+gimp-print: Ghostscript or CUPS.  These drivers provide printing quality for Linux
+gimp-print: in many cases equal to or better than proprietary vendor-supplied
+gimp-print: drivers, and can be used for many of the most demanding printing
+gimp-print: tasks.
+gimp-print:
+gimp-print:
+gimp-print:

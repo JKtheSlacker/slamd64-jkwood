@@ -1,0 +1,48 @@
+#!/bin/sh
+# Set initial variables:
+PKGNAM=procmail
+VERSION=3.22
+BUILD=${BUILD:-3}
+
+. /etc/pkghelpers
+pkghelpers_env
+
+rm -rf $PKG
+mkdir -p $PKG
+# Explode the package framework:
+cd $PKG
+explodepkg $CWD/_procmail.tar.gz
+cd $TMP
+rm -rf procmail-$VERSION
+tar xzvf $CWD/procmail-$VERSION.tar.gz
+cd procmail-$VERSION
+zcat $CWD/procmail_3.22-5.diff.gz | patch -p1 --verbose || exit
+zcat $CWD/procmail.lfs.diff.gz | patch -p1 --verbose || exit
+chown -R root:root .
+find . -perm 777 -exec chmod 755 {} \;
+find . -perm 664 -exec chmod 644 {} \;
+make
+cd src
+cat formail > $PKG/usr/bin/formail
+cat lockfile > $PKG/usr/bin/lockfile
+cat mailstat > $PKG/usr/bin/mailstat
+cat procmail > $PKG/usr/bin/procmail
+cd ../man
+for file in formail.1 lockfile.1 procmail.1 ; do
+  gzip -9c $file > $PKG/usr/man/man1/$file.gz
+done
+for file in procmailex.5 procmailrc.5 procmailsc.5 ; do
+  gzip -9c $file > $PKG/usr/man/man5/$file.gz
+done
+mkdir -p $PKG/usr/doc/procmail-$VERSION
+cd ..
+cp -a \
+  Artistic COPYING FAQ FEATURES HISTORY INSTALL KNOWN_BUGS \
+  README examples $PKG/usr/doc/procmail-$VERSION
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+
+# Build the package:
+cd $PKG
+pkghelpers_fixup
+pkghelpers_makepkg

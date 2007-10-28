@@ -1,0 +1,123 @@
+#!/bin/sh
+# Copyright 2006, 2007  Patrick J. Volkerding, Sebeka, MN, USA
+# All rights reserved.
+#
+# Redistribution and use of this script, with or without modification, is
+# permitted provided that the following conditions are met:
+#
+# 1. Redistributions of this script must retain the above copyright
+#    notice, this list of conditions and the following disclaimer.
+#
+#  THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR IMPLIED
+#  WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+#  MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.  IN NO
+#  EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+#  SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+#  PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+#  OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+#  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+#  OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+#  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+
+PKGNAM=mesa32
+VERSION=${VERSION:-7.0.1}
+ARCH=${ARCH:-x86_64}
+BUILD=${BUILD:-3}
+DISTRO=${DISTRO:-slamd64}
+MESAARCH=x86
+
+if [ $DISTRO = slackware ]; then
+	PKGARCH=$ARCH
+else
+	PKGARCH=${ARCH}_${DISTRO}
+fi
+
+if [ $DISTRO = slamd64 ]; then
+	LIBSUFFIX=64
+else
+	LIBSUFFIX=
+fi
+
+CWD=$(pwd)
+if [ "$TMP" = "" ]; then
+  TMP=/tmp
+fi
+PKG=/tmp/package-mesa32
+rm -rf $PKG
+mkdir -p $PKG
+
+if [ "$ARCH" = "i386" ]; then
+  SLKCFLAGS="-O2 -march=i386 -mcpu=i686"
+elif [ "$ARCH" = "i486" ]; then
+  SLKCFLAGS="-O2 -march=i486 -mtune=i686"
+elif [ "$ARCH" = "s390" ]; then
+  SLKCFLAGS="-O2"
+elif [ "$ARCH" = "x86_64" ]; then
+  SLKCFLAGS="-O2 -fPIC"
+fi
+
+cd $TMP
+rm -rf Mesa-${VERSION}
+tar xjvf $CWD/MesaLib-$VERSION.tar.bz2
+tar xjvf $CWD/MesaGLUT-$VERSION.tar.bz2
+#tar xjvf $CWD/MesaDemos-$VERSION.tar.bz2
+cd Mesa-$VERSION
+
+# Make sure ownerships and permissions are sane:
+chown -R root:root .
+find . -perm 666 -exec chmod 644 {} \;
+find . -perm 664 -exec chmod 644 {} \;
+find . -perm 600 -exec chmod 644 {} \;
+find . -perm 444 -exec chmod 644 {} \;
+find . -perm 400 -exec chmod 644 {} \;
+find . -perm 440 -exec chmod 644 {} \;
+find . -perm 777 -exec chmod 755 {} \;
+find . -perm 775 -exec chmod 755 {} \;
+find . -perm 511 -exec chmod 755 {} \;
+find . -perm 711 -exec chmod 755 {} \;
+find . -perm 555 -exec chmod 755 {} \;
+
+# Patch to fix FAST_X86_FPU undefined error
+#zcat $CWD/mesa.tnl-FAST_X86_FPU.diff.gz | patch -p1 --verbose || exit 1
+
+# Build and install:
+(
+	# Patch to install DRI drivers into "/usr":
+	zcat $CWD/mesa.linux-dri-$MESAARCH.diff.gz | patch -p1 --verbose  || exit 1
+
+	# Patch to build DRI drivers only for hardware that is also supported by linux-dri-x86-64
+	zcat $CWD/mesa.linux-dri-$MESAARCH-$ARCH.diff.gz | patch -p1 --verbose  || exit 1
+
+	. /etc/profile.d/32dev.sh # Sort out gcc -m32 for us; this is from the 'devel32' package
+	make -j 10 linux-dri-$MESAARCH || exit 1 # no -j, breaks.
+
+	# Patch to put into /tmp/package-mesa:  (sorry, I know this should use $PKG ;-)
+	zcat $CWD/mesa.linux-dri-$MESAARCH-fake-destdir.diff.gz | patch -p1 --verbose  || exit 1
+
+	make install || exit 1
+)
+
+# Install some "demos":
+#( cd progs/xdemos
+#  make -i
+#  mkdir -p $PKG/usr/bin/32
+#  cp glthreads glxcontexts glxdemo glxgears glxgears_fbconfig glxheads \
+#    glxinfo glxpbdemo glxpixmap \
+#    $PKG/usr/bin/32
+#)
+
+( cd $PKG
+	# Remove stuff in common with the 64-bit package
+	rm -rf usr/include
+	# Strip binaries:
+  find . | xargs file | grep "executable" | grep ELF | cut -f 1 -d : | xargs strip --strip-unneeded 2> /dev/null
+  find . | xargs file | grep "shared object" | grep ELF | cut -f 1 -d : | xargs strip --strip-unneeded 2> /dev/null
+)
+
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+
+cd $PKG
+makepkg -l y -c n ../${PKGNAM}-$VERSION-$PKGARCH-$BUILD.tgz
+

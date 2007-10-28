@@ -1,0 +1,55 @@
+#!/bin/sh
+# Set initial variables:
+PKGNAM=autofs
+VERSION=3.1.7
+BUILD=3
+
+. /etc/pkghelpers
+pkghelpers_env
+
+if [ ! -d $PKG ]; then
+  mkdir -p $PKG # place for the package to be built
+fi
+
+echo "+==============+"
+echo "| autofs-$VERSION |"
+echo "+==============+"
+cd $TMP
+tar xjvf $CWD/autofs-$VERSION.tar.bz2
+cd autofs-$VERSION
+zcat $CWD/autofs-$VERSION.diff.gz | patch -p1 --verbose --backup --suffix=.orig -E || exit 1
+zcat $CWD/autofs-gcc-fix.diff.gz | patch -p1 --verbose --backup --suffix=.orig -E || exit 1
+zcat $CWD/autofs-3.1.7-x86_64.diff.gz | patch -p1 --verbose --backup --suffix=.orig -E || exit 1 # Patch adapted from a RedHat/ Fedora file
+mkdir -p $PKG/usr/doc/autofs-$VERSION
+cp -a COPYING COPYRIGHT NEWS README README.options TODO \
+  multiserver_mount.patch samples $PKG/usr/doc/autofs-$VERSION
+chown -R root:root $PKG/usr/doc/autofs-$VERSION
+find $PKG/usr/doc/autofs-$VERSION -type d -exec chmod 755 {} \;
+find $PKG/usr/doc/autofs-$VERSION -type f -exec chmod 644 {} \;
+./configure --prefix=/usr --libdir=/usr/lib$LIBSUFFIX x86_64-slackware-linux
+make
+cd daemon
+mkdir -p $PKG/usr/sbin
+cat automount > $PKG/usr/sbin/automount
+chmod 755 $PKG/usr/sbin/automount
+cd ../modules
+mkdir -p $PKG/usr/lib$LIBSUFFIX/autofs
+for file in *.so ; do
+  cat $file > $PKG/usr/lib$LIBSUFFIX/autofs/$file
+done
+cd ../man
+mkdir -p $PKG/usr/man/man5 $PKG/usr/man/man8
+for file in *.5 ; do
+  cat $file | gzip -9c > $PKG/usr/man/man5/$file.gz
+done
+for file in *.8 ; do
+  cat $file | gzip -9c > $PKG/usr/man/man8/$file.gz
+done
+strip $PKG/usr/sbin/*
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+
+# Build the package:
+cd $PKG
+pkghelpers_fixup
+pkghelpers_makepkg

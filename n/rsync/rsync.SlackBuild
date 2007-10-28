@@ -1,0 +1,42 @@
+#!/bin/sh
+# Set initial variables:
+
+PKGNAM=rsync
+VERSION=2.6.9
+BUILD=1
+
+. /etc/pkghelpers
+pkghelpers_env
+
+rm -rf $PKG
+mkdir -p $PKG
+
+cd $TMP
+rm -rf rsync-$VERSION
+tar xzvf $CWD/rsync-$VERSION.tar.gz
+cd rsync-$VERSION
+chown -R root.root .
+CFLAGS="$SLKCFLAGS" \
+./configure \
+  --prefix=/usr
+make -j10
+mkdir -p $PKG/usr/bin
+cat rsync > $PKG/usr/bin/rsync
+chmod 755 $PKG/usr/bin/rsync
+chown -R root.bin $PKG/usr/bin
+mkdir -p $PKG/usr/man/man1
+cat rsync.1 | gzip -9c > $PKG/usr/man/man1/rsync.1.gz
+mkdir -p $PKG/usr/man/man5
+cat rsyncd.conf.5 | gzip -9c > $PKG/usr/man/man5/rsyncd.conf.5.gz
+mkdir -p $PKG/usr/doc/rsync-$VERSION
+cp -a README NEWS COPYING tech_report.tex $PKG/usr/doc/rsync-$VERSION
+chown -R root.root $PKG/usr/doc/rsync-$VERSION
+chmod 644 $PKG/usr/doc/rsync-$VERSION/*
+
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+
+# Build the package:
+cd $PKG
+pkghelpers_fixup
+pkghelpers_makepkg

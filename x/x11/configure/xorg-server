@@ -1,0 +1,36 @@
+# Servers to build:
+BUILD_SERVERS="--enable-xorg --enable-xvfb --enable-xnest --enable-dmx"
+SKIP_SERVERS="--disable-xprint"
+
+MESA_VERSION=${MESA_VERSION:-7.0.1}
+
+# Fix from SuSE for Mesa 7.0 patches to GL/ Makefile
+autoreconf -fi
+
+CFLAGS="$SLKCFLAGS" \
+./configure \
+  --prefix=/usr \
+	--libdir=/usr/lib$LIBSUFFIX \
+  --sysconfdir=/etc \
+  --localstatedir=/var \
+  --infodir=/usr/info \
+  --mandir=/usr/man \
+  --disable-static \
+  --enable-xcsecurity \
+  --with-pic \
+ --with-int10=x86emu \
+  --with-default-font-path="/usr/share/fonts/TTF,/usr/share/fonts/OTF,/usr/share/fonts/Type1,/usr/share/fonts/misc,/usr/share/fonts/75dpi/:unscaled" \
+  --with-module-dir=/usr/lib$LIBSUFFIX/xorg/modules \
+  --with-dri-driver-path=/usr/lib$LIBSUFFIX/xorg/modules/dri \
+  --with-os-name="$OSNAME" \
+  --with-os-vendor="$OSVENDOR" \
+  --with-mesa-source=/tmp/Mesa-${MESA_VERSION} \
+  --with-xkb-path=/etc/X11/xkb \
+  --with-xkb-output=/var/lib/xkb \
+  $BUILD_SERVERS \
+  $SKIP_SERVERS \
+  $ARCH-$DISTRO-linux
+
+# Ugly fixup
+sed -i 's#-ldl##' hw/xfree86/Makefile
+sed -i 's#-lm#-lm -ldl#' hw/xfree86/Makefile

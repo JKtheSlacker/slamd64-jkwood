@@ -1,0 +1,33 @@
+#!/bin/sh
+# Set initial variables:
+PKGNAM=strace
+VERSION=4.5.15
+BUILD=1
+
+. /etc/pkghelpers
+pkghelpers_env
+
+rm -rf $PKG
+mkdir -p $PKG
+
+cd $TMP
+rm -rf strace-$VERSION
+tar xjvf $CWD/strace-$VERSION.tar.bz2
+cd strace-$VERSION
+chown -R root:root .
+mkdir -p $PKG/usr/doc/strace-$VERSION
+cp -a \
+  COPYRIGHT CREDITS NEWS PORTING README README-CVS README-freebsd README-linux README-sunos4 README-svr4 TODO \
+$PKG/usr/doc/strace-$VERSION
+chmod 644 $PKG/usr/doc/strace-$VERSION/*
+./configure --prefix=/usr --libdir=/usr/lib$LIBSUFFIX
+make -j 12
+make install DESTDIR=$PKG
+strip $PKG/usr/bin/strace
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+
+# Build the package:
+cd $PKG
+pkghelpers_fixup
+pkghelpers_makepkg

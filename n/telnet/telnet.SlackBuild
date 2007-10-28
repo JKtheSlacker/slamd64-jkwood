@@ -1,0 +1,69 @@
+#!/bin/sh
+# Set initial variables:
+CWD=`pwd`
+if [ "$TMP" = "" ]; then
+  TMP=/tmp
+fi
+PKG=$TMP/package-telnet
+
+VERSION=0.17
+ARCH=${ARCH:-x86_64}
+BUILD=1
+DISTRO=${DISTRO:-slamd64}
+
+if [ $DISTRO = slackware ]; then
+	PKGARCH=$ARCH
+else
+	PKGARCH=${ARCH}_${DISTRO}
+fi
+
+if [ ! -d $TMP ]; then
+  mkdir -p $TMP # location to build the source
+fi
+rm -rf $PKG
+mkdir -p $PKG
+
+cd $TMP
+rm -rf netkit-telnet-0.17
+tar xzvf $CWD/netkit-telnet-0.17.tar.gz
+cd netkit-telnet-0.17
+chown -R root:root .
+zcat $CWD/netkit-telnet-0.17.diff.gz | patch -p1 --verbose --backup --suffix=.orig || exit
+zcat $CWD/netkit-telnet-0.17-ayt.patch.gz | patch -p1 --verbose --backup --suffix=.orig || exit
+./configure --prefix=/usr
+cd telnetd
+make
+strip telnetd
+mkdir -p $PKG/usr/sbin
+cat telnetd > $PKG/usr/sbin/in.telnetd
+chmod 755 $PKG/usr/sbin/in.telnetd
+mkdir -p $PKG/usr/man/man8
+cat telnetd.8 | gzip -9c > $PKG/usr/man/man8/in.telnetd.8.gz
+cd ..
+# The OpenBSD version of the telnet client is superior.
+rm -rf telnet
+tar xzvf $CWD/telnet-OpenBSD-20020321.tar.gz
+zcat $CWD/telnet-OpenBSD-20020321.diff.gz | patch -p1 --verbose || exit
+zcat $CWD/telnet-OpenBSD-014_telnet.diff.gz | patch -p1 --verbose --backup --suffix=.orig || exit
+( cd telnet ; make )
+cd telnet
+strip telnet
+mkdir -p $PKG/bin
+cat telnet > $PKG/bin/telnet
+chmod 755 $PKG/bin/telnet
+mkdir -p $PKG/usr/man/man1
+cat telnet.1 | gzip -9c > $PKG/usr/man/man1/telnet.1.gz
+cd ..
+mkdir -p $PKG/usr/doc/netkit-telnet-0.17
+cp -a README $PKG/usr/doc/netkit-telnet-0.17
+chown root:root $PKG/usr/doc/netkit-telnet-0.17/*
+chmod 644 $PKG/usr/doc/netkit-telnet-0.17/*
+
+# Finish up the package:
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+
+# Build the package:
+cd $PKG
+makepkg -l y -c n $TMP/telnet-$VERSION-$PKGARCH-$BUILD.tgz
+

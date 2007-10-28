@@ -1,0 +1,62 @@
+#!/bin/sh
+# Set initial variables:
+CWD=`pwd`
+if [ "$TMP" = "" ]; then
+  TMP=/tmp
+fi
+PKG=$TMP/package-biff+comsat
+
+VERSION=0.17
+ARCH=${ARCH:-x86_64}
+BUILD=1
+DISTRO=${DISTRO:-slamd64}
+
+if [ $DISTRO = slackware ]; then
+	PKGARCH=$ARCH
+else
+	PKGARCH=${ARCH}_${DISTRO}
+fi
+
+if [ ! -d $TMP ]; then
+  mkdir -p $TMP # location to build the source
+fi
+rm -rf $PKG
+mkdir -p $PKG
+
+cd $TMP
+rm -rf biff+comsat-0.17
+tar xzvf $CWD/biff+comsat-0.17.tar.gz || exit 1
+cd biff+comsat-0.17
+chown -R root:root .
+zcat $CWD/biff+comsat-0.17.diff.gz | patch -p1 --verbose || exit
+zcat $CWD/biff+comsat.offset.diff.gz | patch -p1 --verbose || exit
+zcat $CWD/biff+comsat.badutmp.diff.gz | patch -p1 --verbose || exit
+./configure --prefix=/usr
+make || exit 1
+cd biff
+strip biff
+mkdir -p $PKG/usr/bin
+cat biff > $PKG/usr/bin/biff
+chmod 755 $PKG/usr/bin/biff
+mkdir -p $PKG/usr/man/man{1,8}
+cat biff.1 | gzip -9c > $PKG/usr/man/man1/biff.1.gz
+cd ../comsat
+strip comsat
+mkdir -p $PKG/usr/sbin
+cat comsat > $PKG/usr/sbin/in.comsat
+chmod 755 $PKG/usr/sbin/in.comsat
+cat comsat.8 | gzip -9c > $PKG/usr/man/man8/in.comsat.8.gz
+cd ..
+mkdir -p $PKG/usr/doc/biff+comsat-0.17
+cp -a README $PKG/usr/doc/biff+comsat-0.17
+chown root:root $PKG/usr/doc/biff+comsat-0.17/*
+chmod 644 $PKG/usr/doc/biff+comsat-0.17/*
+
+# Finish up the package:
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+
+# Build the package:
+cd $PKG
+makepkg -l y -c n $TMP/biff+comsat-$VERSION-$PKGARCH-$BUILD.tgz
+

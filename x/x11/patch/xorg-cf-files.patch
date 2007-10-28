@@ -1,0 +1,1 @@
+zcat $CWD/patch/xorg-cf-files/xorg-cf-files-lib64.diff.gz | patch -p1 --verbose || exit 1

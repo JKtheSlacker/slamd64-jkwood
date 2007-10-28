@@ -1,0 +1,70 @@
+#!/bin/sh
+PKGNAM=xfsdump
+VERSION=2.2.38-1
+BUILD=2
+
+. /etc/pkghelpers
+pkghelpers_env
+
+rm -rf $PKG
+mkdir -p $PKG
+
+cd $TMP
+rm -rf xfsdump-$(echo $VERSION | cut -f 1 -d '-')
+tar xzvf $CWD/xfsdump_$VERSION.tar.gz
+cd xfsdump-$(echo $VERSION | cut -f 1 -d '-')
+
+zcat $CWD/xfsdump.destdir.diff.gz | patch -p1 --verbose --backup --suffix=.orig || exit 1
+
+chown -R root:root .
+find . -perm 666 -exec chmod 644 {} \;
+find . -perm 664 -exec chmod 644 {} \;
+find . -perm 600 -exec chmod 644 {} \;
+find . -perm 444 -exec chmod 644 {} \;
+find . -perm 400 -exec chmod 644 {} \;
+find . -perm 440 -exec chmod 644 {} \;
+find . -perm 777 -exec chmod 755 {} \;
+find . -perm 775 -exec chmod 755 {} \;
+find . -perm 511 -exec chmod 755 {} \;
+find . -perm 711 -exec chmod 755 {} \;
+find . -perm 555 -exec chmod 755 {} \;
+
+# Make sure you have the same version of autoconf as the
+# developers did...  ;-)
+autoconf
+
+./configure \
+  --prefix=/usr \
+  --sbindir=/sbin \
+  --bindir=/usr/sbin \
+  --enable-gettext=yes \
+  --mandir=/usr/man \
+  --datadir=/usr/share
+
+make -j12 || exit 1
+make install DESTDIR=$PKG
+
+( cd $PKG/usr/sbin
+  rm -f xfsdump xfsrestore
+  ln -sf /sbin/xfsdump xfsdump
+  ln -sf /sbin/xfsrestore xfsrestore
+)
+
+mv $PKG/usr/share/doc $PKG/usr
+( cd $PKG/usr/doc ; mv xfsdump xfsdump-$VERSION )
+# It would be nice to keep the same timestamps that the files have in the source:
+cp -a \
+  README doc/COPYING doc/CREDITS doc/PORTING \
+  $PKG/usr/doc/xfsdump-$VERSION
+mkdir -p $PKG/usr/doc/xfsdump-$VERSION/html
+( cd doc
+  cp -a *.gif *.html $PKG/usr/doc/xfsdump-$VERSION/html
+)
+
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+
+cd $PKG
+PKGVER=$(echo $VERSION | tr - _)
+pkghelpers_fixup
+pkghelpers_makepkg

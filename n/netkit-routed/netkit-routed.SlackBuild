@@ -1,0 +1,56 @@
+#!/bin/sh
+# Set initial variables:
+CWD=`pwd`
+if [ "$TMP" = "" ]; then
+  TMP=/tmp
+fi
+PKG=$TMP/package-netkit-routed
+
+VERSION=0.17
+ARCH=${ARCH:-x86_64}
+BUILD=1
+DISTRO=${DISTRO:-slamd64}
+
+if [ $DISTRO = slackware ]; then
+	PKGARCH=$ARCH
+else
+	PKGARCH=${ARCH}_${DISTRO}
+fi
+
+if [ ! -d $TMP ]; then
+  mkdir -p $TMP # location to build the source
+fi
+rm -rf $PKG
+mkdir -p $PKG
+
+cd $TMP
+rm -rf netkit-routed-0.17
+tar xzvf $CWD/netkit-routed-0.17.tar.gz
+cd netkit-routed-0.17
+chown -R root:root .
+zcat $CWD/routed.18.candidate.final.patch.gz | patch -p1 --backup --verbose -E --suffix=.orig || exit
+zcat $CWD/netkit-routed-0.17.diff.gz | patch -p1 --backup --verbose -E --suffix=.orig || exit
+./configure --prefix=/usr
+make || exit 1
+strip --strip-unneeded ripquery/ripquery routed/routed
+mkdir -p $PKG/usr/sbin
+cat routed/routed > $PKG/usr/sbin/routed
+chmod 755 $PKG/usr/sbin/routed
+mkdir -p $PKG/usr/man/man8
+cat routed/routed.8 | gzip -9c > $PKG/usr/man/man8/routed.8.gz
+cat ripquery/ripquery > $PKG/usr/sbin/ripquery
+chmod 755 $PKG/usr/sbin/ripquery
+cat ripquery/ripquery.8 | gzip -9c > $PKG/usr/man/man8/ripquery.8.gz
+mkdir -p $PKG/usr/doc/netkit-routed-0.17
+cp -a README $PKG/usr/doc/netkit-routed-0.17
+chown root:root $PKG/usr/doc/netkit-routed-0.17/*
+chmod 644 $PKG/usr/doc/netkit-routed-0.17/*
+
+# Finish up the package:
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+
+# Build the package:
+cd $PKG
+makepkg -l y -c n $TMP/netkit-routed-$VERSION-$PKGARCH-$BUILD.tgz
+

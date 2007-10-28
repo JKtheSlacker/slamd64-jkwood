@@ -1,0 +1,31 @@
+#!?bin/sh
+
+PKGNAM=iptables
+VERSION=1.3.8
+BUILD=1
+
+. /etc/pkghelpers
+pkghelpers_env
+
+rm -rf $PKG
+mkdir -p $PKG
+cd $TMP
+rm -rf iptables-$VERSION
+tar xjvf $CWD/iptables-$VERSION.tar.bz2
+cd iptables-$VERSION
+chown -R root:root .
+zcat $CWD/iptables.prefix.diff.gz | patch -p1 || exit
+make -j 10
+make install DESTDIR=$PKG
+make install-devel DESTDIR=$PKG
+make -j 10 experimental
+make install-experimental DESTDIR=$PKG
+mkdir -p $PKG/usr/doc/iptables-$VERSION
+cp -a COPYING INSTALL KNOWN_BUGS $PKG/usr/doc/iptables-$VERSION
+chmod 644 $PKG/usr/doc/iptables-$VERSION/*
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+
+cd $PKG
+pkghelpers_fixup
+pkghelpers_makepkg

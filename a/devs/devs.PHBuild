@@ -1,0 +1,37 @@
+#!/bin/sh
+# Set initial variables:
+PKGNAM=devs
+VERSION=2.3.1
+ARCH=noarch
+BUILD=25
+
+. /etc/pkghelpers
+pkghelpers_env
+
+rm -rf $PKG
+mkdir -p $PKG
+
+# Explode the package framework:
+cd $PKG
+explodepkg $CWD/_devs.tar.gz
+
+cd $TMP
+rm -r MAKEDEV-2.3.1
+tar xzvf $CWD/makedev_2.3.1.orig.tar.gz
+cd MAKEDEV-2.3.1
+zcat $CWD/makedev_2.3.1-46.2.diff.gz | patch -p1 -E
+#zcat $CWD/makedev_2.3.1.slack.diff.gz | patch -p1 -E
+# Add many more IDE devices:
+zcat $CWD/makedev_2.3.1.hd.diff.gz | patch -p1 -E
+# Still not enough:
+zcat $CWD/makedev.hd.diff.gz | patch -p1 -E
+cat MAKEDEV > $PKG/dev/MAKEDEV
+cat README > $PKG/dev/README.MAKEDEV
+gzip -9c MAKEDEV.man > $PKG/usr/man/man8/MAKEDEV.8.gz
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+
+# Build the package:
+cd $PKG
+# THIS DOESN'T USE PKGHELPERS FOR A REASON!
+makepkg -l y -c n $TMP/devs-$VERSION-$PKGARCH-$BUILD.tgz

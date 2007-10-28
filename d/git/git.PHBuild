@@ -1,0 +1,69 @@
+#!/bin/sh
+PKGNAM=git
+VERSION=1.5.2.2
+BUILD=${BUILD:-1}
+
+. /etc/pkghelpers
+pkghelpers_env
+
+PERLDIR="usr/lib$LIBSUFFIX/perl5/site_perl/5.8.8/$ARCH-linux-thread-multi/auto"
+
+rm -rf $PKG
+mkdir -p $PKG
+
+cd $TMP
+rm -rf git-$VERSION
+tar xjvf $CWD/git-$VERSION.tar.bz2 || exit 1
+cd git-$VERSION
+
+chown -R root:root .
+find . -perm 666 -exec chmod 644 {} \;
+find . -perm 664 -exec chmod 644 {} \;
+find . -perm 600 -exec chmod 644 {} \;
+find . -perm 444 -exec chmod 644 {} \;
+find . -perm 400 -exec chmod 644 {} \;
+find . -perm 440 -exec chmod 644 {} \;
+find . -perm 777 -exec chmod 755 {} \;
+find . -perm 775 -exec chmod 755 {} \;
+find . -perm 511 -exec chmod 755 {} \;
+find . -perm 711 -exec chmod 755 {} \;
+find . -perm 555 -exec chmod 755 {} \;
+
+mkdir -p $PKG/usr/doc/git-$VERSION
+cp -a \
+  COPYING INSTALL README \
+  Documentation \
+  contrib \
+  $PKG/usr/doc/git-$VERSION
+( cd $PKG/usr/doc/git-$VERSION/Documentation ; rm *.1 *.3 *.7 )
+
+make -j10 prefix=/usr mandir=/usr/man CFLAGS="$SLKCFLAGS" all doc || exit 1
+
+make prefix=/usr mandir=/usr/man "CFLAGS=$SLKCFLAGS" install install-doc DESTDIR=$PKG || exit 1
+
+mv $PKG/usr/share/man/man3 $PKG/usr/man
+rmdir $PKG/usr/share/man
+
+# Since Stuart Winter hates hard links.  ;-)
+#
+# Switch a hard link with a soft link:
+( cd $PKG/usr/bin
+  find . -links +1 -not -name git | while read gitfile ; do
+    if [ git -ef $gitfile ]; then
+      rm -vf $gitfile
+      ln -vfs git $gitfile
+    fi
+  done
+)
+
+# This removes our DESTDIR from the packlist filenames, to keep perl's 
+# internal inventories consistent and correct.
+sed -e "s#$PKG##" $PKG/$PERLDIR/Git/.packlist > $PKG/$PERLDIR/Git/.packlist.new
+mv -f $PKG/$PERLDIR/Git/.packlist.new $PKG/$PERLDIR/Git/.packlist
+
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+
+cd $PKG
+pkghelpers_fixup
+pkghelpers_makepkg

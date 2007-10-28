@@ -1,0 +1,82 @@
+#!/bin/sh
+# Ported from a Slackware .build
+
+PKGNAM=expect
+PKGVER=${PKGVER:-5.43.0}
+SRCVER=${SRCVER:-5.43}
+BUILD=${BUILD:-1}
+
+. /etc/pkghelpers
+pkghelpers_env
+
+rm -rf $PKG
+mkdir -p $PKG
+
+## Build and install static version:
+#( cd $TMP
+#tar xzvf $CWD/expect-$PKGVER.tar.gz
+#cd expect-$SRCVER
+#./configure --prefix=/usr --with-tclconfig=/usr/lib$LIBSUFFIX \
+#  --with-tclinclude=/usr/include/tcl-private/generic
+#make
+#make install INSTALL_ROOT=$PKG )
+#mv $TMP/expect-$VERSION $TMP/expect-$VERSION-static
+
+## Build and install shared version:
+
+cd $TMP
+rm -rf expect-$SRCVER
+tar xzvf $CWD/expect-${PKGVER}.tar.gz || exit 1
+cd expect-$SRCVER || exit 1
+
+# Make sure ownerships and permissions are sane:
+chown -R root:root .
+find . -perm 664 -exec chmod 644 {} \;
+find . -perm 600 -exec chmod 644 {} \;
+find . -perm 444 -exec chmod 644 {} \;
+find . -perm 400 -exec chmod 644 {} \;
+find . -perm 440 -exec chmod 644 {} \;
+find . -perm 777 -exec chmod 755 {} \;
+find . -perm 775 -exec chmod 755 {} \;
+find . -perm 511 -exec chmod 755 {} \;
+find . -perm 711 -exec chmod 755 {} \;
+find . -perm 555 -exec chmod 755 {} \;
+
+# Configure:
+CFLAGS="$SLKCFLAGS" \
+./configure \
+  --prefix=/usr \
+  --libdir=/usr/lib$LIBSUFFIX \
+  --with-tclconfig=/usr/lib$LIBSUFFIX \
+  --with-tclinclude=/usr/include/tcl-private/generic \
+  --enable-shared
+
+# Build and install:
+make -j12 || exit 1
+make install INSTALL_ROOT=$PKG || exit 1
+
+# Fix symlinks
+( cd $PKG/usr/lib$LIBSUFFIX
+  rm -rf libexpect.a
+  ln -sf libexpect${SRCVER}.a libexpect.a
+  rm -rf libexpect.so
+  ln -sf libexpect${SRCVER}.so libexpect.so
+)
+
+# Delete extra /usr/lib if $LIBSUFFIX is set
+if [ "$LIBSUFFIX" != "" ]; then
+	rm -rf $PKG/usr/lib
+fi
+
+# Add a documentation directory:
+mkdir -p $PKG/usr/doc/expect-$VERSION
+cp -a \
+  FAQ HISTORY INSTALL NEWS README example \
+  $PKG/usr/doc/expect-$VERSION
+
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+
+cd $PKG
+pkghelpers_fixup
+pkghelpers_makepkg

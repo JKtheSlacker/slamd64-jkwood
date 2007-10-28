@@ -1,0 +1,31 @@
+#!/bin/sh
+PKGNAM=madplay
+VERSION=0.15.2b
+BUILD=2
+
+. /etc/pkghelpers
+pkghelpers_env
+
+cd /tmp
+rm -rf madplay-$VERSION
+tar xzvf $CWD/madplay-$VERSION.tar.gz
+cd madplay-$VERSION
+chown -R root.root .
+find . -perm 664 -exec chmod 644 {} \;
+CFLAGS="$SLKCFLAGS" \
+./configure \
+  --prefix=/usr \
+  --disable-debugging \
+  $ARCH-$DISTRO-linux 
+make -j12 || exit 1
+make install DESTDIR=$PKG
+mkdir -p $PKG/usr/doc/madplay-$VERSION
+cp -a \
+  CHANGES COPYING COPYRIGHT CREDITS README TODO VERSION \
+  $PKG/usr/doc/madplay-$VERSION
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+
+cd $PKG
+pkghelpers_fixup
+pkghelpers_makepkg

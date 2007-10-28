@@ -1,0 +1,50 @@
+#!/bin/sh
+PKGNAM=libgsf
+VERSION=1.14.3
+BUILD=1
+
+. /etc/pkghelpers
+pkghelpers_env
+
+rm -rf $PKG
+mkdir -p $PKG
+
+cd $TMP
+rm -rf libgsf-$VERSION
+tar xjvf $CWD/libgsf-$VERSION.tar.bz2
+cd libgsf-$VERSION
+chown -R root:root .
+find . -perm 666 -exec chmod 644 {} \;
+find . -perm 664 -exec chmod 644 {} \;
+CFLAGS="$SLKCFLAGS" \
+./configure \
+  --prefix=/usr \
+	--libdir=/usr/lib$LIBSUFFIX \
+  --sysconfdir=/etc \
+  --localstatedir=/var/lib \
+  --with-html-dir=/usr/share/gtk-doc/html \
+  --mandir=/usr/man \
+  --disable-static \
+  $ARCH-$DISTRO-linux
+make -j12 || exit 1
+make install DESTDIR=$PKG
+
+# This is useless, describing a command that's not installed:
+rm -f $PKG/usr/man/man1/gsf-office-thumbnailer.1
+rmdir $PKG/usr/man/man1 2> /dev/null
+rmdir $PKG/usr/man 2> /dev/null
+
+# And this, more simple removal is about what libgsf deserves if it ignores
+# the --mandir option to configure, which is more than likely...
+rm -rf $PKG/usr/share/man
+
+mkdir -p $PKG/usr/doc/libgsf-$VERSION
+cp -a \
+  AUTHORS BUGS COPYING* HACKING NEWS README TODO \
+  $PKG/usr/doc/libgsf-$VERSION
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+
+cd $PKG
+pkghelpers_fixup
+pkghelpers_makepkg

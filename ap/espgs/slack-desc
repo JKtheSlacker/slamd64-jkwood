@@ -1,0 +1,19 @@
+# HOW TO EDIT THIS FILE:
+# The "handy ruler" below makes it easier to edit a package description.  Line
+# up the first '|' above the ':' following the base package name, and the '|'
+# on the right side marks the last column you can put a character in.  You must
+# make exactly 11 lines for the formatting to be correct.  It's also
+# customary to leave one space after the ':'.
+
+     |-----handy-ruler------------------------------------------------------|
+espgs: espgs (ESP Ghostscript)
+espgs:
+espgs: ESP Ghostscript is a customized version of GNU Ghostscript, an
+espgs: interpreter of Adobe Systems' PostScript(tm) and Portable Document
+espgs: Format (PDF) languages.  Ghostscript is an essential part of the
+espgs: printing subsystem, taking PostScript output from applications and
+espgs: converting it into an appropriate printer or display format.
+espgs: Ghostscript supports many printers directly, and more are supported
+espgs: through gimp-print and HPIJS, which are add-on packages that work
+espgs: with Ghostscript's IJS driver.
+espgs:

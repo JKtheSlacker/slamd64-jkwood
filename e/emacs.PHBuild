@@ -1,0 +1,216 @@
+#!/bin/sh
+# Port of Slackware's emacs.build
+#
+# Copyright 2006  Lasse Collin (aka Larzhu)
+# Copyright 2007  Carlos Corbacho
+#
+# Build and install GNU emacs for Slackware.
+# Before starting, you might want to reduce dependancies in the
+# .tgz packages by doing this (no, you really don't want to do this):
+#                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+#removepkg xaw3d
+#rm /usr/lib/libjpeg.so
+#rm /usr/lib/libpng.so
+#rm /usr/lib/libtiff.so
+#rm /usr/lib/libungif.so
+# and then replace these things after the build.
+
+PKGNAM=emacs
+VERSION=${VERSION:-22.1}
+BUILD=${BUILD:-1}
+
+. /etc/pkghelpers
+pkghelpers_env
+
+export CFLAGS=$SLKCFLAGS
+export LDFLAGS="-s"
+
+# Emacs 22.1 permissions fix
+export LOGNAME="root"
+
+PKG=$TMP/package-$PKGNAM
+PKG_INFO=$TMP/package-$PKGNAM-info
+PKG_LEIM=$TMP/package-$PKGNAM-leim
+PKG_LISP=$TMP/package-$PKGNAM-lisp
+PKG_MISC=$TMP/package-$PKGNAM-misc
+PKG_NOX=$TMP/package-$PKGNAM-nox
+umask 0022
+rm -rf $PKG $PKG_INFO $PKG_LEIM $PKG_LISP $PKG_MISC $PKG_NOX
+
+cd $TMP
+rm -rf $PKGNAM-$VERSION
+tar xzvf $CWD/$PKGNAM-$VERSION.tar.gz
+cd $PKGNAM-$VERSION
+
+# Make sure ownerships and permissions are sane:
+chown -R root:root .
+find . -perm 664 -exec chmod 644 {} \;
+find . -perm 600 -exec chmod 644 {} \;
+find . -perm 444 -exec chmod 644 {} \;
+find . -perm 400 -exec chmod 644 {} \;
+find . -perm 440 -exec chmod 644 {} \;
+find . -perm 777 -exec chmod 755 {} \;
+find . -perm 775 -exec chmod 755 {} \;
+find . -perm 511 -exec chmod 755 {} \;
+find . -perm 711 -exec chmod 755 {} \;
+find . -perm 555 -exec chmod 755 {} \;
+
+# Save some docs:
+mkdir -p $PKG/usr/doc/$PKGNAM-$VERSION
+cp -a BUGS FTP INSTALL README $PKG/usr/doc/$PKGNAM-$VERSION
+chmod 644 $PKG/usr/doc/$PKGNAM-$VERSION/*
+( cd $PKG/usr/doc/$PKGNAM-$VERSION ; ln -sf /usr/share/$PKGNAM/$VERSION/etc . )
+
+# Build a version of emacs that is not linked to the X11 libraries:
+./configure \
+  --prefix=/usr \
+  --libdir=/usr/lib$LIBDIRSUFFIX \
+  --mandir=/usr/man \
+  --infodir=/usr/info \
+  --with-x=no \
+  --with-pop \
+  --build=$ARCH-$DISTRO-linux
+make -j12 || exit 1
+make install DESTDIR=$PKG || exit 1
+( cd $PKG/usr/bin ; mv $PKGNAM-$VERSION $PKGNAM-$VERSION-no-x11 )
+
+# OK, now we start over building the full X11 emacs:
+./configure \
+  --prefix=/usr \
+  --libdir=/usr/lib$LIBDIRSUFFIX \
+  --mandir=/usr/man \
+  --infodir=/usr/info \
+  --with-x11 \
+  --with-x-toolkit \
+  --with-pop \
+  --build=$ARCH-$DISTRO-linux
+make -j12 || exit 1
+make install DESTDIR=$PKG || exit 1
+( cd $PKG/usr/bin ; mv $PKGNAM-$VERSION $PKGNAM-$VERSION-with-x11 ; rm -f $PKGNAM )
+
+# This avoids a collision with Exuberant Ctags...
+mv $PKG/usr/bin/ctags $PKG/usr/bin/ctags-emacs
+mv $PKG/usr/man/man1/ctags.1 $PKG/usr/man/man1/ctags-emacs.1
+
+######################################################################
+
+# Split into separate packages:
+
+# emacs-info:
+mkdir -p $PKG_INFO/usr $PKG_INFO/install
+mv $PKG/usr/info $PKG_INFO/usr
+rm $PKG_INFO/usr/info/dir
+cat $CWD/slack-desc.$PKGNAM-info > $PKG_INFO/install/slack-desc
+
+# emacs-leim:
+mkdir -p $PKG_LEIM/usr/share/$PKGNAM/$VERSION $PKG_LEIM/install
+mv $PKG/usr/share/$PKGNAM/$VERSION/leim $PKG_LEIM/usr/share/$PKGNAM/$VERSION
+cat $CWD/slack-desc.$PKGNAM-leim > $PKG_LEIM/install/slack-desc
+
+# emacs-lisp
+mkdir -p $PKG_LISP/usr/share/$PKGNAM/$VERSION $PKG_LISP/install
+# We cp instead of mv and remove the rest of the duplicates later.
+cp -a $PKG/usr/share/$PKGNAM/$VERSION/lisp $PKG_LISP/usr/share/$PKGNAM/$VERSION
+find $PKG_LISP \! -type d \! -name "*.el.gz" | xargs rm -f
+cat $CWD/slack-desc.$PKGNAM-lisp > $PKG_LISP/install/slack-desc
+
+# emacs-misc:
+mkdir -p $PKG_MISC/usr/share/$PKGNAM/$VERSION $PKG_MISC/install
+mv $PKG/usr/share/$PKGNAM/$VERSION/etc $PKG_MISC/usr/share/$PKGNAM/$VERSION
+mkdir -p $PKG/usr/share/$PKGNAM/$VERSION/etc
+mv $PKG_MISC/usr/share/$PKGNAM/$VERSION/etc/DOC-$VERSION.* $PKG/usr/share/$PKGNAM/$VERSION/etc
+cat $CWD/slack-desc.$PKGNAM-misc > $PKG_MISC/install/slack-desc
+
+# emacs-nox:
+mkdir -p $PKG_NOX/usr/bin $PKG_NOX/install
+mv $PKG/usr/bin/$PKGNAM-$VERSION-no-x11 $PKG_NOX/usr/bin
+ln -s $PKGNAM-$VERSION-no-x11 $PKG_NOX/usr/bin/$PKGNAM
+mkdir -p $PKG_NOX/usr/share/$PKGNAM/$VERSION/etc/
+mv $PKG/usr/share/$PKGNAM/$VERSION/etc/DOC-$VERSION.1 $PKG_NOX/usr/share/$PKGNAM/$VERSION/etc
+cat $CWD/slack-desc.$PKGNAM-nox > $PKG_NOX/install/slack-desc
+
+# emacs
+mkdir -p $PKG/install
+ln -s $PKGNAM-$VERSION-with-x11 $PKG/usr/bin/$PKGNAM
+mkdir -p $PKG/usr/share/$PKGNAM/$VERSION/leim $PKG/install
+cat $CWD/slack-desc.$PKGNAM > $PKG/install/slack-desc
+# This will attempt to handle the Exuberant Ctags situation gracefully...
+cat $CWD/doinst.sh-$PKGNAM > $PKG/install/doinst.sh
+
+######################################################################
+#
+# From Slackware's find-el-orphans.sh
+#
+# This script emits a list of all the .el files for which
+# there is no corresponding .elc file, as well as all the
+# terminal related .el files, and other special .el files
+# suggested by Emacs users over the years.
+#
+# These should always be installed.
+
+( cd $PKG
+  # Seems that all .el.gz files are now also as .elc so this
+  # the for-loop below might be unneeded. --Larhzu
+  for file in `find usr/share/$PKGNAM -name "*.el.gz"` ; do
+    [ ! -e "`echo ${file} | sed s/".gz"//`c" ] && echo "$file"
+  done
+  # OK, now out with the term .el.gz files:
+  find usr/share/$PKGNAM/$VERSION/lisp/term -name "*.el.gz"
+  # Next, the user-supplied list:
+  echo usr/share/$PKGNAM/$VERSION/lisp/abbrevlist.el.gz
+  echo usr/share/$PKGNAM/$VERSION/lisp/bindings.el.gz
+  echo usr/share/$PKGNAM/$VERSION/lisp/cdl.el.gz
+  echo usr/share/$PKGNAM/$VERSION/lisp/$PKGNAM-lisp/cl-specs.el.gz
+  echo usr/share/$PKGNAM/$VERSION/lisp/emulation/edt-lk201.el.gz
+  echo usr/share/$PKGNAM/$VERSION/lisp/emulation/edt-vt100.el.gz
+  echo usr/share/$PKGNAM/$VERSION/lisp/foldout.el.gz
+  echo usr/share/$PKGNAM/$VERSION/lisp/gnus/nnlistserv.el.gz
+  echo usr/share/$PKGNAM/$VERSION/lisp/international/iso-transl.el.gz
+  echo usr/share/$PKGNAM/$VERSION/lisp/mail/rmailmsc.el.gz
+  #echo usr/share/$PKGNAM/$VERSION/lisp/mail/rnews.el.gz
+  #echo usr/share/$PKGNAM/$VERSION/lisp/mail/sc.el.gz
+  echo usr/share/$PKGNAM/$VERSION/lisp/misc.el.gz
+  echo usr/share/$PKGNAM/$VERSION/lisp/vt-control.el.gz
+  #echo usr/share/$PKGNAM/$VERSION/lisp/x-apollo.el.gz
+) | sort -u | ( cd $PKG_LISP ; xargs rm -f )
+
+# Then remove the duplicates:
+( cd $PKG_LISP ; find usr -type f > filelist.tmp )
+( cd $PKG
+  find usr -type f > filelist.tmp
+  sort filelist.tmp $PKG_LISP/filelist.tmp | uniq -d | xargs rm -f
+)
+rm -r $PKG/filelist.tmp $PKG_LISP/filelist.tmp
+
+######################################################################
+
+# Make the packages:
+
+cd $PKG
+pkghelpers_fixup
+pkghelpers_makepkg
+
+cd $PKG_INFO
+PKGNAM=emacs-info
+pkghelpers_fixup
+pkghelpers_makepkg
+
+cd $PKG_LEIM
+PKGNAM=emacs-leim
+pkghelpers_fixup
+pkghelpers_makepkg
+
+cd $PKG_LISP
+PKGNAM=emacs-lisp
+pkghelpers_fixup
+pkghelpers_makepkg
+
+cd $PKG_MISC
+PKGNAM=emacs-misc
+pkghelpers_fixup
+pkghelpers_makepkg
+
+cd $PKG_NOX
+PKGNAM=emacs-nox
+pkghelpers_fixup
+pkghelpers_makepkg

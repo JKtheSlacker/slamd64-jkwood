@@ -1,0 +1,93 @@
+#!/bin/sh
+# Copyright 2006, Alan Hicks, Lizella, GA
+# Copyright 2007, Frederick Emmott <mail@fredemmott.co.uk
+# All rights reserved.
+#
+# Redistribution and use of this script, with or without modification, is
+# permitted provided that the following conditions are met:
+#
+# 1. Redistributions of this script must retain the above copyright
+#    notice, this list of conditions and the following disclaimer.
+#
+#  THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR IMPLIED
+#  WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+#  MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.  IN NO
+#  EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+#  SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+#  PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+#  OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+#  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+#  OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+#  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+PKGNAM=openvpn
+PKGVER=2.0.9
+BUILD=1
+
+. /etc/pkghelpers
+pkghelpers_env
+
+rm -rf $PKG
+mkdir -p $TMP $PKG
+cd $TMP || exit 1
+rm -rf $PKGNAM-$PKGVER
+tar xzvf $CWD/$PKGNAM-$PKGVER.tar.gz || exit 1
+cd $PKGNAM-$PKGVER || exit 1
+
+# Fix ownership and permissions inside the source tarball.
+# It's appalling how many projects have 777 permissions or
+# even suid, sgid, and sticky bits set on things.
+chown -R root:root .
+chmod -R u+w,go+r-w,a-s .
+
+CFLAGS="$SLKCFLAGS" \
+CXXFLAGS="$SLKCFLAGS" \
+./configure \
+  --prefix=/usr \
+	--libdir=/usr/lib$LIBSUFFIX \
+  --sysconfdir=/etc/openvpn \
+  --localstatedir=/var \
+  --enable-lzo \
+  --build=$ARCH-$DISTRO-linux
+
+make || exit 1
+make install-strip DESTDIR=$PKG || exit 1
+
+# Create a decent config directory. openvpn doesn't have one by
+# default, nor does it have a single config file.
+mkdir -p $PKG/etc/openvpn/{certs,keys}
+chown root:nobody $PKG/etc/openvpn/{certs,keys}
+chmod 750 $PKG/etc/openvpn/{certs,keys}
+
+# Install a reasonably generic sample config file:
+install -m644 -o root -g root $CWD/openvpn.conf.sample $PKG/etc/openvpn/openvpn.conf.sample
+
+# Let folks know about the other configs, if they haven't found them.
+# They might even find the documentation there useful.  ;-)
+cat << EOF > $PKG/etc/openvpn/README.TXT
+Have a look in /usr/doc/$PKGNAM-$PKGVER/sample-config-files
+for some more examples of how to configure OpenVPN.  You'll
+need to add something to your /etc/rc.d/rc.local to start
+OpenVPN, as well as to tell it where to find its config file.
+
+
+See "man openvpn" and the other docs for more information.
+EOF
+
+# Add a link, too:
+mkdir -p $PKG/usr/doc/$PKGNAM-$PKGVER/sample-config-files
+( cd $PKG/usr/doc/$PKGNAM-$PKGVER/sample-config-files
+  ln -sf /etc/openvpn/openvpn.conf.sample .
+)
+
+mkdir -p $PKG/usr/doc/$PKGNAM-$PKGVER
+cp -a AUTHORS COPYING COPYRIGHT.GPL ChangeLog INSTALL INSTALL-win32.txt \
+  NEWS PORTS README sample-config-files sample-keys sample-scripts easy-rsa \
+  $PKG/usr/doc/$PKGNAM-$PKGVER
+
+cd $PKG
+pkghelpers_fixup
+mkdir -p install
+cat $CWD/slack-desc > install/slack-desc
+
+pkghelpers_makepkg

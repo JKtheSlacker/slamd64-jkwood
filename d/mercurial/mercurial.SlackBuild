@@ -1,0 +1,57 @@
+#!/bin/sh
+set -e
+
+CWD=`pwd`
+if [ "$TMP" = "" ]; then
+  TMP=/tmp
+fi
+PKG=$TMP/package-mercurial
+
+VERSION=0.9.4
+ARCH=x86_64
+BUILD=${BUILD-1}
+DISTRO=${DISTRO:-slamd64}
+
+if [ $DISTRO = slackware ]; then
+	PKGARCH=$ARCH
+else
+	PKGARCH=${ARCH}_${DISTRO}
+fi
+
+rm -rf $PKG
+mkdir -p $PKG
+cd $TMP
+rm -rf mercurial-$VERSION
+tar xjvf $CWD/mercurial-$VERSION.tar.bz2
+cd mercurial-$VERSION
+chown -R root.root .
+find . -perm 666 -exec chmod 644 {} \;
+find . -perm 664 -exec chmod 644 {} \;
+find . -perm 600 -exec chmod 644 {} \;
+find . -perm 444 -exec chmod 644 {} \;
+find . -perm 400 -exec chmod 644 {} \;
+find . -perm 440 -exec chmod 644 {} \;
+find . -perm 777 -exec chmod 755 {} \;
+find . -perm 775 -exec chmod 755 {} \;
+find . -perm 511 -exec chmod 755 {} \;
+find . -perm 711 -exec chmod 755 {} \;
+find . -perm 555 -exec chmod 755 {} \;
+python setup.py build install --root=$PKG
+( cd doc
+  for dir in 1 5 ; do
+    mkdir -p $PKG/usr/man/man${dir}
+    for file in *.${dir} ; do
+      cat $file | gzip -9c > $PKG/usr/man/man${dir}
+    done
+  done
+)
+mkdir -p $PKG/usr/doc/mercurial-$VERSION
+cp -a \
+  CONTRIBUTORS COPYING PKG-INFO README \
+  $PKG/usr/doc/mercurial-$VERSION
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+
+cd $PKG
+makepkg -l y -c n ../mercurial-$VERSION-$PKGARCH-$BUILD.tgz
+

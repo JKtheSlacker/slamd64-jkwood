@@ -1,0 +1,40 @@
+#!/bin/sh
+# Set initial variables:
+PKGNAM=reiserfsprogs
+VERSION=3.6.19
+BUILD=${BUILD:-2}
+
+. /etc/pkghelpers
+pkghelpers_env
+
+rm -rf $PKG
+mkdir -p $PKG # place for the package to be built
+
+cd $TMP
+rm -rf reiserfsprogs-$VERSION
+tar xzvf $CWD/reiserfsprogs-$VERSION.tar.gz
+cd reiserfsprogs-$VERSION
+chown -R root.root .
+CFLAGS="$SLKCFLAGS" \
+./configure \
+  --prefix=/usr \
+  $ARCH-$DISTRO-linux
+make -j12 || exit 1
+make install DESTDIR=$PKG
+
+mv $PKG/usr/sbin $PKG
+( cd $PKG/sbin
+  ln -sf mkreiserfs mkfs.reiserfs
+  ln -sf reiserfsck fsck.reiserfs
+)
+chown -R root:root $PKG/sbin
+mkdir -p $PKG/usr/doc/reiserfsprogs-$VERSION
+cp -a AUTHORS COPYING INSTALL NEWS README $PKG/usr/doc/reiserfsprogs-$VERSION
+chmod 644 $PKG/usr/doc/reiserfsprogs-$VERSION/*
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+
+# Build the package:
+cd $PKG
+pkghelpers_fixup
+pkghelpers_makepkg

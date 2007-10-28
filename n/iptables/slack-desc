@@ -1,0 +1,19 @@
+# HOW TO EDIT THIS FILE:
+# The "handy ruler" below makes it easier to edit a package description.  Line
+# up the first '|' above the ':' following the base package name, and the '|'
+# on the right side marks the last column you can put a character in.  You must
+# make exactly 11 lines for the formatting to be correct.  It's also
+# customary to leave one space after the ':'.
+
+        |-----handy-ruler------------------------------------------------------|
+iptables: iptables (IP packet filter administration)
+iptables:
+iptables: iptables is a packet filter administration tool for Linux 2.4,
+iptables: replacing the ipchains tool that was used with the 2.2 kernel.  The
+iptables: iptables  tool is used to set up, maintain, and inspect the tables of
+iptables: IP packet filter rules in the Linux kernel for packet filtering,
+iptables: firewalling, and NAT (Network Address Translation).
+iptables:
+iptables: If you plan to set up a firewall with Linux 2.4, you'll need this.
+iptables:
+iptables:

@@ -1,0 +1,74 @@
+#!/bin/sh
+CWD=`pwd`
+TMP=${TMP:-/tmp}
+PKG=$TMP/package-man-pages
+
+VERSION=2.55
+ARCH=noarch_slamd64
+BUILD=1
+
+if [ ! -d $TMP ]; then
+  mkdir -p $TMP
+fi
+rm -rf $PKG
+mkdir -p $PKG
+
+cd $TMP
+rm -rf man-pages-$VERSION
+tar xjvf $CWD/man-pages-$VERSION.tar.bz2
+cd man-pages-$VERSION
+chown -R root:root .
+find . -perm 666 -exec chmod 644 {} \;
+find . -perm 664 -exec chmod 644 {} \;
+find . -perm 600 -exec chmod 644 {} \;
+find . -perm 444 -exec chmod 644 {} \;
+find . -perm 400 -exec chmod 644 {} \;
+find . -perm 440 -exec chmod 644 {} \;
+find . -perm 777 -exec chmod 755 {} \;
+find . -perm 775 -exec chmod 755 {} \;
+find . -perm 511 -exec chmod 755 {} \;
+find . -perm 711 -exec chmod 755 {} \;
+find . -perm 555 -exec chmod 755 {} \;
+mkdir -p $PKG/usr/man
+cp -a * $PKG/usr/man
+
+# Are these old POSIX manpages of any real usefulness here?
+# Granted there may be some historical interest, and it's nice
+# to have them in the source package for that reason, but it
+# seems to me that installing them on the system by default 
+# isn't likely to help most people and may lead to confusion.
+rm -rf $PKG/usr/man/man*p
+rm -rf $PKG/usr/man/POSIX-COPYRIGHT
+
+# Also probably not needed in the package
+rm -rf $PKG/usr/man/scripts
+
+# Compress the pages:
+gzip -9 $PKG/usr/man/man*/*.*
+
+# If a man page exists in some other package, assume that's the
+# newer, better version:
+( cd $PKG
+  for file in usr/man/man*/*.gz ; do
+    if grep -l $file /var/log/packages/* | grep -v var/log/packages/man-pages ; then
+      rm -f --verbose $file
+    fi
+  done
+)
+
+# This package has always provided the initial whatis sample
+# file, so we'll continue to have that here, too:
+cp -a $CWD/whatis.sample.bz2 $PKG/usr/man
+( cd $PKG/usr/man
+  chown root:root whatis.sample.bz2
+  chmod 644 whatis.sample.bz2
+  bzip2 -d whatis.sample.bz2
+)
+
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+zcat $CWD/doinst.sh.gz > $PKG/install/doinst.sh
+
+cd $PKG
+makepkg -l y -c n $TMP/man-pages-$VERSION-$ARCH-$BUILD.tgz
+

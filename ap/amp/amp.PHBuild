@@ -1,0 +1,41 @@
+#!/bin/sh
+# Set initial variables:
+PKGNAM=amp
+VERSION=0.7.6
+BUILD=2
+
+. /etc/pkghelpers
+pkghelpers_env
+
+if [ ! -d $PKG ]; then
+  mkdir -p $PKG # place for the package to be built
+fi
+
+# Explode the package framework:
+cd $PKG
+explodepkg $CWD/_amp.tar.gz
+
+echo "+===========+"
+echo "| amp-$VERSION |"
+echo "+===========+"
+cd $TMP
+rm -rf amp-$VERSION
+tar xzvf $CWD/amp-$VERSION.tar.gz
+cd amp-$VERSION
+zcat $CWD/amp-gcc34.diff.gz | patch -p1 --verbose
+./configure --prefix=/usr $ARCH-$DISTRO-linux
+make -j12
+strip amp
+cat amp > $PKG/usr/bin/amp
+cat amp.1 | gzip -9c > $PKG/usr/man/man1/amp.1.gz
+mkdir -p $PKG/usr/doc/amp-$VERSION
+cp -a BUGS CHANGES README TODO doc/jukebox.txt doc/layer2.txt doc/linuxrealtime.txt doc/BeOS.txt $PKG/usr/doc/amp-$VERSION
+chown -R root.root $PKG/usr/doc/amp-$VERSION
+chmod 644 $PKG/usr/doc/amp-$VERSION/*
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+
+# Build the package:
+cd $PKG
+pkghelpers_fixup
+pkghelpers_makepkg

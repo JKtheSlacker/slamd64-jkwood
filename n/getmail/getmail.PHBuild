@@ -1,0 +1,31 @@
+#!/bin/sh
+PKGNAM=getmail
+VERSION=4.7.4
+ARCH=noarch
+BUILD=1
+
+. /etc/pkghelpers
+pkghelpers_env
+
+cd $TMP
+rm -rf getmail-$VERSION
+tar xzvf $CWD/getmail-$VERSION.tar.gz
+chown -R root:root getmail-$VERSION
+cd getmail-$VERSION
+python setup.py build
+python setup.py install --root=$PKG
+
+( cd $PKG/usr/share
+  mv man ..
+  mv doc ..
+  cd ..
+  rmdir share
+)
+
+
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+
+cd $PKG
+pkghelpers_fixup
+pkghelpers_makepkg
