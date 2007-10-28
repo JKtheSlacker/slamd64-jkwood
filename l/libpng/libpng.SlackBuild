@@ -5,7 +5,7 @@ PKG=$TMP/package-libpng
 rm -rf $PKG
 mkdir -p $PKG/usr
 
-VERSION=1.2.18
+VERSION=1.2.22
 ARCH=${ARCH:-x86_64}
 BUILD=1
 DISTRO=${DISTRO:-slamd64}
@@ -40,14 +40,6 @@ find . -perm 555 -exec chmod 755 {} \;
 # pre-built Makefile for now anyway...
 ./configure --prefix=/usr --libdir=/usr/lib$LIBSUFFIX
 
-# makefile.linux breaks on trying to deal with MMX on AMD64.
-# If we use automake, the Makefile doesn't deal with certain
-# exported functions we need (e.g. png_read_destroy)
-# We *could* patch libpng to use 64 bit safe MMX instructions, but
-# the tested and recommended way appears to be to disable the MMX
-# instructions on AMD64
-zcat $CWD/libpng.mmx-x86-only.diff.gz | patch -p1 --verbose || exit 1 # Patch from Mandriva
-
 # Might as well link to -lz -lm, since the ./configure seems
 # to be doing it that way now...  finally.  That'll prevent
 # a couple of emails a week.  :-)
@@ -56,7 +48,7 @@ zcat $CWD/libpng.libs.diff.gz | patch -p1 --verbose || exit 1
 # Link the custom makefile:
 ln -sf scripts/makefile.linux ./Makefile
 
-make prefix=/usr LIBPATH=/usr/lib$LIBSUFFIX
+make -j12 prefix=/usr LIBPATH=/usr/lib$LIBSUFFIX
 make install prefix=/usr LIBPATH=/usr/lib$LIBSUFFIX DESTDIR=$PKG
 
 # This symlink is needed to keep old applications running:
