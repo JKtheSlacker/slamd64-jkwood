@@ -9,3 +9,5 @@
 CHECKSUMS*
 FILE_LIST*
 MANIFEST.bz2
+*.sig
+*.asc
