@@ -1,6 +1,6 @@
 #!/bin/sh
 PKGNAM=librsvg
-VERSION=2.16.1
+VERSION=2.18.2
 BUILD=1
 
 . /etc/pkghelpers
@@ -18,12 +18,13 @@ find . -perm 664 -exec chmod 644 {} \;
 CFLAGS="$SLKCFLAGS" \
 ./configure \
   --prefix=/usr \
-	--libdir=/usr/lib$LIBSUFFIX \
+  --libdir=/usr/lib$LIBSUFFIX \
+  --mandir=/usr/man \
   --sysconfdir=/etc \
   --localstatedir=/var/lib \
   --enable-static=no \
   --build=$ARCH-$DISTRO-linux
-make -j10
+make -j10 || exit 1
 make install DESTDIR=$PKG
 mkdir -p $PKG/usr/doc/librsvg-$VERSION
 cp -a \
