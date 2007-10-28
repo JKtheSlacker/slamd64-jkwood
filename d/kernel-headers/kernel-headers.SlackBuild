@@ -2,46 +2,18 @@
 set -e
 CWD=`pwd`
 
-VERSION=${VERSION:-2.6.22.8}
+VERSION=${VERSION:-2.6.23.1}
 ARCH=${ARCH:-x86_64}
 BUILD=${BUILD:-1}
 
-# Not always used
-FILEDATE=
-
-TMP=/tmp/linux-headers-$VERSION
 PKG=/tmp/package-kernel-headers
+rm -rf $PKG
 
-rm -rf $TMP $PKG
-
-if [ ! -e linux-headers-$VERSION.tar.bz2 ]; then
-	sh clfs-headers.sh version=$VERSION
-fi
-
-cd /tmp
-if [ $FILEDATE =  ]; then
-  tar jxfv $CWD/linux-headers-$VERSION.tar.bz2
-else
-  tar jxfv $CWD/linux-headers-$VERSION-$FILEDATE.tar.bz2
-fi
-
-chown -R root:root $TMP
-cd $TMP
-
-# Drop scsi & net, since this duplicates glibc headers
-# and we can now match (in a general sense) the Slackware 2.6 headers
-# mtd is left in since it is not duplicated by glibc
-install -dv $PKG/usr/include/{asm,asm-generic,asm-i386,asm-x86_64,linux,mtd,sound}
-for SUBDIR in asm-generic asm-i386 asm-x86_64 linux mtd sound; do
-	cp -av include/$SUBDIR/* $PKG/usr/include/$SUBDIR
-done
-cp -av include/asm-x86_64-biarch/* $PKG/usr/include/asm
+cd /usr/src/linux-$VERSION
+make headers_check
+make headers_install INSTALL_HDR_PATH=$PKG/usr
 
 cd $PKG
-chown -Rv root:root $PKG
-find $PKG/usr/include/{asm,asm-generic,asm-i386,asm-x86_64,linux,mtd,sound} -type d -exec chmod -v 755 {} \;
-find $PKG/usr/include/{asm,asm-generic,asm-i386,asm-x86_64,linux,mtd,sound} -type f -exec chmod -v 644 {} \;
-
 mkdir install
 cat $CWD/slack-desc > install/slack-desc
 makepkg -l y -c n ../kernel-headers-$VERSION-${ARCH}_slamd64-$BUILD.tgz

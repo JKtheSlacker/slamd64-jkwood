@@ -1,6 +1,0 @@
-linux/acct.h
-linux/resource.h
-linux/socket.h
-linux/stat.h
-linux/un.h
-linux/wait.h
