@@ -1,6 +1,6 @@
 #!/bin/sh
 PKGNAM=ndiswrapper
-PKGVER=1.47
+PKGVER=1.49
 BUILD=1
 
 . /etc/pkghelpers
