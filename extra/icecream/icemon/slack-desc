@@ -1,0 +1,11 @@
+icemon: Icecream is created by SUSE and is based on ideas and code by distcc.
+icemon: Like distcc it takes compile jobs from your (KDE) build and distributes
+icemon: it to remote machines allowing a parallel build on several machines
+icemon: you've got. But unlike distcc Icecream uses a central server that
+icemon: schedules the compile jobs to the fastest free server and is as this
+icemon: dynamic.
+icemon: 
+icemon: 
+icemon: 
+icemon: 
+icemon: 

@@ -1,0 +1,24 @@
+#!/bin/sh
+CWD=`pwd`
+
+VERSION=${VERSION:-2.6.8}
+ARCH=${ARCH:-noarch_slamd64}
+BUILD=${BUILD:-1}
+
+PKG=/tmp/package-keychain
+rm -rf $PKG
+
+cd /tmp
+tar jxfv $CWD/keychain-$VERSION.tar.bz2
+cd keychain-$VERSION
+mkdir -p $PKG/{etc/profile.d,usr/{bin,man/man1},install}
+cp keychain $PKG/usr/bin
+chmod 755 $PKG/usr/bin/keychain
+chown root:bin $PKG/usr/bin/keychain
+cat keychain.1 | gzip -9 -c - > $PKG/usr/man/man1/keychain.1.gz
+zcat $CWD/keychain.sh.gz > $PKG/etc/profile.d/keychain.sh
+chmod 755 $PKG/etc/profile.d/keychain.sh
+
+cd $PKG
+cat $CWD/slack-desc > install/slack-desc
+makepkg -l y -c n ../keychain-$VERSION-$ARCH-$BUILD.tgz

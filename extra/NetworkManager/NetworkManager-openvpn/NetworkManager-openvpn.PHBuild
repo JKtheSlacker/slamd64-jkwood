@@ -1,0 +1,34 @@
+#!/bin/sh
+
+PKGNAM=NetworkManager-openvpn
+PKGVER=0.3.2svn2342
+BUILD=1
+
+
+. /etc/pkghelpers
+pkghelpers_env
+
+cd $TMP
+rm -rf $PKG
+mkdir $PKG
+
+tar xfv $CWD/network-manager-openvpn_$PKGVER.orig.tar.gz
+cd network-manager-openvpn_$PKGVER.orig
+#--with-distro=slackware not $DISTRO
+CFLAGS=$SLKCFLAGS \
+./autogen.sh \
+	--prefix=/usr \
+	--libdir=/usr/lib$LIBSUFFIX \
+	--sysconfdir=/etc \
+	--with-distro=slackware \
+	--without-gnome
+make || exit 1
+make install DESTDIR=$PKG || exit 1
+
+cd $PKG
+cat $CWD/nm-openvpn-service.conf > etc/dbus-1/system.d/nm-openvpn-service.conf
+
+pkghelpers_fixup
+mkdir install
+cat $CWD/slack-desc > install/slack-desc
+pkghelpers_makepkg

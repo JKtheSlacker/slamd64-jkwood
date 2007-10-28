@@ -1,0 +1,57 @@
+#!/bin/bash
+# Copyright (c) 2007 Fred Emmott <mail@fredemmott.co.uk>
+# From the Slamd64 Linux Project
+CWD=`pwd`
+
+PKGNAM=${PKGNAM:-`echo $0 | sed 's#.*[ ^/]\([^ /]\+\)\.SlackBuild#\1#'`}
+
+VERSION=${VERSION:-`ls $PKGNAM-[0-9]*.tar.* | sed 's#.\+-\([^-]\+\).tar.\+#\1#'`}
+PKGVER=${VERSION}
+
+ARCH=${ARCH:-x86_64}
+BUILD=${BUILD:-1}
+DISTRO=${DISTRO:-slamd64}
+
+if [ $DISTRO = slackware ]; then
+	PKGARCH=$ARCH
+else
+	PKGARCH=${ARCH}_${DISTRO}
+fi
+
+if [ $DISTRO = slamd64 ]; then
+	LIBSUFFIX=64
+else
+	LIBSUFFIX=
+fi
+
+PKGDIR=/tmp/beryl-build/package-$PKGNAM
+rm -rf $PKGDIR
+mkdir -p $PKGDIR
+
+cd /tmp/beryl-build
+# FIXME - remove this if block?
+if [ ! -d $PKGNAM-$VERSION ]; then
+	tar xfv $CWD/$PKGNAM-$VERSION.tar.*
+fi
+cd $PKGNAM-$VERSION
+
+# thanks to "roginovicci" on forums.slamd64.com for help with these
+CFLAGS="-O2 -fPIC -I/usr/X11R7/include -g" \
+./configure \
+	--build=$ARCH-$DISTRO-linux \
+	--prefix=/usr \
+	--libdir=/usr/lib$LIBSUFFIX \
+	|| exit 1
+make -j9 || exit 1
+make install DESTDIR=$PKGDIR
+
+cd $PKGDIR
+
+#find -type f | xargs file | grep ELF | cut -f 1 -d : | xargs strip --strip-unneeded >/dev/null 2>/dev/null
+
+if [ -e $CWD/slack-desc/$PKGNAM ]; then
+	mkdir install
+	cat $CWD/slack-desc/$PKGNAM > install/slack-desc
+fi
+
+makepkg -l y -c n ../$PKGNAM-$PKGVER-$PKGARCH-$BUILD.tgz

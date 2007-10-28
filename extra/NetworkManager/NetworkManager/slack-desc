@@ -1,0 +1,11 @@
+NetworkManager: NetworkManager (D-Bus/HAL-based network management)
+NetworkManager: Networking on Linux right now is painful for the mobile
+NetworkManager: desktop user, especially in comparison to other operating
+NetworkManager: systems. A laptop user should never need to use the command
+NetworkManager: line or configuration files to manage their network; it
+NetworkManager: should "Just Work" as automatically as possible and intrude
+NetworkManager: as little as possible into the user's workflow. NetworkManager
+NetworkManager: attempts to make networking invisible.
+NetworkManager: 
+NetworkManager: 
+NetworkManager: 

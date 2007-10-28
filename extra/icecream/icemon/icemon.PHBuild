@@ -1,0 +1,26 @@
+#!/bin/sh
+PKGNAM=icemon
+PKGVER=kde3
+BUILD=1
+
+. /etc/pkghelpers
+pkghelpers_env
+
+rm -rf $PKG
+cd $TMP
+rm -rf $PKGNAM-$PKGVER
+tar xfv $CWD/$PKGNAM-$PKGVER.tar.*
+cd $PKGNAM-$PKGVER
+CFLAGS=$SLKCFLAGS \
+CXXFLAGS=$SLKCFLAGS \
+./configure \
+	--prefix=/usr \
+	--libdir=/usr/lib$LIBSUFFIX
+make
+make install DESTDIR=$PKG
+
+cd $PKG
+mkdir install
+cat $CWD/slack-desc > install/slack-desc
+pkghelpers_fixup
+pkghelpers_makepkg

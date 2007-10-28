@@ -1,0 +1,11 @@
+keychain: keychain
+keychain: Keychain makes using ssh-agent and gpg-agent easier. To disable, 
+keychain: chmod -x /etc/profile.d/keychain.sh
+keychain: 
+keychain: 
+keychain: 
+keychain: 
+keychain: 
+keychain: 
+keychain: 
+keychain: 

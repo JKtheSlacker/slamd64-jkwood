@@ -1,0 +1,19 @@
+# HOW TO EDIT THIS FILE:
+# The "handy ruler" below makes it easier to edit a package description.  Line
+# up the first '|' above the ':' following the base package name, and the '|'
+# on the right side marks the last column you can put a character in.  You must
+# make exactly 11 lines for the formatting to be correct.  It's also
+# customary to leave one space after the ':'.
+
+            |-----handy-ruler------------------------------------------------------|
+checkinstall: checkinstall (create a package from "make install")
+checkinstall:
+checkinstall: Installs a compiled program from the program's source directory using
+checkinstall: "make install" or any other command supplied on checkinstall's command
+checkinstall: line (such as a Slackware .build script), and create a binary package
+checkinstall: at the same time so that you can install and remove the package using
+checkinstall: Slackware's package management tools.
+checkinstall:
+checkinstall: checkinstall was written by Felipe Eduardo Sanchez Diaz Duran, and
+checkinstall: uses the installwatch tool by Pancrazio `Ezio' de Mauro to monitor the
+checkinstall: installation process.

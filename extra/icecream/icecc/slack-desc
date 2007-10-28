@@ -1,0 +1,11 @@
+icecc: Icecream is created by SUSE and is based on ideas and code by distcc.
+icecc: Like distcc it takes compile jobs from your (KDE) build and distributes
+icecc: it to remote machines allowing a parallel build on several machines
+icecc: you've got. But unlike distcc Icecream uses a central server that
+icecc: schedules the compile jobs to the fastest free server and is as this
+icecc: dynamic.
+icecc: 
+icecc: 
+icecc: 
+icecc: 
+icecc: 

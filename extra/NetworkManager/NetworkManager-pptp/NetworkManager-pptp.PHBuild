@@ -1,0 +1,42 @@
+#!/bin/sh
+
+PKGNAM=NetworkManager-pptp
+PKGVER=0.6.3+cvs20060819
+SRCVER=0.7.0-beta
+BUILD=3
+
+
+. /etc/pkghelpers
+pkghelpers_env
+
+cd $TMP
+rm -rf $PKG
+mkdir $PKG
+
+tar xfv $CWD/network-manager-pptp_$PKGVER.orig.tar.gz
+cd NetworkManager-ppp_vpn-$SRCVER
+# I know this is ugly... reasons:
+# 1) New version of this requires new NM
+# 2) New NM incompatabile with KNM
+# 3) Old this doesn't have --without-gnome
+zcat $CWD/configure-0.6.5.gz > configure
+#--with-distro=slackware not $DISTRO
+CFLAGS=$SLKCFLAGS \
+./configure \
+	--prefix=/usr \
+	--libdir=/usr/lib$LIBSUFFIX \
+	--sysconfdir=/etc \
+	--without-gnome \
+	--with-bluetooth \
+	--enable-nm-vpn-dbus-old
+make SUBDIRS="src po" || exit 1
+make SUBDIRS="src po" install DESTDIR=$PKG
+
+cd $PKG
+cat $CWD/nm-ppp-starter.conf > etc/dbus-1/system.d/nm-ppp-starter.conf
+sed -i 's#name=ppp#name=pptp#' etc/NetworkManager/VPN/nm-ppp-starter.name
+
+pkghelpers_fixup
+mkdir install
+cat $CWD/slack-desc > install/slack-desc
+pkghelpers_makepkg

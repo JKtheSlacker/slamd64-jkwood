@@ -1,0 +1,35 @@
+#!/bin/sh
+
+PKGNAM=NetworkManager
+PKGVER=0.6.5
+BUILD=3
+
+. /etc/pkghelpers
+pkghelpers_env
+
+cd $TMP
+rm -rf $PKG
+mkdir $PKG
+
+tar xfv $CWD/$PKGNAM-$PKGVER.tar.bz2
+cd $PKGNAM-$PKGVER
+#--with-distro=slackware not $DISTRO
+CFLAGS=$SLKCFLAGS \
+./configure \
+	--prefix=/usr \
+	--libdir=/usr/lib$LIBSUFFIX \
+	--sysconfdir=/etc \
+	--with-distro=slackware \
+	--without-gnome
+make || exit 1
+make install DESTDIR=$PKG
+
+cd $PKG
+mv usr/share/man usr/man
+rm -rf usr/share
+cat $CWD/NetworkManager.conf > etc/dbus-1/system.d/NetworkManager.conf
+
+pkghelpers_fixup
+mkdir install
+cat $CWD/slack-desc > install/slack-desc
+pkghelpers_makepkg

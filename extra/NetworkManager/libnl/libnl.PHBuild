@@ -1,0 +1,28 @@
+#!/bin/sh
+
+PKGNAM=libnl
+PKGVER=1.0pre6
+SRCVER=1.0-pre6
+BUILD=1
+
+. /etc/pkghelpers
+pkghelpers_env
+
+cd $TMP
+rm -rf $PKG
+mkdir $PKG
+
+tar xfv $CWD/$PKGNAM-$SRCVER.tar.gz
+cd $PKGNAM-$SRCVER
+CFLAGS=$SLKCFLAGS \
+./configure \
+	--prefix=/usr \
+	--libdir=/usr/lib$LIBSUFFIX
+make
+make install DESTDIR=$PKG
+
+cd $PKG
+pkghelpers_fixup
+mkdir install
+cat $CWD/slack-desc > install/slack-desc
+pkghelpers_makepkg

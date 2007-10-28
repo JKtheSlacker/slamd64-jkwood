@@ -1,0 +1,37 @@
+#!/bin/sh
+
+PKGNAM=knetworkmanager
+PKGVER=20070617
+BUILD=3
+
+. /etc/pkghelpers
+pkghelpers_env
+
+cd $TMP
+rm -rf $PKG
+mkdir $PKG
+
+tar xfv $CWD/$PKGNAM-$PKGVER.tar.bz2
+cd $PKGNAM-$PKGVER
+zcat $CWD/types_h.diff.gz | patch -p1 --verbose || exit 1
+#--with-distro=slackware not $DISTRO
+CFLAGS=$SLKCFLAGS \
+CXXFLAGS=$SLKCFLAGS \
+./configure \
+	--prefix=/usr \
+	--libdir=/usr/lib$LIBSUFFIX \
+	--sysconfdir=/etc \
+	--with-distro=slackware \
+	--with-openvpn \
+	--with-vpnc \
+	--with-pptp
+make || exit 1
+make install DESTDIR=$PKG || exit 1
+
+cd $PKG
+cat $CWD/knetworkmanager.conf > etc/dbus-1/system.d/knetworkmanager.conf
+
+pkghelpers_fixup
+mkdir install
+cat $CWD/slack-desc > install/slack-desc
+pkghelpers_makepkg

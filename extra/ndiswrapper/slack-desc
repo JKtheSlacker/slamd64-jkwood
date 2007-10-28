@@ -1,0 +1,11 @@
+ndiswrapper: ndiswrapper (Support for windows wireless drivers)
+ndiswrapper: Many vendors do not release specifications of the hardware
+ndiswrapper: or provide a Linux driver for their wireless network cards.
+ndiswrapper: This project implements Windows kernel API and NDIS
+ndiswrapper: (Network Driver Interface Specification) API within Linux
+ndiswrapper: kernel. A Windows driver for wireless network card is then
+ndiswrapper: linked to this implementation so that the driver runs
+ndiswrapper: natively, as though it is in Windows, without binary emulation.
+ndiswrapper: 
+ndiswrapper: Note that if you are using a 64-bit kernel, you must use 64-bit
+ndiswrapper: windows drivers with ndiswrapper.

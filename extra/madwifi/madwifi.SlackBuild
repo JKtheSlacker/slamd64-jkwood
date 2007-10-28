@@ -1,0 +1,38 @@
+#!/bin/sh
+# Copyright (c) 2005-2007 Frederick Emmott <mail@fredemmott.co.uk>
+# Distributed under the terms of the GNU General Public License, version 2.
+CWD=`pwd`
+
+ARCH=${ARCH:-x86_64}
+VERSION=${VERSION:-0.9.3.2}
+BUILD=1
+DISTRO=${DISTRO:-slamd64}
+
+if [ $DISTRO = slackware ]; then
+	PKGARCH=$ARCH
+else
+	PKGARCH=${ARCH}_${DISTRO}
+fi
+
+KERNEL=${KERNEL:-`uname -r`}
+
+PKG=/tmp/package-madwifi
+rm -rf  $PKG
+
+cd /tmp
+rm -rf madwifi-$VERSION
+tar jxfv $CWD/madwifi-$VERSION.tar.bz2
+cd madwifi-$VERSION
+make TARGET=$ARCH-elf TOOLPREFIX= KERNELRELEASE=$KERNEL KERNELPATH=/lib/modules/$KERNEL/build
+make install DESTDIR=$PKG BINDIR=/usr/bin MANDIR=/usr/man KERNELPATH=/lib/modules/$KERNEL/build
+cd tools
+make -j10 KERNELPATH=/lib/modules/$KERNEL/build KERNELRELEASE=$KERNEL KERNELCONF=/lib/modules/$KERNEL/build/.conf
+mkdir -p $PKG/usr/bin
+make install DESTDIR=$PKG BINDIR=/usr/bin MANDIR=/usr/man KERNELPATH=/lib/modules/$KERNEL/build KERNELRELEASE=$KERNEL
+
+cd $PKG
+gzip -9 usr/man/*/*
+mkdir install
+cat $CWD/slack-desc > install/slack-desc
+echo "/sbin/depmod -ae" > install/doinst.sh
+makepkg -l y -c n ../madwifi-${VERSION}_$(echo $KERNEL | sed 's#-#_#g')-$PKGARCH-$BUILD.tgz

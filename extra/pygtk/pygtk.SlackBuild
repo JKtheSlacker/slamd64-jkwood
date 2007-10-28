@@ -1,0 +1,58 @@
+#!/bin/sh
+# Copyright (c) 2006-2007 Fred Emmott <mail@fredemmott.co.uk>
+# Distributed under the GNU General Public License, version 2
+set -e
+CWD=`pwd`
+
+PYCAIROVER=1.2.6
+PYGOBJECTVER=2.12.3
+PYGTKVER=2.10.4
+EXTRASVER=2.14.3
+
+ARCH=${ARCH:-x86_64}
+BUILD=${BUILD:-1}
+DISTRO=${DISTRO:-slamd64}
+
+if [ $DISTRO = slackware ]; then
+  PKGARCH=$ARCH
+else
+  PKGARCH=${ARCH}_${DISTRO}
+fi
+
+if [ $DISTRO = slamd64 ]; then
+	LIBSUFFIX=64
+else
+	LIBSUFFIX=
+fi
+
+function doPackage {
+	PACKAGE=$1
+	VERSION=$2
+	DIR=$PACKAGE-$VERSION
+	cd /tmp
+#	rm -rf $DIR
+	tar xfv $CWD/$DIR.tar.*
+	cd $DIR
+	CFLAGS="-O2 -fPIC" \
+	./configure \
+		--prefix=/usr \
+		--libdir=/usr/lib64
+	make || exit 1
+	make install || exit 1 # spamming your root partition...
+	make install DESTDIR=$PKG || exit 1
+}
+
+PKG=/tmp/package-pygtk
+rm -rf $PKG
+
+doPackage pygobject $PYGOBJECTVER
+doPackage pycairo $PYCAIROVER
+doPackage pygtk $PYGTKVER
+doPackage gnome-python-extras $EXTRASVER
+
+cd $PKG
+find -type f | xargs file | grep ELF | cut -f 1 -d : | xargs strip --strip-unneeded
+
+mkdir install
+cat $CWD/slack-desc > install/slack-desc
+makepkg -l y -c n ../pygtk-$PYGTKVER-$PKGARCH-$BUILD.tgz

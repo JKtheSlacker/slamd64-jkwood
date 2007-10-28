@@ -1,0 +1,24 @@
+#!/bin/sh
+# Set initial variables:
+CWD=`pwd`
+if [ "$TMP" = "" ]; then
+  TMP=/tmp
+fi
+
+VERSION=1.32_1
+PKGVER=1.32
+
+if [ ! -d $TMP ]; then
+  mkdir -p $TMP # location to build the source
+fi
+cd $TMP
+rm -rf slacktrack
+tar xzvf $CWD/slacktrack-$VERSION-source.tar.gz
+cd slacktrack
+# Fix libdir issues
+zcat $CWD/slacktrack-$VERSION-multilib.diff.gz | patch -p1 --verbose || exit 1
+# Start the "real" SlackBuild:
+./slacktrack.SlackBuild
+
+cd /tmp
+mv slacktrack-$PKGVER-x86_64-1.tgz slacktrack-$PKGVER-x86_64_slamd64-1.tgz

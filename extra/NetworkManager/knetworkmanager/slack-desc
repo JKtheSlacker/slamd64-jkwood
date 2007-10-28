@@ -1,0 +1,11 @@
+knetworkmanager: KNetworkManager (KDE interface to NetworkManager)
+knetworkmanager: KNetworkManager is the KDE front end for NetworkManager. It provides
+knetworkmanager: a sophisticated and intuitive user interface which enables users
+knetworkmanager: easily to switch their network environment. The range of functions
+knetworkmanager: encompasses the features implemented by NetworkManager daemon. Up
+knetworkmanager: until now NetworkManager supports: 
+knetworkmanager: 
+knetworkmanager: - Wired Ethernet Devices (IEEE 802.3) 
+knetworkmanager: - Wireless Ethernet Devices (IEEE 802.11): Unencrypted, WEP, WPA
+knetworkmanager: - Virtual Private Network (VPN): OpenVPN, VPNC 
+knetworkmanager: - Dial-Up (PPP)

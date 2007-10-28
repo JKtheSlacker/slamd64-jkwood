@@ -1,0 +1,29 @@
+#!/bin/sh
+PKGNAM=ndiswrapper
+PKGVER=1.47
+BUILD=1
+
+. /etc/pkghelpers
+pkghelpers_env
+
+KERNEL=${KERNEL:-`uname -r`}
+
+rm -rf $PKG
+
+cd /tmp
+rm -rf $PKGNAM-$PKGVER
+tar xfv $CWD/$PKGNAM-$PKGVER.tar.*
+
+cd $PKGNAM-$PKGVER
+make
+make install DESTDIR=$PKG
+
+cd $PKG
+rm lib/modules/$KERNEL/modules.*
+pkghelpers_fixup || exit 1
+
+mkdir install
+cat $CWD/slack-desc > install/slack-desc
+echo "/sbin/depmod -ae" > install/doinst.sh
+
+makepkg -l y -c n ../$PKGNAM-${PKGVER}_$(echo $KERNEL | sed 's#-#_#g')-$PKGARCH-$BUILD.tgz

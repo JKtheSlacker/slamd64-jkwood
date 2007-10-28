@@ -1,0 +1,11 @@
+pygtk: pygtk (Python bindings for the GTK Toolkit)
+pygtk: These are required by any python program that uses GTK, such
+pygtk: as the newer Cedega GUI packages (as the "large" packages
+pygtk: which included dependencies are no longer produced).
+pygtk: 
+pygtk: This package also contains various gnome-python packages.
+pygtk: 
+pygtk: 
+pygtk: 
+pygtk: 
+pygtk: 
