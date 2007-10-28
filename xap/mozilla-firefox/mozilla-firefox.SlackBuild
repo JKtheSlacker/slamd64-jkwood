@@ -9,9 +9,9 @@ PKG=$TMP/package-mozilla-firefox
 # unless you have permission from the mozilla foundation.
 # XXX XXX XXX XXX
 
-VERSION=2.0.0.6
+VERSION=2.0.0.8
 ARCH=${ARCH:-x86_64}
-BUILD=${BUILD:-2}
+BUILD=${BUILD:-1}
 
 # "-O" is the default, as few changes as possible to defaults for Firefox and Thunderbird
 if [ "$ARCH" = "i386" ]; then
@@ -31,7 +31,6 @@ rm -rf $PKG
 mkdir -p $PKG/usr/lib64
 
 cd $TMP
-rm -rf mozilla
 tar jxvf $CWD/firefox-$VERSION-source.tar.bz2
 
 cd mozilla
@@ -53,6 +52,7 @@ export CXXFLAGS="$SLKCFLAGS" &&
 	--with-default-mozilla-five-home=/usr/lib64/firefox-$VERSION \
 	--with-system-zlib \
 	--with-system-png \
+	--with-system-cairo \
 	--enable-application=browser \
 	--enable-default-toolkit=gtk2 \
 	--enable-crypto \
@@ -75,13 +75,21 @@ export CXXFLAGS="$SLKCFLAGS" &&
 	--disable-composer \
 	--disable-profilesharing
 
-make -j10
+make -j12
 make install DESTDIR=$PKG || exit 1
 
 ( cd $PKG/usr/lib64/firefox-$VERSION
-  zcat $CWD/mozilla-firefox-thunderbird.diff.gz | patch -p0 --verbose || exit 1
+  zcat $CWD/mozilla-firefox-thunderbird.diff.gz | patch -p1 --verbose 
+  if [ ! $? = 0 ]; then
+		echo thunderbird
+    exit 1
+  fi
   cd $PKG/usr/bin
-  zcat $CWD/firefox.moz_plugin_path.diff.gz | patch -p0 --verbose || exit 1
+  zcat $CWD/firefox.moz_plugin_path.diff.gz | patch -p1 --verbose
+  if [ ! $? = 0 ]; then
+		echo plugin_path
+    exit 1
+  fi
 ) || exit 1
 
 ( cd $PKG/usr/bin

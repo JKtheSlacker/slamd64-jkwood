@@ -5,9 +5,11 @@ PKG=$TMP/package-seamonkey
 rm -rf $PKG
 mkdir -p $PKG/usr
 
-VERSION=${VERSION:-1.1.4}
+VERSION=${VERSION:-1.1.5}
 ARCH=${ARCH:-x86_64}
 BUILD=${BUILD:-1}
+
+NUMJOBS=${NUMJOBS:-12}
 
 cd $TMP
 tar xjvf $CWD/seamonkey-${VERSION}.source.tar.bz2
@@ -58,8 +60,8 @@ BUILD_OFFICIAL=1 MOZILLA_OFFICIAL=1 \
   --enable-xft \
   $ARCH-$DISTRO-linux
 
-BUILD_OFFICIAL=1 MOZILLA_OFFICIAL=1 make -s export || exit 1
-BUILD_OFFICIAL=1 MOZILLA_OFFICIAL=1 make -s libs || exit 1
+BUILD_OFFICIAL=1 MOZILLA_OFFICIAL=1 make -j$NUMJOBS -s export || exit 1
+BUILD_OFFICIAL=1 MOZILLA_OFFICIAL=1 make -j$NUMJOBS -s libs || exit 1
 BUILD_OFFICIAL=1 MOZILLA_OFFICIAL=1 DESTDIR=$PKG make install || exit 1
 
 # Install nss headers.
