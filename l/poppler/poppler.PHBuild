@@ -22,8 +22,8 @@
 
 
 PKGNAM=poppler
-VERSION=${VERSION:-0.5.4}
-BUILD=${BUILD:-2}
+VERSION=${VERSION:-0.6.1}
+BUILD=${BUILD:-1}
 
 . /etc/pkghelpers
 pkghelpers_env
@@ -35,8 +35,6 @@ cd $TMP
 rm -rf ${PKGNAM}-${VERSION}
 tar xjvf $CWD/${PKGNAM}-$VERSION.tar.bz2 || exit 1
 cd ${PKGNAM}-$VERSION
-
-zcat $CWD/poppler-xpdf-3.02pl1.diff.gz | patch -p1 --verbose || exit 1
 
 # Make sure ownerships and permissions are sane:
 chown -R root:root .
@@ -67,7 +65,7 @@ CFLAGS="$SLKCFLAGS" \
   --build=$ARCH-$DISTRO-linux
 
 # Build and install:
-make -j6 || exit 1
+make -j12 || exit 1
 make install DESTDIR=$PKG || exit 1
 
 # Add a documentation directory:

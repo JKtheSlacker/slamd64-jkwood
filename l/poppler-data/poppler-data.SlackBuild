@@ -21,7 +21,7 @@
 
 
 PKGNAM=poppler-data
-VERSION=${VERSION:-0.1}
+VERSION=${VERSION:-0.1.1}
 ARCH=${ARCH:-noarch}
 BUILD=${BUILD:-1}
 DISTRO=${DISTRO:-slamd64}
