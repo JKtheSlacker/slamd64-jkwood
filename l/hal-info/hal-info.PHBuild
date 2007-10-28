@@ -3,6 +3,7 @@
 # Slackware build script for hal-info
 
 # Copyright 2007  Robby Workman  (http://rlworkman.net)
+# Copyright 2007  Fred Emmott (www.slamd64.com)
 # All rights reserved.
 #
 # Redistribution and use of this script, with or without modification, is
@@ -21,32 +22,21 @@
 # WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
 # OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 # ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-#
-# Modified by Fred Emmott <mail@fredemmott.co.uk>
 
-CWD=$(pwd)
-TMP=${TMP:-/tmp}
-PRGNAM=hal-info
-PKG=$TMP/package-$PRGNAM
-
-
-VERSION=20070618
+PKGNAM=hal-info
+VERSION=20071011
 ARCH=noarch
-BUILD=${BUILD:-1}
-DISTRO=${DISTRO:-slamd64}
+BUILD=1
 
-if [ $DISTRO = slackware ]; then
-	PKGARCH=$ARCH
-else
-	PKGARCH=${ARCH}_${DISTRO}
-fi
+. /etc/pkghelpers
+pkghelpers_env
 
 rm -rf $PKG
 mkdir -p $TMP $PKG
 cd $TMP || exit 1
-rm -rf $PRGNAM-$VERSION
-tar xzvf $CWD/$PRGNAM-$VERSION.tar.gz || exit 1
-cd $PRGNAM-$VERSION || exit 1
+rm -rf $PKGNAM-$VERSION
+tar xzvf $CWD/$PKGNAM-$VERSION.tar.gz || exit 1
+cd $PKGNAM-$VERSION || exit 1
 
 # Make sure ownerships and permissions are sane:
 chown -R root:root .
@@ -64,12 +54,13 @@ find . \
 make || exit 1
 make install DESTDIR=$PKG || exit 1
 
-mkdir -p $PKG/usr/doc/$PRGNAM-$VERSION
+mkdir -p $PKG/usr/doc/$PKGNAM-$VERSION
 cp -a AUTHORS COPYING HACKING INSTALL NEWS README \
-  $PKG/usr/doc/$PRGNAM-$VERSION
+  $PKG/usr/doc/$PKGNAM-$VERSION
 
 mkdir -p $PKG/install
 cat $CWD/slack-desc > $PKG/install/slack-desc
 
 cd $PKG
-/sbin/makepkg -l y -c n $TMP/$PRGNAM-$VERSION-$PKGARCH-$BUILD.tgz
+pkghelpers_fixup
+pkghelpers_makepkg
