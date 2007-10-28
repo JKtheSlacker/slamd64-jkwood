@@ -1,31 +1,36 @@
 #!/bin/sh
-# rc.modules 3.1  Thu Aug 28 14:01:35 PDT 2003  pjv <volkerdi@slackware.com>
+# rc.modules 12.1  Mon Oct 15 14:54:40 CDT 2007  pp (rb), pjv
 #
 # This file loads extra drivers into the Linux kernel.
-# The modules will be looked for under /lib/modules/<kernel version number>
-# On systems using KMOD this file will be mostly commented out, but is still
-# useful for loading selected modules at boot time.
 #
-# Most Linux kernel modules will accept extra options such as IRQ or base
-# address, or to set various modes (such as 10baseT or BNC, etc).  The Linux
-# kernel source is the best place to look for extra documentation for the
-# various modules.  This can be found under /usr/src/linux/Documentation if
-# you've the installed the kernel sources.  Also, the kernel source docs are
-# present on the Slackware CD in the /docs/linux-2.x.x directory.
+# The modules will be looked for under /lib/modules/<kernel version number>
+# On systems using KMOD and hotplug or udev this file should remain mostly
+# commented out.  Nearly all hardware device modules will be loaded
+# automatically on such systems.  This file should only be used when hotplug
+# or udev are not loading a module that you require, or if you are not using
+# hotplug or udev (which is going to become increasingly impossible...), or
+# if you want to force a particular module to be loaded where alternatives
+# exist.
+#
+# Many Linux kernel modules will accept extra options.  The Linux kernel
+# source is the best place to look for extra documentation for the various
+# modules.  This can be found under /usr/src/linux/Documentation if you've
+# the installed the kernel sources. 
 #
 # NOTE:  This may not be a complete list of modules.  If you don't see what
 # you're looking for, look around in /lib/modules/2.x.x/ for an appropriate
 # module.  Also, if any problems arise loading or using these modules, try
 # compiling and installing a custom kernel that contains the support instead.
 # That always works. ;^)
-#
+
+# Determine the version of the running kernel:
+RELEASE=$(uname -r)
 
 ### Update module dependencies ###
-RELEASE=`uname -r`
 # If /usr is mounted and we have 'find', we can try to take a shortcut:
 if [ -x /usr/bin/find -a -e /lib/modules/$RELEASE/modules.dep \
      -a /lib/modules/$RELEASE/modules.dep -nt /etc/modules.conf ]; then
-  NEWMODS="`/usr/bin/find /lib/modules/$RELEASE -type f -newer /lib/modules/$RELEASE/modules.dep`"
+  NEWMODS="$(/usr/bin/find /lib/modules/$RELEASE -type f -mindepth 2 -newer /lib/modules/$RELEASE/modules.dep)"
   # Only rebuild dependencies if new module(s) are found:
   if [ ! "" = "$NEWMODS" ]; then
     echo "Updating module dependencies for Linux $RELEASE:"
@@ -38,54 +43,193 @@ else # we don't have find, or there is no existing modules.dep, or it is out of 
   /sbin/depmod -A
 fi
 
+### Mouse support:
+# PS/2 mouse support:
+# The default in Slackware is to use proto=imps because that works with the
+# most types of mice out of the box.  For example, using proto=any will
+# completely break the mouse if you change consoles with several models of KVM
+# switches.
+#
+# This is commented out here because a better place to configure the options
+# for the psmouse module is in /etc/modprobe.d/psmouse.
+#
+#/sbin/modprobe psmouse proto=imps
+#
+# Serial (RS-232, COM port) mouse support:
+#/sbin/modprobe sermouse
+#
+# Microsoft/ATI XL busmouse support:
+# Microsoft busmouse (also called Inport mice) is connected to an 
+# expansion board using a round connector with 9 pins.  Be aware that 
+# several vendors talk about 'Microsoft busmouse' and actually mean 
+# PS/2 busmouse -- so count the pins on the connector.  This driver
+# also supports the ATIXL mouse, a rare mouse that is connected to the
+# back of an ATI video card:
+#/sbin/modprobe inport 
+#
+# Logitech mouse connected to a proprietary interface card. It's
+# generally a round connector with 9 pins.  Note that the newer mice
+# made by Logitech don't use the Logitech protocol anymore; for those,
+# you don't need this module:
+#/sbin/modprobe logibm 
+#
+# IBM PC110 palmtop digitizer pad:
+#/sbin/modprobe pc110pad
+
+#### ACPI support ###
+# Advanced Configuration and Power Interface (ACPI) support for Linux
+# requires an ACPI compliant platform (hardware/firmware), and assumes
+# the presence of OS-directed configuration and power management (OSPM)
+# software.  Linux ACPI provides a robust functional replacement for
+# several legacy configuration and power management interfaces, including
+# the Plug-and-Play BIOS specification (PnP BIOS), the MultiProcessor
+# Specification (MPS), and the Advanced Power Management (APM)
+# specification.  If both ACPI and APM support are configured, whichever
+# is loaded first shall be used.  Also note that in many cases udev will
+# load the required modules if ACPI is found to be active.
+# ACPI can be disabled with the "noacpi" boot option.
+# Also note that ACPI is blacklisted with our default kernel
+# configurations on machines with a BIOS older than 2001-01-01.  If you
+# still want to try it, you'll need to use the "acpi=force" boot option.
+#
+# AC Adapter (indicates whether a system is on AC, or not):
+#/sbin/modprobe ac
+#
+# Battery (adds battery information through/proc/acpi/battery):
+#/sbin/modprobe battery
+#
+# Button (handles events on the power, sleep and lid buttons):
+#/sbin/modprobe button
+#
+# Video.  This driver implements the ACPI Extensions For Display Adapters
+# for integrated graphics devices on motherboard, as specified in ACPI 2.0
+# Specification, Appendix B, allowing some basic control like defining the
+# video POST device, retrieving EDID information, or to setup a video output.
+# Note that this is an reference implementation only, and it may or may not
+# work for your integrated video device.
+#/sbin/modprobe video
+#
+# Fan (adds support for ACPI fan control and status):
+#/sbin/modprobe fan
+#
+# Dock (adds support for ACPI controlled docking stations):
+#/sbin/modprobe dock
+#
+# Bay (adds support for ACPI controlled removable drive bays such as the
+# IBM UltraBay or the Dell Module Bay):
+#/sbin/modprobe bay
+#
+# Processor.  This driver installs ACPI as the idle handler for Linux, and
+# uses ACPI C2 and C3 processor states to save power, on systems that
+# support it.  It is required by several flavors of cpufreq Performance-
+# state drivers.
+#/sbin/modprobe processor
+#
+# Thermal.  This driver adds support for ACPI thermal zones.  Most mobile and
+# some desktop systems support ACPI thermal zones.  It is HIGHLY recommended
+# that this option be enabled, as your processor(s) may be damaged without it.
+#/sbin/modprobe thermal
+#
+# Memory.  This driver adds support for ACPI Memory Hotplug.  This driver
+# provides support for fielding notifications on ACPI memory devices
+# (PNP0C80) which represent memory ranges that may be onlined or offlined
+# during runtime.  Enabling this driver assumes that your platform hardware
+# and firmware have support for hot-plugging physical memory.  If your
+# system does not support physically adding or ripping out memory DIMMs at
+# some platform defined granularity (individually or as a bank) at runtime,
+# then you need not enable this driver.
+#/sbin/modprobe memory
+#
+# Container (EXPERIMENTAL -- allows _physical_ insertion and removal of CPUs
+# and memory on machines that support it):
+#/sbin/modprobe container
+#
+# ASUS/Medion Laptop Extras.  This driver provides support for extra features
+# of ACPI-compatible ASUS laptops.  As some of Medion laptops are made by
+# ASUS, it may also support some Medion laptops (such as 9675 for example).
+# It makes all the extra buttons generate standard ACPI events that go through
+# /proc/acpi/events, and (on some models) adds support for changing the
+# display brightness and output, switching the LCD backlight on and off, and,
+# most importantly, allows you to blink those fancy LEDs intended for
+# reporting mail and wireless status.  All settings are changed via
+# /proc/acpi/asus directory entries.  Owner and group for these entries can be
+# set with asus_uid and asus_gid module parameters.
+# More information and a userspace daemon for handling the extra buttons:
+# http://sourceforge.net/projects/acpi4asus/
+#/sbin/modprobe asus_acpi
+#
+# ThinkPad ACPI Laptop Extras.  This is a driver for the IBM and Lenovo
+# ThinkPad laptops.  It adds support for Fn-Fx key combinations, Bluetooth
+# control, video output switching, ThinkLight control, UltraBay eject and
+# more.  For more information about this driver see:
+# Documentation/thinkpad-acpi.txt and http://ibm-acpi.sf.net/
+#/sbin/modprobe thinkpad_acpi
+#
+# Toshiba Laptop Extras.  This driver adds support for access to certain
+# system settings on "legacy free" Toshiba laptops.  These laptops can be
+# recognized by their lack of a BIOS setup menu and APM support.  On these
+# machines, all system configuration is handled through the ACPI.  This
+# driver is required for access to controls not covered by the general ACPI
+# drivers, such as LCD brightness and video output.  Configuration is
+# accessed by reading and writing text files in the /proc tree.  Furthermore,
+# no power management functions are exposed, as those are handled by the
+# general ACPI drivers.
+# More information about this driver is available at:
+# http://memebeam.org/toys/ToshibaAcpiDriver
+#/sbin/modprobe toshiba_acpi
+#
+#
+# See also the ACPI CPU frequency scaling driver in the "CPU frequency
+# scaling modules" section below.
+
 #### APM support ###
 # APM is a BIOS specification for saving power using several different
-# techniques. This is mostly useful for battery powered laptops.
+# techniques.  This is mostly useful for battery powered laptops.
+# If a kernel supports ACPI it will always be built in, not a module.
+# APM is considered obsolete on newer hardware -- most things have ACPI.
 #/sbin/modprobe apm
 
-#### PC parallel port support ###
-#if cat /proc/ksyms | grep "\[parport_pc\]" 1> /dev/null 2> /dev/null ; then
-#  echo "parport0 is built-in, not loading module" > /dev/null
-#else
-#  if [ -r /lib/modules/$RELEASE/kernel/drivers/parport/parport_pc.o \
-#       -o -r /lib/modules/$RELEASE/kernel/drivers/parport/parport_pc.o.gz \
-#       -o -r /lib/modules/$RELEASE/kernel/drivers/parport/parport_pc.ko ]; then
-#    # Generic setup example:
-#    /sbin/modprobe parport_pc
-#    # Hardware specific setup example  (PLIP requires an IRQ, and the
-#    # ECP protocol requires a DMA channel)
-#    # This may also give better performance in general.
-#    #/sbin/modprobe parport_pc io=0x378 irq=7 dma=1
-#  fi
-#fi
+# Enable PC speaker support:
+#/sbin/modprobe pcspkr
 
-#### Parallel printer support ###
-#if cat /proc/ksyms | grep "\[lp\]" 1> /dev/null 2> /dev/null ; then
-#  echo "lp support built-in, not loading module" > /dev/null
-#else
-#  if [ -r /lib/modules/$RELEASE/kernel/drivers/char/lp.o \
-#       -o -r /lib/modules/$RELEASE/kernel/drivers/char/lp.o.gz \
-#       -o -r /lib/modules/$RELEASE/kernel/drivers/char/lp.ko ]; then
-#    /sbin/modprobe lp
-#  fi
-#fi
+### Built-in PC parallel port support ###
+# Generic setup example.  Attempt to load by default, since it usually
+# won't hurt.  Some (most?) people may want to comment the line below
+# and look into better functioning and performing hardware specific
+# options as described later on in this section.
+#
+/sbin/modprobe -q parport_pc 2> /dev/null
+# Hardware specific setup example  (PLIP requires an IRQ, and the
+# ECP protocol requires a DMA channel)
+# This may also give better performance in general.
+#/sbin/modprobe parport_pc io=0x378 irq=7 dma=1
 
-### Filesystem Quota support ###
-if grep -q quota /etc/fstab ; then
-  #/sbin/modprobe quota_v1
-  /sbin/modprobe quota_v2
-fi
+### PCI parallel/serial card support:
+# If your serial/parallel ports are on a PCI card, uncomment the
+# line below and comment the section above that loads parport_pc.
+#/sbin/modprobe parport_serial
+
+### Parallel printer support ###
+# This should be safe to try to load by default.
+/sbin/modprobe -q lp 2> /dev/null
 
 ### Parallel port IP ###
 #/sbin/modprobe plip
+
+### Filesystem Quota support ###
+if /bin/grep -q quota /etc/fstab ; then
+  # /sbin/modprobe quota_v1
+  /sbin/modprobe quota_v2
+fi
 
 ### AGP (Accelerated Graphics Port) GART support ###
 # This module takes care of programming the GART (part of your motherboard's
 # chipset that handles gathering data from memory and passing it to the
 # card) and enables faster AGP transfers.  The AGP GART module is required
 # to use AGP features of your 3D rendering video card.  You'll need this to
-# use XFree86's direct rendering support, for example.
-/sbin/modprobe agpgart
+# with most cards (nVidia's official drivers that include their own GART
+# support being a notable exception) to use X11's direct rendering support.
+/sbin/modprobe agpgart 2> /dev/null
 
 ### non-IDE CD-ROM drive support ###
 # These modules add CD-ROM drive support.  Most of these drivers will probe
@@ -107,16 +251,15 @@ fi
 #/sbin/modprobe cdu31a cdu31a_port=<I/O address> cdu31a_irq=<interrupt>
 #/sbin/modprobe cm206 cm206=<I/O address>,<IRQ>
 #/sbin/modprobe gscd gscd=<I/O address>
-#/sbin/modprobe mcd mcd=<I/O address>,<IRQ>
 #/sbin/modprobe mcdx mcdx=<I/O address>,<IRQ>
 #/sbin/modprobe optcd optcd=<I/O address>
 # Below, this last number is "1" for SoundBlaster Pro card, or "0" for a clone.
 #/sbin/modprobe sbpcd sbpcd=<I/O address>,1
-#/sbin/modprobe sonycd535 sonycd535=<I/O address>
 #/sbin/modprobe sjcd sjcd=<I/O address>
+#/sbin/modprobe sonycd535 sonycd535=<I/O address>
 
 # CD-ROM drives on ISP16, MAD16 or Mozart sound card:
-#/sbin/modprobe isp16=[<port>[,<irq>[,<dma>]]][[,]<drive_type>]
+#/sbin/modprobe isp16 isp16_cdrom_base=<port> isp16_cdrom_irq=<irq> isp16_cdrom_dma=<dma> isp16_cdrom_type=<drive_type>
 #  where the values are one of: port=0x340,0x320,0x330,0x360
 #                               irq=0,3,5,7,9,10,11
 #                               dma=0,3,5,6,7
@@ -130,35 +273,36 @@ fi
 #/sbin/modprobe slip
 
 ## Load PPP:
-## Check kernel version to determine module names to use
-#if [ "`uname -r | cut -f 1,2 -d .`" = "2.2" ]; then
-#  # This module is for PPP support:
-#  /sbin/modprobe ppp
-#else # assume 2.4 or newer
-#  # This module is for PPP support:
-#  /sbin/modprobe ppp_generic
-#  # This PPP plugin supports PPP over serial lines:
-#  /sbin/modprobe ppp_async
-#  # Use this plugin instead for HDLC (used for high-speed leased lines like T1/E1)
-#  # /sbin/modprobe ppp_synctty
-#fi
+# This module is for PPP support:
+#/sbin/modprobe ppp_generic
+# This PPP plugin supports PPP over serial lines:
+#/sbin/modprobe ppp_async
+# Use this plugin instead for HDLC (used for high-speed leased lines like T1/E1)
+#/sbin/modprobe ppp_synctty
+
 ## This module provides compression for PPP (optional):
 ##/sbin/modprobe ppp_deflate
 
 ### USB Host Controllers:
-# Universal Host Controller Interface (Intel standard):
-#/sbin/modprobe usb-uhci
-# Universal Host Controller Interface (alternate JE):
-#/sbin/modprobe uhci
+# Enhanced Host Controller Interface (USB 2.0)
+#/sbin/modprobe ehci-hcd
 # Open Host Controller Interface (Compaq/Microsoft/National standard):
-#/sbin/modprobe usb-ohci
+#/sbin/modprobe ohci-hcd
+# Universal Host Controller Interface (Intel/Via standard):
+#/sbin/modprobe uhci-hcd
+# ISP1160/ISP1161 USB Host Controllers
+#/sbin/modprobe isp116x-hcd
+# SL811HS USB Host Controller
+#/sbin/modprobe sl811-hcd
+# SL811HS PCMCIA/CF USB Host Controller
+#/sbin/modprobe sl811_cs
 
 ### USB device support:
 # (Note that once you've loaded USB hub support most USB devices will
 # trigger the kernel to load their modules automatically)
 # USB "Human Interface Device" driver; handles most USB mice, joysticks,
 # gamepads, steering wheels, keyboards, trackballs and digitizers.
-#/sbin/modprobe hid
+#/sbin/modprobe usbhid
 # Simple HIDBP USB mouse driver, if hid doesn't work:
 #/sbin/modprobe usbmouse
 # Simple HIDBP USB keyboard driver, if hid doesn't work:
@@ -166,15 +310,15 @@ fi
 # Wacom Graphire and Intuos tablet driver:
 #/sbin/modprobe wacom
 # Logitech WingMan Force joystick:
-#/sbin/modprobe wmforce
+#/sbin/modprobe iforce
 # USB audio:
 #/sbin/modprobe audio
 # USB modem support:
-#/sbin/modprobe acm
+#/sbin/modprobe cdc-acm
 # USB serial converter:
 #/sbin/modprobe usbserial
 # USB printer support:
-#/sbin/modprobe printer
+#/sbin/modprobe usblp 
 # IBM "C-It" USB video camera:
 #/sbin/modprobe ibmcam framerate=1
 # USB OV511 Camera support:
@@ -183,8 +327,6 @@ fi
 #/sbin/modprobe pegasus
 # Kawasaki USB ethernet controller support:
 #/sbin/modprobe kaweth
-# USB Kodak DC-2xx Camera support:
-#/sbin/modprobe dc2xx
 # USB Mustek MDC800 Digital Camera Support:
 #/sbin/modprobe mdc800
 # USB Mass Storage support:
@@ -199,12 +341,8 @@ fi
 #/sbin/modprobe dsbr100
 # USB Bluetooth support:
 #/sbin/modprobe bluetooth
-# USB scanner support (requires patched SANE from http://fachschaft.cup.uni-muenchen.de/~neukum/scanner.html):
-#/sbin/modprobe scanner
 
 ### USB event drivers:
-# Keyboard input:
-#/sbin/modprobe keybdev
 # Mouse input:
 #/sbin/modprobe mousedev
 # Joystick input:
@@ -212,28 +350,29 @@ fi
 # Generic event reporting device:
 #/sbin/modprobe evdev
 
-### OSS Sound support ###
-### (Old Sound System ;-)
+### ALSA (Advanced Linux Sound Architecture) support: 
 # Sound Blaster Pro/16 support:
-#/sbin/modprobe sb io=0x220 irq=5 dma=3 dma16=5 mpu_io=0x300
+#/sbin/modprobe snd-sb16 port=0x220 irq=5 dma8=3 dma16=5 mpu_port=0x300
 # Sound Blaster Live support:
-#/sbin/modprobe emu10k1
-# MAD16 support:
-#/sbin/modprobe mad16 io=0x530 irq=7 dma=0 dma16=1
+#/sbin/modprobe snd-emu10k1
 # AD1816(A) sound driver:
-#/sbin/modprobe modprobe ad1816 io=0x530 irq=5 dma=1 dma2=3 ad1816_clockfreq=33000
+#/sbin/modprobe snd-ad1816a port=0x530 irq=5 dma1=1 dma2=3
 # Crystal CS4232 based (PnP) cards:
-#/sbin/modprobe cs4232
-# ES1370 support, such as Sound Blaster 128PCI:
-#/sbin/modprobe es1370
-# ES1371 support, such as Sound Blaster 64V PCI:
-#/sbin/modprobe es1371
+#/sbin/modprobe snd-cs4232
+# ES1370 (Ensoniq AudioPCI ES1370) support.  This is for some Creative
+# Labs Sound Blaster PCI64/128 (that use the ES1370 chipset), and
+# Ensoniq AudioPCI-97:
+#/sbin/modprobe snd-ens1370
+# ES1371 (Ensoniq AudioPCI ES1371/73) support.  This is for some Creative
+# Labs Sound Blaster PCI64/128 (that use the ES1371/73 chipset), Ectiva
+# EV1938, Vibra PCI128, and Ensoniq AudioPCI ES1371/73:
+#/sbin/modprobe snd-ens1371
 # ESS Maestro, Maestro2, Maestro2E:
-#/sbin/modprobe maestro
+#/sbin/modprobe snd-es1968 
 # ESS Maestro3/Allegro:
-#/sbin/modprobe maestro3
-# VIA VT82Cxxx Audio Controller
-#/sbin/modprobe via82cxxx_audio
+#/sbin/modprobe snd-maestro3
+# VIA VT82xx Audio Controller
+#/sbin/modprobe snd-via82xx
 # (For information on configuring other sound cards with Linux,
 # see the documentation in /usr/src/linux/Documentation/sound/,
 # and /usr/src/linux/Documentation/Configure.help.
@@ -245,12 +384,9 @@ fi
 ### Next, you must load a module for your gameport.
 # Classic ISA/PnP gameports:
 #/sbin/modprobe ns558
-# Crystal SoundFusion gameports:
-#/sbin/modprobe cs461x
-# Aureal Vortex and Trident 4DWave gameports:
-#/sbin/modprobe pcigame
 # SoundBlaster Live! gameports:
 #/sbin/modprobe emu10k1-gp
+# Many soundcards had their gameport support bundled in sound drivers
 ### Drivers for various joystick devices ###
 # Analog joysticks and gamepads:
 #/sbin/modprobe analog
@@ -315,16 +451,14 @@ fi
 
 ### Network device support ###
 # Most of these drivers will probe automatically for the card if you don't
-# specify an I/O address and IRQ.  But, the NE2000 driver needs at least the
-# I/O.  For complete information, see the net-modules.txt file that comes
-# with the Linux 2.2.x source code.  This file can also be found on the
-# Slackware CD-ROM in the /docs/linux-2.2.x/ directory.
+# specify an I/O address and IRQ.  
 #
 # First, if setup probing found a network card, there may be an 'rc.netdevice'
 # file that we should run to load the network module:
 if [ -x /etc/rc.d/rc.netdevice ]; then
   . /etc/rc.d/rc.netdevice
 fi
+
 ### Ethernet cards based on the 8390 chip.
 # 3com 3c503 support:
 #/sbin/modprobe 3c503 
@@ -373,7 +507,7 @@ fi
 #/sbin/modprobe apricot
 # Generic ARCnet support:
 #/sbin/modprobe arcnet
-# AT1700/1720 support:
+# AT1700/1720 & Fujitsu FMV-181/182/183/184 support:
 #/sbin/modprobe at1700
 # AT-LAN-TEC/RealTek pocket adapter support:
 #/sbin/modprobe atp
@@ -393,8 +527,6 @@ fi
 #/sbin/modprobe eepro
 # Intel EtherExpress PRO/100 PCI support:
 #/sbin/modprobe eepro100
-# Intel EtherExpress PRO/1000 PCI support:
-#/sbin/modprobe e1000
 # Intel EtherExpress16 support:
 #/sbin/modprobe eexpress
 # SMC EtherPower II 9432 PCI support:
@@ -403,8 +535,6 @@ fi
 #/sbin/modprobe eth16i
 # DEC EtherWorks 3 support:
 #/sbin/modprobe ewrk3
-# Fujitsu FMV-181/182/183/184 support:
-#/sbin/modprobe fmv18x
 # HP 10/100VG PCLAN (ISA, EISA, PCI) support:
 #/sbin/modprobe hp100
 # IBM Tropic chipset based adapter support:
@@ -485,24 +615,40 @@ fi
 ### Filesystem support ###
 #/sbin/modprobe adfs
 #/sbin/modprobe affs
+#/sbin/modprobe autofs4
 #/sbin/modprobe coda
+#/sbin/modprobe cramfs
+#/sbin/modprobe exportfs
 #/sbin/modprobe ext2
+#/sbin/modprobe ext3
 #/sbin/modprobe fat
+#/sbin/modprobe fuse
 #/sbin/modprobe hfs
+#/sbin/modprobe hfsplus
 #/sbin/modprobe hpfs
+#/sbin/modprobe intermezzo
 #/sbin/modprobe isofs
+#/sbin/modprobe jfs
 #/sbin/modprobe minix
 #/sbin/modprobe msdos
 #/sbin/modprobe ncpfs
 #/sbin/modprobe nfs
 #/sbin/modprobe ntfs
+#/sbin/modprobe ocfs2
 #/sbin/modprobe qnx4
+#/sbin/modprobe reiserfs
+#/sbin/modprobe relayfs
 #/sbin/modprobe romfs
 #/sbin/modprobe smbfs
+#/sbin/modprobe sysfs
 #/sbin/modprobe sysv
+#/sbin/modprobe tmpfs
+#/sbin/modprobe udf
 #/sbin/modprobe ufs
 #/sbin/modprobe umsdos
+#/sbin/modprobe usbfs
 #/sbin/modprobe vfat
+#/sbin/modprobe xfs
 
 ### RAID (Multiple Devices) support ###
 #/sbin/modprobe linear
@@ -510,21 +656,24 @@ fi
 #/sbin/modprobe raid1
 #/sbin/modprobe raid5
 
-# *** THIS IS STILL LOADED BY DEFAULT ***
+# Note: this *IS NOT* needed to burn discs with 2.6.x or newer kernels.
+#
 # SCSI emulation support.  This will provide SCSI host adapter emulation
 # for IDE ATAPI devices, and will allow you to use a SCSI device driver
 # instead of a native ATAPI driver.  This is useful if you have an ATAPI
 # device for which no native driver has been written (for example, an ATAPI
-# PD-CD or CD-RW drive); you can then use this emulation together with an
-# appropriate SCSI device driver.  Note that this option does NOT allow you
-# to attach SCSI devices to a box that doesn't have a SCSI host adapter
-# installed.  Also, you'll need to exclude your CD-RW from being grabbed by
-# the normal ATAPI driver by passing a flag to the kernel at boot time.
+# PD-CD, CD-RW, or DVD-RW drive);  you can then use this emulation together
+# with an # appropriate SCSI device driver.  Note that this option does not
+# allow you to attach SCSI devices to a box that doesn't have a SCSI host
+# adapter installed.  :-)  Also, you'll need to tell the ide-scsi module
+# which device is your burner so that the normal ATAPI driver won't grab it
+# first.  This is done by passing a flag to the kernel at boot time.
 # If you're using LILO, add this:  append="hdc=ide-scsi"
 # Replace "hdc" with the appropriate device name.
-/sbin/modprobe ide-scsi
+#
+#/sbin/modprobe ide-scsi
 
-# SCSI kernel support:
+### SCSI kernel support:
 #/sbin/modprobe scsi_mod
 #/sbin/modprobe scsi_syms
 #/sbin/modprobe sd_mod
@@ -532,12 +681,9 @@ fi
 #/sbin/modprobe sr_mod
 #/sbin/modprobe st
 
-# SCSI controller support:
-# NCR53c7,8xx SCSI support (note there is another driver for 
-# the 53c8xx family below):
-#/sbin/modprobe 53c7,8xx
-# AM53/79C974 PCI SCSI support:
-#/sbin/modprobe AM53C974
+### SCSI controller support:
+# NCR53c7xx SCSI support: 
+#/sbin/modprobe 53c7xx
 # BusLogic MultiMaster and FlashPoint SCSI support:
 #/sbin/modprobe BusLogic
 # NCR53c406a SCSI support:
@@ -563,9 +709,6 @@ fi
 #/sbin/modprobe dtc
 # EATA ISA/EISA/PCI (DPT and generic EATA/DMA-compliant boards) support:
 #/sbin/modprobe eata
-# EATA-DMA [Obsolete -- use above driver] (DPT, NEC, AT&T, SNI, AST,
-# Olivetti, Alphatronix) support:
-#/sbin/modprobe eata_dma
 # EATA-PIO (old DPT PM2001, PM2012A) support:
 #/sbin/modprobe eata_pio
 # Future Domain 16xx SCSI/AHA-2920A support:
@@ -580,16 +723,14 @@ fi
 #/sbin/modprobe in2000
 # Initio 91XXU(W) SCSI support:
 #/sbin/modprobe initio
-# AMI MegaRAID support:
+# LSI Logic MegaRAID support (new driver):
+#/sbin/modprobe megaraid_mbox
+# LSI Logic MegaRAID support (legacy driver):
 #/sbin/modprobe megaraid
 # NCR53C8XX SCSI support:
-#/sbin/modprobe ncr53c8xx
+#/sbin/modprobe sym53c8xx
 # PAS16 SCSI support:
 #/sbin/modprobe pas16
-# PCI2000 support:
-#/sbin/modprobe pci2000
-# PCI2220i support:
-#/sbin/modprobe pci2220i
 # IOMEGA parallel port (ppa - older parallel Zip drives):
 #/sbin/modprobe ppa
 # PSI240i support:
@@ -598,10 +739,6 @@ fi
 #/sbin/modprobe qlogicfas
 # QLogic ISP2100 SCSI support:
 #/sbin/modprobe qlogicfc
-# This driver works for all QLogic PCI SCSI host adapters (IQ-PCI,
-# IQ-PCI-10, IQ_PCI-D) except for the PCI-basic card. (This latter
-# card is supported by the "AM53/79C974 PCI SCSI" driver):
-#/sbin/modprobe qlogicisp
 # Seagate ST-02 and Future Domain TMC-8xx SCSI support:
 #/sbin/modprobe seagate
 # Symbios Logic sym53c416 support:
@@ -617,33 +754,14 @@ fi
 # Western Digital 7000 SCSI support:
 #/sbin/modprobe wd7000
 
-### Mouse support:
-# This is a rare type of busmouse that is connected to the back of an
-# ATI video card:
-#/sbin/modprobe atixlmouse
-# Logitech mouse connected to a proprietary interface card. It's
-# generally a round connector with 9 pins. Note that the newer mice
-# made by Logitech don't use the Logitech protocol anymore; for those,
-# you don't need this option:
-#/sbin/modprobe busmouse
-# Microsoft busmouse support.  These animals (also called Inport mice) are
-# connected to an expansion board using a round connector with 9 pins.  Be
-# aware that several vendors talk about 'Microsoft busmouse' and actually
-# mean PS/2 busmouse -- so count the pins on the connector:
-#/sbin/modprobe msbusmouse
-# C&T 82C710 mouse port support (as on TI Travelmate):
-#/sbin/modprobe qpmouse
-# IBM PC110 palmtop digitizer pad:
-#/sbin/modprobe pc110pad
-
-# Floppy drive support:
+### Floppy drive support:
 # (Most Linux kernels should already contain this)
 #/sbin/modprobe floppy
 
-# Floppy tape support (such as Colorado Jumbo 250 or other QIC-80 drives):
+### Floppy tape support (such as Colorado Jumbo 250 or other QIC-80 drives):
 #/sbin/modprobe ftape
 
-# IP masquerading modules:
+### IP masquerading modules:
 # These modules are used with IP masquerading, a process which allows you to
 # use a Linux box connected to the Internet (via PPP or SLIP, or some other
 # means) as a gateway for other Linux, Windows, Macintosh boxes on your local
@@ -684,7 +802,7 @@ fi
 # that up correctly.
 #
 # Special modules for iptables. See also "man iptables" for information about
-# that powerfull firewall tool.
+# that powerful firewall tool.
 #
 #/sbin/modprobe ipt_conntrack
 #/sbin/modprobe ip_conntrack
@@ -693,18 +811,51 @@ fi
 #/sbin/modprobe ip_nat_ftp
 #/sbin/modprobe ip_nat_irc
 #/sbin/modprobe ip_nat_snmp_basic
-#
-# These modules below are for ipchains (kernel 2.2.x). You can install ipchains
-# from /pasture. To use ipchains with newer kernels, you'll need this: 
-# /sbin/modprobe ipchains
-#
-#/sbin/modprobe ip_masq_autofw
-#/sbin/modprobe ip_masq_cuseeme
-#/sbin/modprobe ip_masq_ftp
-#/sbin/modprobe ip_masq_irc
-#/sbin/modprobe ip_masq_mfw
-#/sbin/modprobe ip_masq_portfw
-#/sbin/modprobe ip_masq_quake
-#/sbin/modprobe ip_masq_raudio
-#/sbin/modprobe ip_masq_user
-#/sbin/modprobe ip_masq_vdolive
+
+### Kernel security models:
+# Default Linux Capabilities
+# This enables the "default" Linux capabilities functionality.
+/sbin/modprobe capability
+# BSD Secure Levels
+# An implementation of BSD Secure Levels for Linux.
+# See Documentation/seclvl.txt in the Linux kernel source
+# for information about how this works.
+#/sbin/modprobe seclvl
+
+### CPU frequency scaling modules:
+# generic ACPI P-States based driver
+#/sbin/modprobe acpi-cpufreq
+# AMD mobile K6-2/3+ PowerNow!
+#/sbin/modprobe powernow-k6
+# AMD mobile Athlon PowerNow!  
+#/sbin/modprobe powernow-k7
+# AMD Cool&Quiet PowerNow!
+#/sbin/modprobe powernow-k8
+# Intel SpeedStep using the SMI BIOS interface
+#/sbin/modprobe speedstep-smi
+# Intel SpeedStep on ICH-based chipsets
+#/sbin/modprobe speedstep-ich
+# Intel Enhanced SpeedStep 
+#/sbin/modprobe speedstep-centrino
+# Intel Pentium4/Xeon clock modulation
+#/sbin/modprobe p4-clockmod 
+# NatSemi Geode GX / Cyrix MediaGXm
+#/sbin/modprobe gx-suspmod 
+# Transmeta Crusoe / Efficeon LongRun
+#/sbin/modprobe longrun 
+# VIA Cyrix Longhaul
+#/sbin/modprobe longhaul 
+
+### CPU frequency scaling policies:
+# Powersave policy, stick frequency to the slower state.
+#/sbin/modprobe cpufreq_powersave
+# Performance policy, stick frequency to the faster state.
+#/sbin/modprobe cpufreq_performance
+# Set the frequency on demand. What you want is what you get
+#/sbin/modprobe cpufreq_ondemand
+# Same of On demand policy, but for slow switching CPUs (AMD64 e.g)
+#/sbin/modprobe cpufreq_conservative
+
+# We are done with these variables now:
+unset NEWMODS RELEASE
+
