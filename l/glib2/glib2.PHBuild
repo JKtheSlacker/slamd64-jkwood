@@ -1,0 +1,35 @@
+#!/bin/sh
+PKGNAM=glib2
+VERSION=2.12.13
+BUILD=1
+
+. /etc/pkghelpers
+pkghelpers_env
+
+rm -rf $PKG
+mkdir -p $PKG/usr
+
+cd $TMP
+rm -rf glib-$VERSION
+tar xjvf $CWD/glib-$VERSION.tar.bz2
+cd glib-$VERSION
+chown -R root:root .
+find . -perm 664 -exec chmod 644 {} \;
+CFLAGS="$SLKCFLAGS" \
+./configure \
+  --prefix=/usr \
+	--libdir=/usr/lib$LIBSUFFIX \
+  --sysconfdir=/etc \
+  --mandir=/usr/man
+make -j12 || exit 1
+make install DESTDIR=$PKG
+mkdir -p $PKG/usr/doc/glib-$VERSION
+cp -a \
+  AUTHORS COPYING NEWS README \
+  $PKG/usr/doc/glib-$VERSION
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+
+cd $TMP/package-glib2
+pkghelpers_fixup
+pkghelpers_makepkg
