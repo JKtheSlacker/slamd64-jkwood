@@ -4,8 +4,10 @@ SKIP_SERVERS="--disable-xprint"
 
 MESA_VERSION=${MESA_VERSION:-7.0.1}
 
-# Fix from SuSE for Mesa 7.0 patches to GL/ Makefile
-autoreconf -fi
+# For now, trying to compile with HAL/D-BUS leads to a compile failure
+# with a ton of undefined symbols.  Until this is rectified, we will be
+# leaving this feature off.  It's not terriby useful IMHO anyway --
+# autodetection and configuration of input devices.
 
 CFLAGS="$SLKCFLAGS" \
 ./configure \
@@ -16,9 +18,11 @@ CFLAGS="$SLKCFLAGS" \
   --infodir=/usr/info \
   --mandir=/usr/man \
   --disable-static \
+  --enable-config-dbus=no \
+  --enable-config-hal=no \
   --enable-xcsecurity \
   --with-pic \
- --with-int10=x86emu \
+  --with-int10=x86emu \
   --with-default-font-path="/usr/share/fonts/TTF,/usr/share/fonts/OTF,/usr/share/fonts/Type1,/usr/share/fonts/misc,/usr/share/fonts/75dpi/:unscaled" \
   --with-module-dir=/usr/lib$LIBSUFFIX/xorg/modules \
   --with-dri-driver-path=/usr/lib$LIBSUFFIX/xorg/modules/dri \
