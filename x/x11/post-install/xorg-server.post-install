@@ -7,6 +7,17 @@ rmdir $PKG/var/log
 rmdir $PKG/var
 
 # Fix xserver location:
-mv $PKG/usr/lib/xserver etc/X11
+mkdir -p $PKG/etc/X11
+mv $PKG/usr/lib/xserver $PKG/etc/X11
 ( cd $PKG/usr/lib ; ln -sf ../../etc/X11/xserver . )
+mv $PKG/etc/X11/xserver/SecurityPolicy $PKG/etc/X11/xserver/SecurityPolicy.new
+
+# While I hate to have X11 take over another generic-sounding
+# piece of prime filesystem real estate, this symlink will
+# direct (for now) proprietary X drivers into the corrent
+# location:
+( cd $PKG/usr/lib
+  rm -rf modules
+  ln -sf xorg/modules .
+)
 
