@@ -286,7 +286,7 @@ mkdir -p $SLACK_X_BUILD_DIR
         SRCDIRBUILD=$BUILD
       fi
       if [ -r $CWD/makepkg/${PKGNAME} ]; then
-        . $CWD/makepkg/${PKGNAME}
+        BUILD=$MODBUILD . $CWD/makepkg/${PKGNAME}
       else
         makepkg -l y -c n ${SLACK_X_BUILD_DIR}/x11-${x_source_dir}-${VERSION}-${PKGARCH}${PKGARCHSUFFIX}-${SRCDIRBUILD}.tgz
       fi
