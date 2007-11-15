@@ -1,8 +1,8 @@
 # Servers to build:
-BUILD_SERVERS="--enable-xorg --enable-xvfb --enable-xnest --enable-dmx"
-SKIP_SERVERS="--disable-xprint"
+BUILD_SERVERS="--enable-xorg --enable-xvfb --enable-xnest"
+SKIP_SERVERS="--disable-xprint --disable-dmx"
 
-MESA_VERSION=${MESA_VERSION:-7.0.1}
+MESA_VERSION=${MESA_VERSION:-7.0.2}
 
 # For now, trying to compile with HAL/D-BUS leads to a compile failure
 # with a ton of undefined symbols.  Until this is rectified, we will be
@@ -18,8 +18,6 @@ CFLAGS="$SLKCFLAGS" \
   --infodir=/usr/info \
   --mandir=/usr/man \
   --disable-static \
-  --enable-config-dbus=no \
-  --enable-config-hal=no \
   --enable-xcsecurity \
   --with-pic \
   --with-int10=x86emu \
