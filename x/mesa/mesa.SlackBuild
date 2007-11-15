@@ -21,7 +21,7 @@
 
 
 PKGNAM=mesa
-VERSION=${VERSION:-7.0.1}
+VERSION=${VERSION:-7.0.2}
 ARCH=${ARCH:-x86_64}
 BUILD=${BUILD:-1}
 DISTRO=${DISTRO:-slamd64}
@@ -83,6 +83,9 @@ find . -perm 555 -exec chmod 755 {} \;
 
 # Patch to build into "/usr":
 zcat $CWD/mesa.linux-dri-$MESAARCH.diff.gz | patch -p1 --verbose  || exit 1
+
+# Fix missing glw.pc in Mesa 7.0.2:
+zcat $CWD/mesa-7.0.2.no_glw_pc.diff.gz | patch -p1 --verbose  || exit 1
 
 # Build and install:
 make -j10 linux-dri-$MESAARCH || exit 1 # no -j, breaks.
