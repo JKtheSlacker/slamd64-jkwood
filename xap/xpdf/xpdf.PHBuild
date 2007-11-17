@@ -2,7 +2,7 @@
 # Set initial variables:
 PKGNAM=xpdf
 VERSION=3.02
-PATCHLEVEL=pl1
+PATCHLEVEL=pl2
 PKGVER=${VERSION}${PATCHLEVEL}
 BUILD=1
 
@@ -18,6 +18,7 @@ cd xpdf-$VERSION
 
 zcat $CWD/xpdf-resizefix.diff.gz | patch -p1 --verbose || exit 1
 cat $CWD/xpdf-3.02pl1.patch | patch -p1 --verbose || exit 1
+cat $CWD/xpdf-3.02pl2.patch | patch -p1 --verbose || exit 1
 
 chown -R root:root .
 zcat $CWD/xpdfrc.diff.gz | patch -p1 --verbose --backup --suffix=.orig || exit
