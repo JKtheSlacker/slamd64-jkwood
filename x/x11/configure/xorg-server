@@ -29,9 +29,11 @@ CFLAGS="$SLKCFLAGS" \
   --with-mesa-source=/tmp/Mesa-${MESA_VERSION} \
   --with-xkb-path=/etc/X11/xkb \
   --with-xkb-output=/var/lib/xkb \
+  --disable-config-dbus \
+  --disable-config-hal \
   $BUILD_SERVERS \
   $SKIP_SERVERS \
-  $ARCH-$DISTRO-linux
+  --build=$ARCH-$DISTRO-linux
 
 # Ugly fixup
 sed -i 's#-ldl##' hw/xfree86/Makefile
