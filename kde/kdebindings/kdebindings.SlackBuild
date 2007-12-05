@@ -25,7 +25,10 @@ echo "Building kdebindings-$VERSION.tar.bz2..."
 tar xjvf $CWD/kdebindings-$VERSION.tar.bz2 || exit 1
 cd kdebindings-$VERSION || exit 1
 
-( cd python/pykde ; zcat $CWD/configure.py.diff.gz | patch -p0 --verbose ) || exit 1
+( cd python/pykde ; zcat $CWD/PyKDE-3.16.0.py25.diff.gz | patch -p1 --verbose ) || exit 1
+
+# Patch from Frugalware to fix Java build errors
+zcat $CWD/kdebindings-3.5.4-java.diff.gz | patch -p1 --verbose || exit 1
 
 # Kdebindings half ignores --mandir (putting a man page under /usr/man and
 # another under /usr/share/man), so it's better to use --mandir=/usr/share/man
