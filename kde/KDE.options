@@ -5,7 +5,7 @@
 # environment variables.
 
 if [ -z $VERSION ]; then
-  export VERSION=3.5.7
+  export VERSION=3.5.8
 fi
 
 if [ -z $ARCH ]; then
