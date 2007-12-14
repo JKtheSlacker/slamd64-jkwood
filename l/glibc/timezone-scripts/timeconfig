@@ -261,8 +261,10 @@ if [ "$COLOR" = "on" -o -r $TMP/SeTcolor -o "$T_PX" = "/" ]; then
 "America/Indiana/Knox" " " \
 "America/Indiana/Marengo" " " \
 "America/Indiana/Petersburg" " " \
+"America/Indiana/Tell_City" " " \
 "America/Indiana/Vevay" " " \
 "America/Indiana/Vincennes" " " \
+"America/Indiana/Winamac" " " \
 "America/Indianapolis" " " \
 "America/Inuvik" " " \
 "America/Iqaluit" " " \
@@ -311,6 +313,7 @@ if [ "$COLOR" = "on" -o -r $TMP/SeTcolor -o "$T_PX" = "/" ]; then
 "America/Rankin_Inlet" " " \
 "America/Recife" " " \
 "America/Regina" " " \
+"America/Resolute" " " \
 "America/Rio_Branco" " " \
 "America/Rosario" " " \
 "America/Santiago" " " \
@@ -803,8 +806,10 @@ if [ "$COLOR" = "on" -o -r $TMP/SeTcolor -o "$T_PX" = "/" ]; then
 "posix/America/Indiana/Knox" " " \
 "posix/America/Indiana/Marengo" " " \
 "posix/America/Indiana/Petersburg" " " \
+"posix/America/Indiana/Tell_City" " " \
 "posix/America/Indiana/Vevay" " " \
 "posix/America/Indiana/Vincennes" " " \
+"posix/America/Indiana/Winamac" " " \
 "posix/America/Indianapolis" " " \
 "posix/America/Inuvik" " " \
 "posix/America/Iqaluit" " " \
@@ -853,6 +858,7 @@ if [ "$COLOR" = "on" -o -r $TMP/SeTcolor -o "$T_PX" = "/" ]; then
 "posix/America/Rankin_Inlet" " " \
 "posix/America/Recife" " " \
 "posix/America/Regina" " " \
+"posix/America/Resolute" " " \
 "posix/America/Rio_Branco" " " \
 "posix/America/Rosario" " " \
 "posix/America/Santiago" " " \
@@ -1358,8 +1364,10 @@ if [ "$COLOR" = "on" -o -r $TMP/SeTcolor -o "$T_PX" = "/" ]; then
 "right/America/Indiana/Knox" " " \
 "right/America/Indiana/Marengo" " " \
 "right/America/Indiana/Petersburg" " " \
+"right/America/Indiana/Tell_City" " " \
 "right/America/Indiana/Vevay" " " \
 "right/America/Indiana/Vincennes" " " \
+"right/America/Indiana/Winamac" " " \
 "right/America/Indianapolis" " " \
 "right/America/Inuvik" " " \
 "right/America/Iqaluit" " " \
@@ -1408,6 +1416,7 @@ if [ "$COLOR" = "on" -o -r $TMP/SeTcolor -o "$T_PX" = "/" ]; then
 "right/America/Rankin_Inlet" " " \
 "right/America/Recife" " " \
 "right/America/Regina" " " \
+"right/America/Resolute" " " \
 "right/America/Rio_Branco" " " \
 "right/America/Rosario" " " \
 "right/America/Santiago" " " \
@@ -1952,8 +1961,10 @@ America/Indiana/Indianapolis
 America/Indiana/Knox
 America/Indiana/Marengo
 America/Indiana/Petersburg
+America/Indiana/Tell_City
 America/Indiana/Vevay
 America/Indiana/Vincennes
+America/Indiana/Winamac
 America/Indianapolis
 America/Inuvik
 America/Iqaluit
@@ -2002,6 +2013,7 @@ America/Rainy_River
 America/Rankin_Inlet
 America/Recife
 America/Regina
+America/Resolute
 America/Rio_Branco
 America/Rosario
 America/Santiago
@@ -2494,8 +2506,10 @@ posix/America/Indiana/Indianapolis
 posix/America/Indiana/Knox
 posix/America/Indiana/Marengo
 posix/America/Indiana/Petersburg
+posix/America/Indiana/Tell_City
 posix/America/Indiana/Vevay
 posix/America/Indiana/Vincennes
+posix/America/Indiana/Winamac
 posix/America/Indianapolis
 posix/America/Inuvik
 posix/America/Iqaluit
@@ -2544,6 +2558,7 @@ posix/America/Rainy_River
 posix/America/Rankin_Inlet
 posix/America/Recife
 posix/America/Regina
+posix/America/Resolute
 posix/America/Rio_Branco
 posix/America/Rosario
 posix/America/Santiago
@@ -3049,8 +3064,10 @@ right/America/Indiana/Indianapolis
 right/America/Indiana/Knox
 right/America/Indiana/Marengo
 right/America/Indiana/Petersburg
+right/America/Indiana/Tell_City
 right/America/Indiana/Vevay
 right/America/Indiana/Vincennes
+right/America/Indiana/Winamac
 right/America/Indianapolis
 right/America/Inuvik
 right/America/Iqaluit
@@ -3099,6 +3116,7 @@ right/America/Rainy_River
 right/America/Rankin_Inlet
 right/America/Recife
 right/America/Regina
+right/America/Resolute
 right/America/Rio_Branco
 right/America/Rosario
 right/America/Santiago

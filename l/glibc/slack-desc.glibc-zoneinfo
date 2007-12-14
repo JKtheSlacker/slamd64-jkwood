@@ -6,11 +6,11 @@
 # leave one space after the ':'.
 
               |-----handy-ruler------------------------------------------------------|
-glibc-zoneinfo: glibc-zoneinfo (time zone database)
+glibc-zoneinfo: glibc-zoneinfo (timezone database)
 glibc-zoneinfo:
 glibc-zoneinfo: This package allows you to configure your time zone.
 glibc-zoneinfo:
-glibc-zoneinfo: This database comes from glibc, and is based on the tzdata package by
+glibc-zoneinfo: This timezone database comes from the tzdata and tzcode packages by
 glibc-zoneinfo: Arthur David Olson et.al.  The latest version and more information
 glibc-zoneinfo: may be found at ftp://elsie.nci.nih.gov/pub/
 glibc-zoneinfo:

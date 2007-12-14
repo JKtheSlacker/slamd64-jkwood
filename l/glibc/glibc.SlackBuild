@@ -1,6 +1,8 @@
 #!/bin/sh
 ## build glibc-$VERSION for Slackware
 ## by Patrick J. Volkerding <volkerdi@slackware.com>
+## modified for Slamd64 (multilib)
+## by Fred Emmott <mail@fredemmott.co.uk>
 CWD=$(pwd)
 
 # Temporary build location.  This should not be a directory
@@ -10,8 +12,14 @@ if [ ! -d $TMP ]; then
   mkdir -p $TMP
 fi
 
-VERSION=${VERSION:-2.5}
-CVSVER=2.5
+VERSION=${VERSION:-2.7}
+CVSVER=2.7
+
+# Sanity check on the version number in the install scripts:
+if ! grep -vq libutil-$VERSION}.so $CWD/doinst.sh-glibc ; then
+  echo "FATAL:  doinst.sh scripts have wrong version numbers."
+  exit 1
+fi
 
 # Fill in the kernel version to build against:
 KERNEL_HEADERS=/usr/include # otherwise -m32 breaks
@@ -27,7 +35,7 @@ TARGET32=${TARGET32:-i486} # only needed on multilib
 
 DISTRO=${DISTRO:-slamd64}
 
-BUILD=${BUILD:-6}
+BUILD=${BUILD:-1}
 
 # Automatically work out our libdir
 if [ $DISTRO = slamd64 ]; then
@@ -68,6 +76,10 @@ apply_patches() {
   # Use old-style locale directories rather than a single (and strangely
   # formatted) /usr/lib/locale/locale-archive file:
   zcat $CWD/glibc.locale.no-archive.diff.gz | patch -p1 --verbose || exit 1
+  # The is_IS locale is causing a strange error about the "echn" command
+  # not existing.  This patch reverts is_IS to the version shipped in
+  # glibc-2.5:
+  zcat $CWD/is_IS.diff.gz | patch -p1 --verbose || exit 1
   # Fix NIS netgroups:
   zcat $CWD/glibc.nis-netgroups.diff.gz | patch -p1 --verbose || exit 1
   # Evidently glibc never expected Linux kernel versions to be in the
@@ -77,28 +89,22 @@ apply_patches() {
   zcat $CWD/glibc.kernelversion.diff.gz | patch -p1 --verbose || exit 1
   # Support ru_RU.CP1251 locale:
   zcat $CWD/glibc.ru_RU.CP1251.diff.gz | patch -p1 --verbose || exit 1
-  # Support sa_IN locale:
-  zcat $CWD/glibc.sa_IN.diff.gz | patch -p1 --verbose || exit 1
   # Fix missing MAX macro in getcwd.c:
   zcat $CWD/glibc.getcwd.max.macro.diff.gz | patch -p1 --verbose || exit 1
-  if [ $CVSVER = 2.5 ]; then
-    # Update the timezone information.
-    ( cd timezone
-      tar xzf $CWD/tzdata2007h.tar.gz
-      chown root:root *
-      mv yearistype.sh yearistype
-      chmod 644 *
-      chmod 755 yearistype
-      mkdir tzcode
-      cd tzcode
-      tar xzf $CWD/tzcode2007h.tar.gz
-      chown -R root:root .
-      chmod 644 *
-      cp -a *.c *.h ..
-    )
-  else
-    exit 1
-  fi
+  # Update the timezone information.
+  ( cd timezone
+    tar xzf $CWD/tzdata2007i.tar.gz
+    chown root:root *
+    mv yearistype.sh yearistype
+    chmod 644 *
+    chmod 755 yearistype
+    mkdir tzcode
+    cd tzcode
+    tar xzf $CWD/tzcode2007h.tar.gz
+    chown -R root:root .
+    chmod 644 *
+    cp -a *.c *.h ..
+  )
 }
 
 # I'll break this out as an option for fun  :-)
