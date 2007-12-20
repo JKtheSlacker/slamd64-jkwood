@@ -9,7 +9,7 @@ PKG=$TMP/package-mozilla-firefox
 # unless you have permission from the mozilla foundation.
 # XXX XXX XXX XXX
 
-VERSION=2.0.0.8
+VERSION=2.0.0.11
 ARCH=${ARCH:-x86_64}
 BUILD=${BUILD:-1}
 
@@ -56,6 +56,8 @@ export CXXFLAGS="$SLKCFLAGS" &&
 	--enable-application=browser \
 	--enable-default-toolkit=gtk2 \
 	--enable-crypto \
+	--enable-svg \
+	--enable-canvas \
 	--enable-xft \
 	--enable-xinerama \
 	--enable-optimize \
