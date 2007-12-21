@@ -1,13 +1,13 @@
 #!/bin/sh
-CWD=`pwd`
+CWD=$(pwd)
 if [ "$TMP" = "" ]; then
   TMP=/tmp
 fi
 PKG=$TMP/package-udev
 
-VERSION=${VERSION:-111}
+VERSION=${VERSION:-116}
 ARCH=${ARCH:-x86_64}
-BUILD=${BUILD:-3}
+BUILD=${BUILD:-1}
 DISTRO=${DISTRO:-slamd64}
 
 if [ $DISTRO = slackware ]; then
@@ -24,25 +24,22 @@ rm -rf $PKG
 mkdir -p $PKG/lib/udev
 cd $TMP
 rm -rf udev-$VERSION
-tar xjvf $CWD/udev-$VERSION.tar.bz2 || exit 1
-cd udev-$VERSION
+tar xvf $CWD/udev-$VERSION.tar.bz2 || exit 1
+
+cd udev-$VERSION || exit 1
+patch -p1 < $CWD/rule_generator.patch
 
 chown -R root:root .
-find . -perm 666 -exec chmod 644 {} \;
-find . -perm 664 -exec chmod 644 {} \;
-find . -perm 600 -exec chmod 644 {} \;
-find . -perm 444 -exec chmod 644 {} \;
-find . -perm 400 -exec chmod 644 {} \;
-find . -perm 440 -exec chmod 644 {} \;
-find . -perm 777 -exec chmod 755 {} \;
-find . -perm 775 -exec chmod 755 {} \;
-find . -perm 511 -exec chmod 755 {} \;
-find . -perm 711 -exec chmod 755 {} \;
-find . -perm 555 -exec chmod 755 {} \;
+find . \
+ \( -perm 777 -o -perm 775 -o -perm 711 -o -perm 555 -o -perm 511 \) \
+ -exec chmod 755 {} \; -o \
+ \( -perm 666 -o -perm 664 -o -perm 600 -o -perm 444 -o -perm 440 -o -perm 400 \) \
+ -exec chmod 644 {} \;
 
 make EXTRAS="extras/ata_id extras/cdrom_id \
 		extras/firmware extras/floppy extras/path_id \
 		extras/scsi_id extras/usb_id \
+		extras/rule_generator \
 		extras/edd_id extras/volume_id" || exit 1
 make install DESTDIR=$PKG
 
@@ -53,19 +50,22 @@ cp -a extras/scsi_id/scsi_id $PKG/lib/udev
 cp -a extras/scsi_id/scsi_id.config $PKG/etc
 cp -a extras/ata_id/ata_id $PKG/lib/udev
 cp -a extras/usb_id/usb_id $PKG/lib/udev
-cp -a extras/edd_id/edd_id $PKG/lib/udev
-cp -a extras/cdrom_id/cdrom_id $PKG/lib/udev
-( cd extras/volume_id ; make install-bin usrlibdir=/usr/lib$LIBSUFFIX libdir=/lib$LIBSUFFIX DESTDIR=$PKG )
+( cd extras/floppy ; make install-bin DESTDIR=$PKG )
+( cd extras/rule_generator ; make install-bin DESTDIR=$PKG ) 
+( cd extras/volume_id ; make install-bin DESTDIR=$PKG \
+	usrlibdir=/usr/lib$LIBSUFFIX libdir=/lib$LIBSUFFIX )
+( cd extras/edd_id ; make install-bin DESTDIR=$PKG )
+( cd extras/cdrom_id ; make install-bin DESTDIR=$PKG )
 
 #scsi_id is needed by multipath
 mkdir -p $PKG/sbin
-( cd $PKG
-  ln -s /lib/udev/scsi_id sbin/scsi_id
+( cd $PKG/sbin
+  ln -sf ../lib/udev/scsi_id scsi_id
 )
 
 #vol_id is needed by multipath, too
-( cd $PKG
-  ln -s /lib/udev/vol_id sbin/vol_id
+( cd $PKG/sbin
+  ln -s ../lib/udev/vol_id vol_id
 )
 
 mv $PKG/usr/share/man $PKG/usr
@@ -76,7 +76,6 @@ rmdir $PKG/usr/share
   find . | xargs file | grep "shared object" | grep ELF | cut -f 1 -d : | xargs strip --strip-unneeded 2> /dev/null
 )
 
-rm -r $PKG/etc/udev
 mkdir -p $PKG/etc/udev/rules.d \
 	 $PKG/lib/firmware \
 	 $PKG/etc/modprobe.d \
@@ -84,24 +83,20 @@ mkdir -p $PKG/etc/udev/rules.d \
 
 # Yes, these will clobber existing config files.
 cp -a $CWD/config/udev.conf $PKG/etc/udev/udev.conf
-cp -a $CWD/config/rules.d/50-udev.rules $PKG/etc/udev/rules.d/50-udev.rules
+# Copy Slackware custom rules
+cp -a $CWD/config/rules.d/* $PKG/etc/udev/rules.d/
+cp -a etc/udev/packages/40-alsa.rules $PKG/etc/udev/rules.d/
 
 cp -a $CWD/config/rc.d/rc.udev.new $PKG/etc/rc.d/rc.udev.new
 cp -a $CWD/config/modprobe.d/blacklist.new $PKG/etc/modprobe.d/blacklist.new
 cp -a $CWD/config/modprobe.d/isapnp.new $PKG/etc/modprobe.d/isapnp.new
+cp -a $CWD/config/modprobe.d/psmouse.new $PKG/etc/modprobe.d/psmouse.new
 
-chmod 644 $PKG/etc/udev/udev.conf \
-  $PKG/etc/udev/rules.d/50-udev.rules \
-  $PKG/etc/modprobe.d/blacklist.new \
-  $PKG/etc/modprobe.d/isapnp.new
-
+find $PKG/etc -type f -exec chmod 644 {} \;
+find $PKG/etc -type d -exec chmod 755 {} \;
 chmod 755 $PKG/etc/rc.d/rc.udev.new
 
-chown root:root $PKG/etc/udev/udev.conf \
-  $PKG/etc/udev/rules.d/50-udev.rules \
-  $PKG/etc/modprobe.d/blacklist.new \
-  $PKG/etc/modprobe.d/isapnp.new \
-  $PKG/etc/rc.d/rc.udev.new
+chown -R root:root $PKG/etc
 
 # Add extra device nodes to the package that udev doesn't make:
 tar -xvzf $CWD/udev-fixed-devices.tar.gz -C $PKG/
@@ -116,9 +111,7 @@ chmod -x $PKG/lib/udev/rc.optical-symlinks
 chown root:root $PKG/lib/udev/*
 
 mkdir -p $PKG/usr/doc/udev-$VERSION
-cp -a \
-  COPYING FAQ README TODO RELEASE-NOTES \
-  docs \
+cp -a COPYING FAQ README TODO RELEASE-NOTES docs \
   $PKG/usr/doc/udev-$VERSION
 
 # Copy manpages of helper applications in /extra

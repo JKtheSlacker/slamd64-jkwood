@@ -9,7 +9,7 @@ OPT=""
 . /etc/udev/udev.conf
 
 # remove trailing slash from udev_root
-UDEV_ROOT=`echo "${udev_root}" |sed 's/\/*$//'`
+UDEV_ROOT=$(echo "${udev_root}" |sed 's/\/*$//')
 
 case "$1" in
     start)
@@ -52,19 +52,12 @@ case "$1" in
 	# failed events. Else, it will start udevd.
 	if ps axc | grep -q udevd ; then
 	  OPT="--retry-failed $OPT"
-	  mv ${udev_root}/*.rules ${udev_rules}/ 2>/dev/null
+	  ( cd ${udev_root}/.udev
+	    for TMPFILE in tmp-rules-*.rules ; do
+		mv $TMPFILE ${udev_rules}/${TMPFILE/tmp-rules--/} 2>/dev/null
+	    done
+	  ) 
 	else
-	  # Copy the needed disk nodes to the static devices directory:
-	  RDEV=`grep -v '^#' /etc/fstab | sed -ne '/\W\/\W/s#/dev/\(\w*\)[0-9].*#\1#p'`
-	  if ! [ -e /lib/udev/devices/$RDEV ]; then
-		cp -a /dev/`echo $RDEV | cut -f3 -d/` /lib/udev/devices/ 2>/dev/null
-	  fi
-	  for i in `grep "$RDEV" /etc/fstab | cut -f1 -d\  | cut -f3 -d/`; do
-		if ! [ -e /lib/udev/devices/$i ]; then
-			cp -a /dev/$i /lib/udev/devices/ 2>/dev/null
-		fi
-	  done
-
 	  # Mount tmpfs on $UDEV_ROOT:
 	  if ! grep -E -q "^[^[:space:]]+ $UDEV_ROOT tmpfs" /proc/mounts; then
 		# umount shm if needed

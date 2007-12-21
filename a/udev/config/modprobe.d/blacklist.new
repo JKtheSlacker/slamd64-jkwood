@@ -4,29 +4,6 @@
 # no matter which driver happens to get probed first.  Sometimes user
 # mode tools can also control driver binding.
 
-# PS/2 mouse support:
-# The default options when the psmouse module is loaded will completely
-# break the mouse if you change consoles with several models of KVM
-# switches.  So, it is listed in the blacklist here and is loaded in
-# /etc/rc.d/rc.modules using "/sbin/modprobe psmouse proto=imps", which
-# is a more basic protocol that is less likely to cause problems with
-# the mouse.  If you'd rather use the kernel default options, just
-# comment out the line below.  If you'd rather choose your own options,
-# leave the line below alone and edit /etc/rc.d/rc.modules to use the
-# options you want with the "psmouse" module.
-#
-# In some machines, blacklisting this module here isn't enough, and you
-# also need to comment the psmouse alias in /etc/modprobe.d/isapnp.
-blacklist psmouse
-
-# PC Speaker support:
-# This one is loaded by /etc/rc.d/rc.modules. If you don't like
-# the beeps and buzz from speaker, edit /etc/rc.d/rc.modules.
-#
-# In some machines, blacklisting this module here isn't enough, and you
-# also need to comment the pcspkr alias in /etc/modprobe.d/isapnp.
-blacklist pcspkr
-
 # tulip ... de4x5, xircom_tulip_cb, dmfe (...) handle same devices
 blacklist de4x5
 
@@ -38,8 +15,8 @@ blacklist dmfe
 blacklist evbug
 
 # Alternate Intel EtherExpress Pro/100 support driver.  List it
-# here so it won't conflict with an already-loaded eepro100 module.
-blacklist e100
+# here so it won't conflict with an already-loaded e100 module.
+blacklist eepro100
 
 # Alternate 8139 driver.  Some 8139 cards need this specific driver,
 # though...
