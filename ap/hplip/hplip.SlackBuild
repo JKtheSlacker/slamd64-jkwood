@@ -1,6 +1,8 @@
 #!/bin/sh
+
 # Slackware build script for hplip
-# Copyright 2006  Robby Workman  (http://rlworkman.net)
+
+# Copyright 2006-2007  Robby Workman  (http://rlworkman.net)
 # All rights reserved.
 #
 # Redistribution and use of this script, with or without modification, is
@@ -20,18 +22,14 @@
 # OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 # ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# Modified by Patrick J. Volkerding, 2006.
+# Modified by Patrick J. Volkerding, 2006, 2007.
 # No additional license terms added...  :-)
 
-# Set initial variables:
-CWD=$(pwd)
-TMP=${TMP:-/tmp}
-OUTPUT=$TMP
 
 PRGNAM=hplip
-VERSION=1.7.4a
+VERSION=${VERSION:-2.7.10}
 ARCH=${ARCH:-x86_64}
-BUILD=${BUILD:-4}
+BUILD=${BUILD:-1}
 DISTRO=${DISTRO:-slamd64}
 
 if [ $DISTRO = slackware ]; then
@@ -41,9 +39,16 @@ else
 fi
 
 if [ $DISTRO = slamd64 ]; then
-	LIBSUFFIX=${LIBSUFFIX:-64}
+	LIBSUFFIX=64
+	SLKLDFLAGS="-L/usr/lib64"
+else
+	LIBSUFFIX=
+	SLKLDFLAGS=
 fi
 
+# Set initial variables:
+CWD=$(pwd)
+TMP=${TMP:-/tmp}
 PKG=$TMP/package-$PRGNAM
 
 if [ "$ARCH" = "i386" ]; then
@@ -64,45 +69,42 @@ tar xjvf $CWD/$PRGNAM-$VERSION.tar.bz2 || exit 1
 cd $PRGNAM-$VERSION || exit 1
 
 chown -R root:root .
-find . -perm 666 -exec chmod 644 {} \;
-find . -perm 664 -exec chmod 644 {} \;
-find . -perm 600 -exec chmod 644 {} \;
-find . -perm 444 -exec chmod 644 {} \;
-find . -perm 400 -exec chmod 644 {} \;
-find . -perm 440 -exec chmod 644 {} \;
-find . -perm 777 -exec chmod 755 {} \;
-find . -perm 775 -exec chmod 755 {} \;
-find . -perm 511 -exec chmod 755 {} \;
-find . -perm 711 -exec chmod 755 {} \;
-find . -perm 555 -exec chmod 755 {} \;
+find . \
+ \( -perm 777 -o -perm 775 -o -perm 711 -o -perm 555 -o -perm 511 \) \
+ -exec chmod 755 {} \; -o \
+ \( -perm 666 -o -perm 664 -o -perm 600 -o -perm 444 -o -perm 440 -o -perm 400 \) \
+ -exec chmod 644 {} \;
 
 CFLAGS="$SLKCFLAGS" \
 CXXFLAGS="$SLKCFLAGS" \
 ./configure \
   --prefix=/usr \
 	--libdir=/usr/lib$LIBSUFFIX \
+	--with-cupsbackenddir=/usr/lib$LIBSUFFIX/cups/backend \
   --sysconfdir=/etc \
   --localstatedir=/var \
+  --disable-xml-install \
+  --enable-foomatic-ppd-install \
+  --with-hpppddir=/usr/share/cups/model/HP \
   --enable-network-build=yes \
   --build=$ARCH-$DISTRO-linux \
   --host=$ARCH-$DISTRO-linux \
   || exit 1
 
-make -j12 || exit 1
+make -j4 || exit 1
 make install DESTDIR=$PKG || exit 1
 
-# "make-strip" is often not as good as "strip --strip-unneeded" later...
 ( cd $PKG
   find . | xargs file | grep "executable" | grep ELF | cut -f 1 -d : | xargs strip --strip-unneeded 2> /dev/null
   find . | xargs file | grep "shared object" | grep ELF | cut -f 1 -d : | xargs strip --strip-unneeded 2> /dev/null
 )
 
-mv $PKG/etc/hp/hplip.conf $PKG/etc/hp/hplip.conf.new
-mkdir -p $PKG/etc/rc.d
-mv $PKG/etc/init.d/hplip $PKG/etc/rc.d/rc.hplip.new
-# Default HPLIP to off
-chmod 0644 $PKG/etc/rc.d/rc.hplip.new
-rm -r $PKG/etc/init.d
+# Fix group and permissions in udev rules file
+sed -i -e 's/\(OWNER=\)"lp".*\(GROUP="lp",\).\(MODE=\).*/\1"root", \2 \3"0660"/' \
+	$PKG/etc/udev/rules.d/55-hpmud.rules
+
+# Fix udev rules for current versions of udev
+sed -i 's/SYSFS/ATTR/g' $PKG/etc/udev/rules.d/55-hpmud.rules
 
 # No thanks, we don't replace/add files which are part of other packages
 rm -rf $PKG/etc/sane.d
@@ -114,4 +116,4 @@ cat $CWD/slack-desc > $PKG/install/slack-desc
 zcat $CWD/doinst.sh.gz > $PKG/install/doinst.sh
 
 cd $PKG
-/sbin/makepkg -l y -c n -p $OUTPUT/$PRGNAM-$VERSION-$PKGARCH-$BUILD.tgz;
+/sbin/makepkg -l y -c n ../$PRGNAM-$VERSION-$PKGARCH-$BUILD.tgz
