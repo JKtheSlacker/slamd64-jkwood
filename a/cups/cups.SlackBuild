@@ -8,9 +8,24 @@ if [ "$TMP" = "" ]; then
 fi
 PKG=$TMP/package-cups
 
-VERSION=1.2.11
+VERSION=1.3.4
 ARCH=${ARCH:-x86_64}
-BUILD=${BUILD:-2}
+BUILD=${BUILD:-1}
+DISTRO=${DISTRO:-slamd64}
+
+if [ $DISTRO = slackware ]; then
+	PKGARCH=$ARCH
+else
+	PKGARCH=${ARCH}_${DISTRO}
+fi
+
+if [ $DISTRO = slamd64 ]; then
+	LIBSUFFIX=64
+	SLKLDFLAGS="-L/usr/lib64"
+else
+	LIBSUFFIX=
+	SLKLDFLAGS=
+fi
 
 if [ ! -d $TMP ]; then
   mkdir -p $TMP # location to build the source
@@ -20,22 +35,30 @@ mkdir -p $PKG
 
 cd $TMP
 rm -rf cups-$VERSION
-tar xjvf $CWD/cups-$VERSION-source.tar.bz2
+tar xjvf $CWD/cups-$VERSION-source.tar.bz2 || exit 1
 cd cups-$VERSION
 # enforce clue
 sed -i 's#$exec_prefix/lib/cups#$libdir/cups#g' configure
 ./configure \
-	--libdir=/usr/lib64 \
-  --disable-pam
-make -j10 IMGLIBS="-lpng -lz -lm -ltiff -ljpeg" || exit 1 # Something's broken :)
+	--libdir=/usr/lib$LIBSUFFIX \
+  --enable-ssl \
+  --enable-openssl=yes \
+  --enable-gnutls=no \
+  --enable-cdsassl=no \
+  --without-php \
+  --disable-pam \
+  --build=$ARCH-$DISTRO-linux
+
+make -j5 || exit 1
 mkdir -p $PKG/etc/cups
 mkdir -p $PKG/var/spool
-make BUILDROOT=$PKG install
+make BUILDROOT=$PKG install || exit 1
 
 # I'm added so many things like /etc/init.d/ to Slackware that CUPS
 # is now installing init scripts to the Red Hat locations.  We'll move
 # them to the usual locations:
 mkdir -p $PKG/etc/rc.d
+# Handle this as a config file, and non-executable in a default install:
 mv $PKG/etc/init.d/cups $PKG/etc/rc.d/rc.cups.new
 chmod 644 $PKG/etc/rc.d/rc.cups.new
 # Clear out the additions:
@@ -54,8 +77,8 @@ mv $PKG/etc/dbus-1/system.d/cups.conf $PKG/etc/dbus-1/system.d/cups.conf.new
 
 # However, this will get you the most useful SMB support for free.
 # Thanks to Boris Kurktchiev for the tip.  :-)
-( cd $PKG/usr/lib/cups/backend
-  if [ ! -r smb ]; then
+( cd $PKG/usr/lib$LIBSUFFIX/cups/backend
+  if [ ! -e smb ]; then
     ln -sf /usr/bin/smbspool smb
   fi
 )
@@ -63,35 +86,12 @@ mv $PKG/etc/dbus-1/system.d/cups.conf $PKG/etc/dbus-1/system.d/cups.conf.new
 mkdir -p $PKG/install
 cat $CWD/slack-desc > $PKG/install/slack-desc
 
-# Fix manpages:
+# Remove preformatted manpages and move the manpages to /usr/man:
 ( cd $PKG/usr/share/man
   find . -type d -name "cat*" | xargs rm -rf
+  cd ..
+  mv man ..
 )
-( cd $PKG/usr/share ; mv man .. )
-# Compress and if needed symlink the man pages:
-if [ -d $PKG/usr/man ]; then
-  ( cd $PKG/usr/man
-    for manpagedir in $(find . -type d -name "man*") ; do
-      ( cd $manpagedir
-        for eachpage in $( find . -type l -maxdepth 1) ; do
-          ln -s $( readlink $eachpage ).gz $eachpage.gz
-          rm $eachpage
-        done
-        gzip -9 *.?
-      )
-    done
-  )
-fi
-
-# Adjust for BSD init scripts.  Note that rc.cups will have to be
-# started from somewhere, like rc.M or rc.inet2.
-( cd $PKG/etc/rc.d
-  mv init.d/cups rc.cups
-  rm -r init.d rc?.d )
-
-# Handle this as a config file, and non-executable in a default install:
-mv $PKG/etc/rc.d/rc.cups $PKG/etc/rc.d/rc.cups.new
-chmod 644 $PKG/etc/rc.d/rc.cups.new
 
 # Adjust/expand docs:
 ( mkdir -p $PKG/usr/doc
@@ -159,7 +159,7 @@ zcat $CWD/doinst.sh.gz > $PKG/install/doinst.sh
 
 # Build the package:
 cd $PKG
-makepkg -l y -c n $TMP/cups-$VERSION-${ARCH}_slamd64-$BUILD.tgz
+makepkg -l y -c n $TMP/cups-$VERSION-$PKGARCH-$BUILD.tgz
 
 # Clean up the extra stuff:
 if [ "$1" = "--cleanup" ]; then
