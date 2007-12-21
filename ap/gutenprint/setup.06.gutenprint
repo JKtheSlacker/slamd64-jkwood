@@ -1,0 +1,6 @@
+#!/bin/sh
+#BLURB="Run cups-genppd to generate Gutenprint PPDs"
+if [ -x usr/sbin/cups-genppd.5.0 ]; then
+  chroot . /bin/mkdir -p /usr/share/cups/model/gutenprint/5.0
+  chroot . /usr/sbin/cups-genppd.5.0 1> /dev/null 2> /dev/null
+fi

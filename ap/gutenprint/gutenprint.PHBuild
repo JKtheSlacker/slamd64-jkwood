@@ -1,0 +1,75 @@
+#!/bin/sh
+# Set initial variables:
+PKGNAM=gutenprint
+VERSION=5.0.1
+BUILD=${BUILD:-1}
+
+. /etc/pkghelpers
+pkghelpers_env
+
+cd $TMP
+rm -rf gutenprint-${VERSION}
+tar xjvf $CWD/gutenprint-${VERSION}.tar.bz2 || exit 1
+cd gutenprint-${VERSION}
+
+chown -R root:root .
+find . -perm 666 -exec chmod 644 {} \;
+find . -perm 664 -exec chmod 644 {} \;
+find . -perm 600 -exec chmod 644 {} \;
+find . -perm 444 -exec chmod 644 {} \;
+find . -perm 400 -exec chmod 644 {} \;
+find . -perm 440 -exec chmod 644 {} \;
+find . -perm 777 -exec chmod 755 {} \;
+find . -perm 775 -exec chmod 755 {} \;
+find . -perm 511 -exec chmod 755 {} \;
+find . -perm 711 -exec chmod 755 {} \;
+find . -perm 555 -exec chmod 755 {} \;
+find . -perm 777 -exec chmod 755 {} \;
+
+CFLAGS="$SLKCFLAGS" \
+./configure \
+  --prefix=/usr \
+	--libdir=/usr/lib$LIBSUFFIX \
+  --infodir=/usr/info \
+  --mandir=/usr/man \
+  --with-cups \
+  --with-gimp2 \
+  --with-gimp2-as-gutenprint \
+  --disable-libgutenprintui \
+  --enable-libgutenprintui2 \
+  --enable-escputil \
+  --disable-static \
+  --build=$ARCH-$DISTRO-linux
+make -j5 || exit 1
+make install DESTDIR=$PKG || exit 1
+
+mkdir -p $PKG/var/log/setup
+cat $CWD/setup.06.gutenprint > $PKG/var/log/setup/setup.06.gutenprint
+chmod 755 $PKG/var/log/setup/setup.06.gutenprint
+
+mkdir -p $PKG/usr/doc/gutenprint-${VERSION}
+# If you want 1MB of ChangeLog, it's in the source...
+cp -a \
+  ABOUT-NLS AUTHORS COPYING INSTALL NEWS README \
+  $PKG/usr/doc/gutenprint-${VERSION}
+  ( cd $PKG/usr/doc/gutenprint-${VERSION}
+    ln -sf /usr/share/gutenprint/doc .
+    ln -sf /usr/share/gutenprint/samples .
+  )
+
+# Big...  again, it's in the source if you want it.
+rm -f $PKG/usr/share/gutenprint/doc/*.pdf
+
+mkdir -p $PKG/install
+cat << EOF > $PKG/install/doinst.sh
+if [ -x usr/sbin/cups-genppd.5.0 ]; then
+  chroot . /bin/mkdir -p /usr/share/cups/model/gutenprint/5.0
+  chroot . /usr/sbin/cups-genppd.5.0 1> /dev/null 2> /dev/null
+fi
+EOF
+
+cat $CWD/slack-desc > $PKG/install/slack-desc
+
+cd $PKG
+pkghelpers_fixup
+pkghelpers_makepkg
