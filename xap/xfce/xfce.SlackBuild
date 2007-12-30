@@ -1,7 +1,6 @@
 #!/bin/sh
 # Copyright 2003  Slackware Linux, Inc., Concord, CA, USA
 # Copyright 2007  Patrick J. Volkerding, Sebeka, MN, USA
-# Copyright 2007  Frederick Emmott <mail@fredemmott.co.uk>
 # All rights reserved.
 #
 # Redistribution and use of this script, with or without modification, is
@@ -30,10 +29,10 @@ PKG=$TMP/package-xfce
 rm -rf $PKG
 mkdir -p $PKG
 
-VERSION=4.4.1
-PKGVER=4.4.1
+VERSION=4.4.2
+PKGVER=4.4.2
 ARCH=${ARCH:-x86_64}
-BUILD=3
+BUILD=${BUILD:-1}
 DISTRO=${DISTRO:-slamd64}
 
 if [ $DISTRO = slackware ]; then
@@ -46,9 +45,7 @@ if [ $DISTRO = slamd64 ]; then
 	LIBSUFFIX=${LIBSUFFIX:-64}
 fi
 
-if [ "$ARCH" = "i386" ]; then
-  SLKCFLAGS="-O2 -march=i386 -mcpu=i686"
-elif [ "$ARCH" = "i486" ]; then
+if [ "$ARCH" = "i486" ]; then
   SLKCFLAGS="-O2 -march=i486 -mtune=i686"
 elif [ "$ARCH" = "s390" ]; then
   SLKCFLAGS="-O2"
@@ -61,50 +58,55 @@ cp -a $CWD/profile.d/* $PKG/etc/profile.d
 chown root:root $PKG/etc/profile.d/*
 chmod 755 $PKG/etc/profile.d/*
 
+# Kludge factor ahead
+mkdir -p $PKG/usr/man $PKG/usr/share $PKG/usr/doc
+( cd $PKG/usr/share ; ln -sf ../man . ; ln -sf ../doc . )
+
 for file in \
-xfce4-dev-tools-4.4.0.tar.bz2 \
-libxfce4util-4.4.1.tar.bz2 \
-libxfcegui4-4.4.1.tar.bz2 \
-libxfce4mcs-4.4.1.tar.bz2 \
-xfce-mcs-manager-4.4.1.tar.bz2 \
-exo-0.3.2.tar.bz2 \
-xfce-mcs-plugins-4.4.1.tar.bz2 \
-xfce4-panel-4.4.1.tar.bz2 \
-Thunar-0.8.0.tar.bz2 \
-xfce4-session-4.4.1.tar.bz2 \
-xfwm4-4.4.1.tar.bz2 \
-xfdesktop-4.4.1.tar.bz2 \
-xfce-utils-4.4.1.tar.bz2 \
-xfprint-4.4.1.tar.bz2 \
-gtk-xfce-engine-2.4.1.tar.bz2 \
-mousepad-0.2.12.tar.bz2 \
-Terminal-0.2.6.tar.bz2 \
-xfce4-appfinder-4.4.1.tar.bz2 \
-xfce4-mixer-4.4.1.tar.bz2 \
-xfce4-icon-theme-4.4.1.tar.bz2 \
-xfwm4-themes-4.4.1.tar.bz2 \
-orage-4.4.1.tar.bz2 \
+xfce4-dev-tools-4.4.0.1.tar.bz2 \
+libxfce4util-4.4.2.tar.bz2 \
+libxfcegui4-4.4.2.tar.bz2 \
+libxfce4mcs-4.4.2.tar.bz2 \
+xfce-mcs-manager-4.4.2.tar.bz2 \
+exo-0.3.4.tar.bz2 \
+xfce-mcs-plugins-4.4.2.tar.bz2 \
+xfce4-panel-4.4.2.tar.bz2 \
+Thunar-0.9.0.tar.bz2 \
+xfce4-session-4.4.2.tar.bz2 \
+xfwm4-4.4.2.tar.bz2 \
+xfdesktop-4.4.2.tar.bz2 \
+xfce-utils-4.4.2.tar.bz2 \
+xfprint-4.4.2.tar.bz2 \
+gtk-xfce-engine-2.4.2.tar.bz2 \
+mousepad-0.2.13.tar.bz2 \
+Terminal-0.2.8.tar.bz2 \
+xfce4-appfinder-4.4.2.tar.bz2 \
+xfce4-mixer-4.4.2.tar.bz2 \
+xfce4-icon-theme-4.4.2.tar.bz2 \
+xfwm4-themes-4.4.2.tar.bz2 \
+orage-4.4.2.tar.bz2 \
 ; do
   ( cd $TMP
-    tar xjf $CWD/$file || exit 1
-    cd `basename $file .tar.bz2`
+    tar xjf $CWD/src/$file || exit 1
+    cd $(basename $file .tar.bz2)
 
     # Here's where we patch or set up any other package-specific stuff:
-    if [ "$file" = "xfce-utils-$VERSION.tar.bz2" ]; then
-      zcat $CWD/xfce-utils-startxfce4.in.diff.gz | patch -p1 --verbose || exit 1
-    fi
     if [ "$file" = "xfce4-mixer-$VERSION.tar.bz2" ]; then
       PACKAGE_SPECIFIC_OPTIONS="--with-sound=alsa"
     fi
 
-    chown -R root:root .
-    find . -perm 777 -exec chmod 755 {} \;
-    find . -perm 775 -exec chmod 755 {} \;
-    find . -perm 666 -exec chmod 644 {} \;
-    find . -perm 664 -exec chmod 644 {} \;
+    # Official patch from Thunar developer 
+    # http://foo-projects.org/pipermail/xfce4-dev/2007-December/023857.html
+    if [ "$file" = "Thunar-0.9.0.tar.bz2" ]; then
+      zcat $CWD/thunar-vfs-volume-hal_missing-audio-cds-for-volman.patch.gz | patch -p0 --verbose
+    fi
 
-    # This option produces no difference that I can see
-    # --disable-hal
+    chown -R root:root .
+    find . \
+     \( -perm 777 -o -perm 775 -o -perm 711 -o -perm 555 -o -perm 511 \) \
+     -exec chmod 755 {} \; -o \
+     \( -perm 666 -o -perm 664 -o -perm 600 -o -perm 444 -o -perm 440 -o -perm 400 \) \
+     -exec chmod 644 {} \;
 
     CFLAGS="$SLKCFLAGS" \
     CXXFLAGS="$SLKCFLAGS" \
@@ -114,7 +116,6 @@ orage-4.4.1.tar.bz2 \
       --enable-compositor \
       --enable-static=no \
       --enable-xinerama \
-			--enable-hal \
       $PACKAGE_SPECIFIC_OPTIONS \
       --build=$ARCH-$DISTRO-linux
 
@@ -126,17 +127,20 @@ orage-4.4.1.tar.bz2 \
     make || exit 1
     make install
     make install DESTDIR=$PKG
-    mkdir -p $PKG/usr/doc/`basename $file .tar.bz2`
+    mkdir -p $PKG/usr/doc/$(basename $file .tar.bz2)
     # This will cause errors, but won't miss any docs:
     cp -a \
-     AUTHORS BUGS COMPOSITOR COPYING COPYING.LIB COPYING_LIBS FAQ HACKING INSTALL NEWS NOTES README README.Kiosk README.Plugins THANKS TODO example.gtkrc-2.0 \
-      $PKG/usr/doc/`basename $file .tar.bz2` 2> /dev/null
-    ( cd $PKG
-      find . | xargs file | grep "executable" | grep ELF | cut -f 1 -d : | xargs strip --strip-unneeded 2> /dev/null
-      find . | xargs file | grep "shared object" | grep ELF | cut -f 1 -d : | xargs strip --strip-unneeded 2> /dev/null
-    )
-  )
+     AUTHORS BUGS COMPOSITOR COPYING COPYING.LIB COPYING_LIBS FAQ HACKING \
+     INSTALL NEWS NOTES README README.Kiosk README.Plugins THANKS TODO \
+     example.gtkrc-2.0 $PKG/usr/doc/$(basename $file .tar.bz2) 2> /dev/null \
+     || true
+  ) || exit 1
 done || exit 1
+
+( cd $PKG
+  find . | xargs file | grep "executable" | grep ELF | cut -f 1 -d : | xargs strip --strip-unneeded 2> /dev/null
+  find . | xargs file | grep "shared object" | grep ELF | cut -f 1 -d : | xargs strip --strip-unneeded 2> /dev/null
+)
 
 # Le kludge r'mvoal
 ( cd $PKG/usr/share ; rm -f doc man )
