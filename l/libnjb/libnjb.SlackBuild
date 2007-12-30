@@ -21,9 +21,9 @@
 
 
 PKGNAM=libnjb
-VERSION=${VERSION:-2.2.5}
+VERSION=${VERSION:-2.2.6}
 ARCH=${ARCH:-x86_64}
-BUILD=${BUILD:-2}
+BUILD=${BUILD:-1}
 DISTRO=${DISTRO:-slamd64}
 
 if [ $DISTRO = slackware ]; then
@@ -83,7 +83,7 @@ CFLAGS="$SLKCFLAGS" \
   $ARCH-$DISTRO-linux
 
 # Build and install:
-make -j6 || exit 1
+make -j10 || exit 1
 make install DESTDIR=$PKG || exit 1
 
 # Hotplug is obsolete:
@@ -93,7 +93,7 @@ fi
 
 # Add udev rules:
 mkdir -p $PKG/etc/udev/rules.d
-cat $CWD/libnjb.rules > $PKG/etc/udev/rules.d/80-libnjb.rules
+cat $CWD/80-libnjb.rules > $PKG/etc/udev/rules.d/80-libnjb.rules
 
 # Strip binaries:
 ( cd $PKG
