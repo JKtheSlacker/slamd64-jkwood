@@ -47,7 +47,7 @@ CXXFLAGS=$CPUOPT \
   --build=$TARGET-$DISTRO-linux
 
 # Lately I've needed this big hammer.  I don't know why.
-make
+make $NUMJOBS
 if [ ! $? = 0 ]; then
   mkdir -p smoke/qt/generate.pl.tmpdir
   cp -a smoke/qt/* smoke/qt/generate.pl.tmpdir
