@@ -34,7 +34,7 @@ CXXFLAGS=$CPUOPT \
   --disable-debug \
   --program-prefix="" \
   --program-suffix="" \
-  --build=$TARGET-$distro-linux
+  --build=$TARGET-$DISTRO-linux
 make $NUMJOBS || exit 1
 make install DESTDIR=$PKG
 mkdir -p $PKG/usr/doc/kdeartwork-$VERSION

@@ -16,24 +16,6 @@ fi
 rm -rf $PKG
 mkdir -p $PKG/usr
 
-# I hear from Debian that the kernel is actually correct here, and that it's
-# KDE that has the bug.  All I know is that this kludges it, and nothing else
-# seems to run into this.  It's not enough to get me to patch the kernel in
-# a permanent way, that's for sure.
-#
-# If you can figure out who's officially responsible and what the fix really
-# is, please tell them.  If that's me, I'm waiting for the clue-stick.
-if [ "$ARCH" = "i386" \
-  -o "$ARCH" = "i486" \
-  -o "$ARCH" = "i586" \
-  -o "$ARCH" = "i686" ]; then
-  if ! grep -q "ifndef __STRICT_ANSI__" /usr/include/asm/byteorder.h ; then
-    ( cd /usr/include/asm
-      zcat $CWD/ugly-kernel-patch.diff.gz | patch -p1 --verbose --backup --suffix=.orig || exit 1
-    )
-  fi
-fi
-
 # Avoid a version number in .la files:
 if [ -d /usr/lib$LIBSUFFIX/qt ]; then
   QTDIR=/usr/lib$LIBSUFFIX/qt

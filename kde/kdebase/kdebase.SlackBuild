@@ -24,10 +24,6 @@ cd $TMP
 echo "Building kdebase-$VERSION.tar.bz2..."
 tar xjvf $CWD/kdebase-$VERSION.tar.bz2 || exit 1
 cd kdebase-$VERSION || exit 1
-
-zcat $CWD/post-3.5.7-kdebase-konqueror.diff.gz | patch -p0 --verbose || exit 1
-zcat $CWD/post-3.5.7-kdebase-kdm.diff.gz | patch -p0 --verbose || exit 1
-
 chown -R root:root .
 CFLAGS=$CPUOPT \
 CXXFLAGS=$CPUOPT \

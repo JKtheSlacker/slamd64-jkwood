@@ -22,7 +22,7 @@
 PKGNAM=qt
 VERSION=${VERSION:-3.3.8}
 ARCH=${ARCH:-x86_64}
-BUILD=${BUILD:-7}
+BUILD=${BUILD:-8}
 QTPLATFORM=linux-g++-64
 DISTRO=${DISTRO:-slamd64}
 
@@ -131,6 +131,13 @@ make install INSTALL_ROOT=$PKG || exit 1
 
 # The infamous qt -> qt-${VERSION} link that lets us cheat on the QTDIR ;-)
 ( cd $PKG/usr/lib$LIBSUFFIX ; ln -sf qt-${VERSION} qt)
+
+# Link the shared libraries into /usr/lib$LIBSUFFIX:
+( cd $PKG/usr/lib$LIBSUFFIX
+  for file in qt/lib/*.so* ; do
+    ln -sf $file .
+  done
+)
 
 # Add man pages:
 mkdir -p $PKG/usr/man

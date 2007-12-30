@@ -2,8 +2,8 @@
 # Make kde-i18n packages
 # by PJV <volkerdi@slackware.com>
 
-export KDEVER=3.5.7
-export PKVER=3.5.7
+export KDEVER=3.5.8
+export PKVER=3.5.8
 export ARCH=noarch
 export BUILD=1
 export LC_ALL=C
