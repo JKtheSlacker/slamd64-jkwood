@@ -7,9 +7,9 @@ PKG=$TMP/package-arts
 # Uninstall xine-lib before running this
 ##### WARNING #####
 
-VERSION=${VERSION:-1.5.7}
+VERSION=${VERSION:-1.5.8}
 ARCH=${ARCH:-x86_64}
-BUILD=${BUILD:-2}
+BUILD=${BUILD:-1}
 DISTRO=${DISTRO:-slamd64}
 
 if [ $DISTRO = slackware ]; then
