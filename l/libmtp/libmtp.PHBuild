@@ -1,5 +1,5 @@
 #!/bin/sh
-# Copyright 2006  Patrick J. Volkerding, Sebeka, MN, USA
+# Copyright 2006, 2007  Patrick J. Volkerding, Sebeka, MN, USA
 # All rights reserved.
 #
 # Redistribution and use of this script, with or without modification, is
@@ -22,26 +22,12 @@
 
 PKGNAM=libmtp
 
-VERSION=${VERSION:-0.1.5}
-ARCH=${ARCH:-x86_64}
+VERSION=${VERSION:-0.2.4}
 BUILD=${BUILD:-1}
-DISTRO=${DISTRO:-slamd64}
 
-if [ $DISTRO = slackware ]; then
-	PKGARCH=$ARCH
-else
-	PKGARCH=${ARCH}_${DISTRO}
-fi
+. /etc/pkghelpers
+pkghelpers_env
 
-if [ $DISTRO = slamd64 ]; then
-	LIBSUFFIX=${LIBSUFFIX:-64}
-fi
-
-CWD=`pwd`
-if [ "$TMP" = "" ]; then
-  TMP=/tmp
-fi
-PKG=$TMP/package-${PKGNAM}
 rm -rf $PKG
 mkdir -p $PKG
 
@@ -78,21 +64,20 @@ find . -perm 555 -exec chmod 755 {} \;
 CFLAGS="$SLKCFLAGS" \
 ./configure \
   --prefix=/usr \
-	--libdir=/usr/lib$LIBSUFFIX \
+  --libdir=/usr/lib$LIBSUFFIX \
   --mandir=/usr/man \
   --disable-static \
-  $ARCH-$DISTRO-linux
+  --build=$ARCH-$DISTRO-linux
 
 #  --enable-hotplugging 
 
 # Build and install:
-make -j6 || exit 1
+make -j10 || exit 1
 make install DESTDIR=$PKG || exit 1
 
 # Add udev rules:
-zcat $CWD/libmtp.udev.diff.gz | patch -p1 --verbose --backup --suffix=.orig || exit 1
 mkdir -p $PKG/etc/udev/rules.d
-cat libmtp.rules > $PKG/etc/udev/rules.d/80-libmtp.rules
+cat $CWD/80-libmtp.rules > $PKG/etc/udev/rules.d/80-libmtp.rules
 
 ## Add hotplug files:
 #zcat $CWD/libmtp.sh.diff.gz | patch -p1 --verbose --backup --suffix=.orig || exit 1
@@ -111,35 +96,6 @@ cat libmtp.rules > $PKG/etc/udev/rules.d/80-libmtp.rules
 #  mv libmtp.usermap.new libmtp.usermap
 #)
 
-# Strip binaries:
-( cd $PKG
-  find . | xargs file | grep "executable" | grep ELF | cut -f 1 -d : | xargs strip --strip-unneeded 2> /dev/null
-  find . | xargs file | grep "shared object" | grep ELF | cut -f 1 -d : | xargs strip --strip-unneeded 2> /dev/null
-)
-
-# Compress and link manpages, if any:
-if [ -d $PKG/usr/man ]; then
-  ( cd $PKG/usr/man
-    for manpagedir in $(find . -type d -name "man*") ; do
-      ( cd $manpagedir
-        for eachpage in $( find . -type l -maxdepth 1) ; do
-          ln -s $( readlink $eachpage ).gz $eachpage.gz
-          rm $eachpage
-        done
-        gzip -9 *.?
-      )
-    done
-  )
-fi
-
-# Compress info files, if any:
-if [ -d $PKG/usr/info ]; then
-  ( cd $PKG/usr/info
-    rm -f dir
-    gzip -9 *
-  )
-fi
-
 mkdir -p $PKG/usr/doc
 mv $PKG/usr/share/doc/* $PKG/usr/doc
 rmdir $PKG/usr/share/doc
@@ -153,5 +109,5 @@ mkdir -p $PKG/install
 cat $CWD/slack-desc > $PKG/install/slack-desc
 
 cd $TMP/package-${PKGNAM}
-makepkg -l y -c n ../${PKGNAM}-$VERSION-$PKGARCH-$BUILD.tgz
-
+pkghelpers_fixup
+pkghelpers_makepkg
