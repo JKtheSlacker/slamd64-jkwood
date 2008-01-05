@@ -1,7 +1,7 @@
 #!/bin/sh
 PKGNAM=bin86
 VERSION=0.16.15
-BUILD=2
+BUILD=3
 
 . /etc/pkghelpers
 pkghelpers_env
@@ -13,10 +13,10 @@ cd /tmp
 tar xjvf $CWD/bin86-$VERSION.tar.bz2
 cd bin86-$VERSION
 zcat $CWD/bin86.diff.gz | patch -p1
-mkdir -p /usr/doc/bin86-$VERSION
-cp -a ChangeLog README README-0.4 as/TODO as/COPYING /usr/doc/bin86-$VERSION
-chmod 644 /usr/doc/bin86-$VERSION/*
-chown root.root /usr/doc/bin86-$VERSION/*
+mkdir -p $PKG/usr/doc/bin86-$VERSION
+cp -a ChangeLog README README-0.4 as/TODO as/COPYING $PKG/usr/doc/bin86-$VERSION
+chmod 644 $PKG/usr/doc/bin86-$VERSION/*
+chown root.root $PKG/usr/doc/bin86-$VERSION/*
 cd ld 
 zcat $CWD/bin86-x86_64.diff.gz | patch -p0 --verbose
 cd ..
