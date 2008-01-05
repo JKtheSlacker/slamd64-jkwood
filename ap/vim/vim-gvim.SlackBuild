@@ -8,8 +8,9 @@ fi
 VIMVER=7.1
 # This is the directory in the VIM source archive to cd into.
 DIRVER=71
+PYVER=2.5
 ARCH=${ARCH:-x86_64}
-BUILD=1
+BUILD=2
 
 PKG=$TMP/package-vim-gvim
 rm -rf $PKG
@@ -36,6 +37,7 @@ CFLAGS="-O2 -fPIC" \
   $* \
   --prefix=/usr \
   --enable-pythoninterp \
+  --with-python-config-dir=/usr/lib64/python$PYVER/config \
   --enable-perlinterp \
   --disable-tclinterp \
   --enable-multibyte \
