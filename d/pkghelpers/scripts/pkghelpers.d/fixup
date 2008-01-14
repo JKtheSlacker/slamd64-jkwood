@@ -25,4 +25,7 @@ pkghelpers_fixup() {
 		rm -f usr/info/dir
 		gzip -9 usr/info/*
 	fi
+
+	##### DELETE UNNECESSARY PERL DOCUMENTATION #####
+	find . -name perllocal.pod | xargs rm -f
 }
