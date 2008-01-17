@@ -37,7 +37,7 @@ CWD=$(pwd)
 if [ "$TMP" = "" ]; then
   TMP=/tmp
 fi
-PKG=$TMP/package-xlibs32
+PKG=${PKG:-$TMP/package-xlibs32}
 #rm -rf $PKG
 mkdir -p $PKG
 
