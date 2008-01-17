@@ -112,4 +112,4 @@ rmdir $PKG/usr/LessTif
 ( cd $PKG/usr/lib$LIBSUFFIX/X11 ; ln -sf ../../../etc/X11/mwm . )
 
 zcat $CWD/doinst.sh.gz | sed "s#lib/#lib$LIBSUFFIX/#g" > $PKG/doinst.sh
-(cd $PKG; sh doinst.sh)
+(cd $PKG; sh doinst.sh; rm doinst.sh)
