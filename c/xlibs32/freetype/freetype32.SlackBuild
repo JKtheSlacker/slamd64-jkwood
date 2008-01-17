@@ -6,6 +6,7 @@ VERSION=2.3.5
 ARCH=${ARCH:-x86_64}
 BUILD=${BUILD:-1}
 DISTRO=${DISTRO:-slamd64}
+NUMJOBS=${NUMJOBS:-10}
 
 if [ $DISTRO = slackware ]; then
 	PKGARCH=$ARCH
@@ -65,7 +66,7 @@ zcat $CWD/freetype.illadvisederror.diff.gz | patch -p1 --verbose || exit 1
 
 chown -R root:root .
 CC="gcc -m32" CFLAGS="$SLKCFLAGS -m32" make setup CFG="--prefix=/usr --libdir=/usr/lib$LIBSUFFIX $ARCH-$DISTRO-linux"
-make -j10 || exit 1
+make -j$NUMJOBS || exit 1
 make install DESTDIR=$PKG
 
 # Can't imagine a lot of use for this:

@@ -25,6 +25,7 @@ VERSION=${VERSION:-0.95.0}
 ARCH=${ARCH:-x86_64}
 BUILD=${BUILD:-3}
 DISTRO=${DISTRO:-slamd64}
+NUMJOBS=${NUMJOBS:-10}
 
 if [ $DISTRO = slackware ]; then
 	PKGARCH=$ARCH
@@ -88,7 +89,7 @@ CFLAGS="$SLKCFLAGS -m32" \
   --build=$ARCH-$DISTRO-linux
 
 # Build and install:
-make libdir=/usr/lib$LIBSUFFIX -j10 || exit 1
+make libdir=/usr/lib$LIBSUFFIX -j$NUMJOBS || exit 1
 make install libdir=/usr/lib$LIBSUFFIX DESTDIR=$PKG || exit 1
 
 # Strip binaries:

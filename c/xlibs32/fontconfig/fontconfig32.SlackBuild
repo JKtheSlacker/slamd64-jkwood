@@ -7,6 +7,7 @@ VERSION=2.4.2
 export ARCH=${ARCH:-x86_64}
 BUILD=${BUILD:-1}
 DISTRO=${DISTRO:-slamd64}
+NUMJOBS=${NUMJOBS:-10}
 
 if [ "$ARCH" = "i386" ]; then
   SLKCFLAGS="-O2 -march=i386 -mcpu=i686"
@@ -68,7 +69,7 @@ CFLAGS="$SLKCFLAGS -m32" \
   --localstatedir=/var
 
 # Uses a currently non-functional sgml tool, thus '-i':
-make -i -j10
+make -i -j$NUMJOBS
 make -i install DESTDIR=$PKG
 
 # This ought to be easily found here, but it's still safer to move it:
