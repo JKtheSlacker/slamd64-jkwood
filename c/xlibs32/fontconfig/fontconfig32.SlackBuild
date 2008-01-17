@@ -24,12 +24,6 @@ else
 	PKGARCH=${ARCH}_${DISTRO}
 fi
 
-if [ $DISTRO = slamd64 ]; then
-	LIBSUFFIX=${LIBSUFFIX:-64}
-else
-	LIBSUFFIX=${LIBSUFFIX:-""}
-fi
-
 #rm -rf $PKG
 mkdir -p $PKG
 
@@ -64,10 +58,11 @@ zcat $CWD/fontconfig.dejavu.diff.gz | patch -p1 --verbose || exit 1
 # index ugly bitmapped fonts):
 zcat $CWD/fontconfig.font.dir.list.diff.gz | patch -p1 --verbose --backup --suffix=.orig || exit 1
 
-CFLAGS="$SLKCFLAGS" \
+CFLAGS="$SLKCFLAGS -m32" \
 ./configure \
   --prefix=$FCPREFIX \
 	--libdir=$FCPREFIX/lib$LIBSUFFIX \
+	--disable-docs \
   --mandir=/usr/man \
   --sysconfdir=/etc \
   --localstatedir=/var
