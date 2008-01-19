@@ -59,6 +59,7 @@ zcat $CWD/fontconfig.dejavu.diff.gz | patch -p1 --verbose || exit 1
 # index ugly bitmapped fonts):
 zcat $CWD/fontconfig.font.dir.list.diff.gz | patch -p1 --verbose --backup --suffix=.orig || exit 1
 
+LDFLAGS="-L/usr/lib$LIBSUFFIX" \
 CFLAGS="$SLKCFLAGS -m32" \
 ./configure \
   --prefix=$FCPREFIX \
