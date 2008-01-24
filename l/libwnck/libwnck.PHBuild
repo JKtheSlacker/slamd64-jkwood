@@ -3,6 +3,9 @@ PKGNAM=libwnck
 VERSION=2.18.3
 BUILD=1
 
+. /etc/pkghelpers
+pkghelpers_env
+
 rm -rf $PKG
 mkdir -p $PKG
 cd $TMP
@@ -15,12 +18,12 @@ find . -perm 664 -exec chmod 644 {} \;
 CFLAGS="$SLKCFLAGS" \
 ./configure \
   --prefix=/usr \
-	--libdir=/usr/lib$LIBSUFFIX \
+  --libdir=/usr/lib$LIBSUFFIX \
   --sysconfdir=/etc \
   --localstatedir=/var/lib \
   --enable-static=no \
   --build=$ARCH-$DISTRO-linux
-make -j3 || exit 1
+make -j6 || exit 1
 make install DESTDIR=$PKG
 mkdir -p $PKG/usr/doc/libwnck-$VERSION
 cp -a \
