@@ -5,7 +5,7 @@ PKG=$TMP/package-liberation-fonts-ttf
 
 VERSION=0.2
 ARCH=noarch
-BUILD=1
+BUILD=3
 DISTRO=${DISTRO:-slamd64}
 
 if [ $DISTRO = slackware ]; then
