@@ -9,4 +9,6 @@ CXXFLAGS=$SLKCFLAGS \
   --mandir=/usr/man \
   --disable-static \
   --disable-gconf \
-  $ARCH-$DISTRO-linux
+  --enable-kde \
+  --enable-librsvg \
+  --build=$ARCH-$DISTRO-linux

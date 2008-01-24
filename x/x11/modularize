@@ -1,5 +1,5 @@
 # If a package is listed here, it will be built apart from the
-# usual "grab bag" package that's make from each soure directory.
+# usual "grab bag" package that's made from each source directory.
 
 applewmproto
 appres
@@ -142,6 +142,7 @@ viewres
 windowswmproto
 x11perf
 xauth
+xbacklight
 xbiff
 xbitmaps
 xcalc
@@ -190,6 +191,7 @@ xf86-input-tek4957
 xf86-input-ur98
 xf86-input-vmmouse
 xf86-input-void
+xf86-video-amd
 xf86-video-apm
 xf86-video-ark
 xf86-video-ast
@@ -210,6 +212,7 @@ xf86-video-neomagic
 xf86-video-newport
 xf86-video-nsc
 xf86-video-nv
+xf86-video-radeonhd
 xf86-video-rendition
 xf86-video-s3
 xf86-video-s3virge

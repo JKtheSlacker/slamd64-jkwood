@@ -1,14 +1,14 @@
 
 # Make the alternate server packages:
-rm -r ${SLACK_X_BUILD_DIR}/package-xorg-server-xdmx
-mkdir -p ${SLACK_X_BUILD_DIR}/package-xorg-server-xdmx/usr/bin
-mv $PKG/usr/bin/*dmx* ${SLACK_X_BUILD_DIR}/package-xorg-server-xdmx/usr/bin
-mkdir -p ${SLACK_X_BUILD_DIR}/package-xorg-server-xdmx/usr/man/man1
-mv $PKG/usr/man/man1/*dmx* ${SLACK_X_BUILD_DIR}/package-xorg-server-xdmx/usr/man/man1
-mkdir -p ${SLACK_X_BUILD_DIR}/package-xorg-server-xdmx/install
-cat $CWD/slack-desc/xorg-server-xdmx > ${SLACK_X_BUILD_DIR}/package-xorg-server-xdmx/install/slack-desc
-cd ${SLACK_X_BUILD_DIR}/package-xorg-server-xdmx
-makepkg -l y -c n ${SLACK_X_BUILD_DIR}/xorg-server-xdmx-${MODULAR_PACKAGE_VERSION}-$PKGARCH$PKGARCHSUFFIX-$BUILD.tgz
+#rm -r ${SLACK_X_BUILD_DIR}/package-xorg-server-xdmx
+#mkdir -p ${SLACK_X_BUILD_DIR}/package-xorg-server-xdmx/usr/bin
+#mv $PKG/usr/bin/*dmx* ${SLACK_X_BUILD_DIR}/package-xorg-server-xdmx/usr/bin
+#mkdir -p ${SLACK_X_BUILD_DIR}/package-xorg-server-xdmx/usr/man/man1
+#mv $PKG/usr/man/man1/*dmx* ${SLACK_X_BUILD_DIR}/package-xorg-server-xdmx/usr/man/man1
+#mkdir -p ${SLACK_X_BUILD_DIR}/package-xorg-server-xdmx/install
+#cat $CWD/slack-desc/xorg-server-xdmx > ${SLACK_X_BUILD_DIR}/package-xorg-server-xdmx/install/slack-desc
+#cd ${SLACK_X_BUILD_DIR}/package-xorg-server-xdmx
+#makepkg -l y -c n ${SLACK_X_BUILD_DIR}/xorg-server-xdmx-${MODULAR_PACKAGE_VERSION}-$PKGARCH$PKGARCHSUFFIX-$BUILD.tgz
 
 rm -r ${SLACK_X_BUILD_DIR}/package-xorg-server-xnest
 mkdir -p ${SLACK_X_BUILD_DIR}/package-xorg-server-xnest/usr/bin

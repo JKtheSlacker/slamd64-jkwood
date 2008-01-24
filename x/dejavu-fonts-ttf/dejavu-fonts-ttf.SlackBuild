@@ -1,0 +1,72 @@
+#!/bin/sh
+CWD=$(pwd)
+TMP=${TMP:-/tmp}
+PKG=$TMP/package-dejavu-fonts-ttf
+
+VERSION=2.22
+ARCH=noarch
+BUILD=1
+DISTRO=slamd64
+
+if [ $DISTRO = slackware ]; then
+	PKGARCH=$ARCH
+else
+	PKGARCH=${ARCH}_${DISTRO}
+fi
+
+# I suppose we'll be nice and try to fetch this if
+# you know the version you want.
+if [ ! -e $CWD/dejavu-fonts-ttf-$VERSION.tar.gz ]; then
+  if [ ! -e $CWD/dejavu-fonts-ttf-$VERSION.tar.bz2 ]; then
+    lftpget http://dejavu.sourceforge.net/snapshots/dejavu-fonts-ttf-$VERSION.tar.gz
+  fi
+fi
+if [ -e $CWD/dejavu-fonts-ttf-$VERSION.tar.gz ]; then
+  gzip -d $CWD/dejavu-fonts-ttf-$VERSION.tar.gz
+  bzip2 -9 $CWD/dejavu-fonts-ttf-$VERSION.tar
+fi
+
+rm -rf $PKG
+mkdir -p $PKG
+cd $TMP
+rm -rf dejavu-fonts-ttf-$VERSION
+tar xjvf $CWD/dejavu-fonts-ttf-$VERSION.tar.bz2
+cd dejavu-fonts-ttf-$VERSION
+
+chown -R root:root .
+find . -perm 666 -exec chmod 644 {} \;
+find . -perm 664 -exec chmod 644 {} \;
+find . -perm 600 -exec chmod 644 {} \;
+find . -perm 444 -exec chmod 644 {} \;
+find . -perm 400 -exec chmod 644 {} \;
+find . -perm 440 -exec chmod 644 {} \;
+find . -perm 777 -exec chmod 755 {} \;
+find . -perm 775 -exec chmod 755 {} \;
+find . -perm 511 -exec chmod 755 {} \;
+find . -perm 711 -exec chmod 755 {} \;
+find . -perm 555 -exec chmod 755 {} \;
+
+mkdir -p $PKG/usr/share/fonts/TTF/
+cp -a ttf/*.ttf $PKG/usr/share/fonts/TTF/
+
+mkdir -p $PKG/etc/fonts/conf.avail
+mkdir -p $PKG/etc/fonts/conf.d
+( cd fontconfig
+  for file in * ; do
+    cp -a $file $PKG/etc/fonts/conf.avail
+    ( cd $PKG/etc/fonts/conf.d ; ln -sf ../conf.avail/$file . )
+  done
+)
+
+mkdir -p $PKG/usr/doc/dejavu-fonts-ttf-$VERSION
+cp -a \
+  AUTHORS LICENSE NEWS README* *.txt \
+  $PKG/usr/doc/dejavu-fonts-ttf-$VERSION
+
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+zcat $CWD/doinst.sh.gz > $PKG/install/doinst.sh
+
+cd $PKG
+makepkg -l y -c n $TMP/dejavu-fonts-ttf-$(echo $VERSION | tr - _ )-$PKGARCH-$BUILD.tgz
+

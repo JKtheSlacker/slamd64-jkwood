@@ -1,11 +1,13 @@
 # Servers to build:
-BUILD_SERVERS="--enable-xorg --enable-xvfb --enable-xnest --enable-dmx"
-SKIP_SERVERS="--disable-xprint"
+BUILD_SERVERS="--enable-xorg --enable-xvfb --enable-xnest"
+SKIP_SERVERS="--disable-xprint --disable-dmx"
 
-MESA_VERSION=${MESA_VERSION:-7.0.1}
+MESA_VERSION=${MESA_VERSION:-7.0.2}
 
-# Fix from SuSE for Mesa 7.0 patches to GL/ Makefile
-autoreconf -fi
+# For now, trying to compile with HAL/D-BUS leads to a compile failure
+# with a ton of undefined symbols.  Until this is rectified, we will be
+# leaving this feature off.  It's not terriby useful IMHO anyway --
+# autodetection and configuration of input devices.
 
 CFLAGS="$SLKCFLAGS" \
 ./configure \
@@ -18,7 +20,7 @@ CFLAGS="$SLKCFLAGS" \
   --disable-static \
   --enable-xcsecurity \
   --with-pic \
- --with-int10=x86emu \
+  --with-int10=x86emu \
   --with-default-font-path="/usr/share/fonts/TTF,/usr/share/fonts/OTF,/usr/share/fonts/Type1,/usr/share/fonts/misc,/usr/share/fonts/75dpi/:unscaled" \
   --with-module-dir=/usr/lib$LIBSUFFIX/xorg/modules \
   --with-dri-driver-path=/usr/lib$LIBSUFFIX/xorg/modules/dri \
@@ -27,9 +29,11 @@ CFLAGS="$SLKCFLAGS" \
   --with-mesa-source=/tmp/Mesa-${MESA_VERSION} \
   --with-xkb-path=/etc/X11/xkb \
   --with-xkb-output=/var/lib/xkb \
+  --disable-config-dbus \
+  --disable-config-hal \
   $BUILD_SERVERS \
   $SKIP_SERVERS \
-  $ARCH-$DISTRO-linux
+  --build=$ARCH-$DISTRO-linux
 
 # Ugly fixup
 sed -i 's#-ldl##' hw/xfree86/Makefile

@@ -1,0 +1,35 @@
+#!/bin/sh
+PKGNAM=libwnck
+VERSION=2.18.3
+BUILD=1
+
+rm -rf $PKG
+mkdir -p $PKG
+cd $TMP
+rm -rf libwnck-$VERSION
+tar xjvf $CWD/libwnck-$VERSION.tar.bz2
+cd libwnck-$VERSION
+chown -R root:root .
+find . -perm 777 -exec chmod 755 {} \;
+find . -perm 664 -exec chmod 644 {} \;
+CFLAGS="$SLKCFLAGS" \
+./configure \
+  --prefix=/usr \
+	--libdir=/usr/lib$LIBSUFFIX \
+  --sysconfdir=/etc \
+  --localstatedir=/var/lib \
+  --enable-static=no \
+  --build=$ARCH-$DISTRO-linux
+make -j3 || exit 1
+make install DESTDIR=$PKG
+mkdir -p $PKG/usr/doc/libwnck-$VERSION
+cp -a \
+  AUTHORS COPYING* NEWS README TODO \
+  $PKG/usr/doc/libwnck-$VERSION
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+
+cd $PKG
+pkghelpers_fixup
+pkghelpers_makepkg
+
