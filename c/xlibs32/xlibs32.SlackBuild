@@ -27,16 +27,13 @@ BUILD=${BUILD:-1}
 DISTRO=${DISTRO:-slamd64}
 NUMJOBS=${NUMJOBS:-3}
 
-# Directory containing X library source tarballs
-SRCDIR=$CWD/src
-
 if [ $DISTRO = slackware ]; then
 	PKGARCH=$ARCH
 else
 	PKGARCH=${ARCH}_${DISTRO}
 fi
 
-CWD=`pwd`
+CWD=$(pwd)
 if [ "$TMP" = "" ]; then
   TMP=/tmp
 fi
@@ -45,6 +42,9 @@ rm -rf $PKG
 mkdir -p $PKG
 
 mkdir -p $TMP/$PKGNAM-$VERSION
+
+# Directory containing X library source tarballs
+SRCDIR=$CWD/src
 
 # Directory for the binaries we want to keep
 mkdir -p $PKG/usr/bin/32
