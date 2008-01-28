@@ -2,7 +2,7 @@
 
 VERSION=${VERSION:-1.0}
 ARCH=${ARCH:-x86_64} # 64-bit arch, not 32
-BUILD=${BUILD:-2}
+BUILD=${BUILD:-3}
 DISTRO=${DISTRO:-slamd64}
 
 SOURCEDIR=/tmp/devel32
@@ -90,5 +90,7 @@ find -type f | xargs file | grep ELF | cut -f 1 -d : | xargs strip --strip-unnee
 mkdir install
 cat $CWD/slack-desc > install/slack-desc
 cat $CWD/doinst.sh > install/doinst.sh
+
+removepkg devel32-tmp
 
 makepkg -l y -c n ../$PKGNAME-$VERSION-${ARCH}_${DISTRO}-$BUILD.tgz
