@@ -1,6 +1,6 @@
 #!/bin/sh
 PKGNAM=libgsf
-VERSION=1.14.3
+VERSION=1.14.7
 BUILD=1
 
 . /etc/pkghelpers
@@ -13,9 +13,7 @@ cd $TMP
 rm -rf libgsf-$VERSION
 tar xjvf $CWD/libgsf-$VERSION.tar.bz2
 cd libgsf-$VERSION
-chown -R root:root .
-find . -perm 666 -exec chmod 644 {} \;
-find . -perm 664 -exec chmod 644 {} \;
+pkghelpers_permissions
 CFLAGS="$SLKCFLAGS" \
 ./configure \
   --prefix=/usr \
