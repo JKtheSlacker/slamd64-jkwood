@@ -1,0 +1,36 @@
+#!/bin/sh
+PKGNAM=expat32
+VERSION=2.0.1
+BUILD=1
+
+. /etc/pkghelpers
+pkghelpers_env
+export MULTILIB=false
+
+SLKCFLAGS="$SLKCFLAGS -m32"
+
+rm -rf $PKG
+mkdir -p $PKG
+cd $TMP
+rm -rf expat-$VERSION
+tar xzvf $CWD/expat-$VERSION.tar.gz
+cd expat-$VERSION
+pkghelpers_permissions
+CC="gcc -m32" \
+CFLAGS="$SLKCFLAGS" \
+./configure \
+  --prefix=/usr \
+  --build=$ARCH-$DISTRO-linux
+make -j6 || exit 1
+make install DESTDIR=$PKG
+
+# Get rid of stuff we'd prefer to use the 64-bit versions of
+rm -rf $PKG/usr/{include,man}
+(cd $PKG/usr/bin; mkdir 32; mv * 32)
+
+cd $PKG
+mkdir $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+pkghelpers_fixup
+pkghelpers_makepkg
+
