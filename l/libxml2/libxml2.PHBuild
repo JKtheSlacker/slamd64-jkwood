@@ -1,0 +1,43 @@
+#!/bin/sh
+PKGNAM=libxml2
+VERSION=2.6.31
+BUILD=1
+
+. /etc/pkghelpers
+pkghelpers_env
+
+rm -rf $PKG
+mkdir -p $PKG
+cd $TMP
+rm -rf libxml2-$VERSION
+tar xjvf $CWD/libxml2-$VERSION.tar.bz2
+cd libxml2-$VERSION
+pkghelpers_permissions
+CFLAGS="$SLKCFLAGS" \
+./configure \
+  --prefix=/usr \
+	--libdir=/usr/lib$LIBSUFFIX \
+  --mandir=/usr/man \
+  --build=$ARCH-$DISTRO-linux
+make -j6 || exit 1
+make install DESTDIR=$PKG
+mv $PKG/usr/share/doc $PKG/usr
+mv $PKG/usr/doc/libxml2-python-$VERSION $PKG/usr/doc/libxml2-$VERSION
+cp -a \
+  AUTHORS COPYING COPYING.LIB INSTALL NEWS README \
+  $PKG/usr/doc/libxml2-$VERSION
+( cd $PKG/usr/doc/libxml2-$VERSION
+  find . -type f | xargs chmod 644
+)
+
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+#echo
+#echo "Only the python bindings in /usr/lib/python__/site-packages/ should"
+#echo "be kept... toss the other stuff"
+#echo
+
+cd $PKG
+pkghelpers_fixup
+pkghelpers_makepkg
+
