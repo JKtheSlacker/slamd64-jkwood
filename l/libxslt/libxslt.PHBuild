@@ -1,0 +1,38 @@
+#!/bin/sh
+PKGNAM=libxslt
+VERSION=1.1.22
+BUILD=1
+
+. /etc/pkghelpers
+pkghelpers_env
+
+rm -rf $PKG
+mkdir -p $PKG
+cd $TMP
+rm -rf libxslt-$VERSION
+tar xjvf $CWD/libxslt-$VERSION.tar.bz2
+cd libxslt-$VERSION
+pkghelpers_permissions
+CFLAGS="$SLKCFLAGS" \
+./configure \
+  --prefix=/usr \
+	--libdir=/usr/lib$LIBSUFFIX \
+  --build=$ARCH-$DISTRO-linux
+make -j4 || exit 1
+make install DESTDIR=$PKG
+mv $PKG/usr/share/doc $PKG/usr
+mv $PKG/usr/doc/libxslt-python-$VERSION $PKG/usr/doc/libxslt-$VERSION
+cp -a \
+  AUTHORS COPYING COPYING.LIB Copyright FEATURES INSTALL IPR NEWS README TODO libxslt.spec \
+  $PKG/usr/doc/libxslt-$VERSION
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+#echo
+#echo "Only the python bindings in /usr/lib/python__/site-packages/ should"
+#echo "be kept... toss the other stuff"
+#echo
+
+cd $PKG
+pkghelpers_fixup
+pkghelpers_makepkg
+
