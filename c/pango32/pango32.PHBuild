@@ -1,0 +1,45 @@
+#!/bin/sh
+PKGNAM=pango32
+VERSION=1.20.0
+BUILD=1
+
+. /etc/pkghelpers
+pkghelpers_env
+export MULTILIB=false
+
+SLKCFLAGS="$SLKCFLAGS -m32"
+
+rm -rf $PKG
+mkdir -p $PKG/usr
+cd $TMP
+rm -rf pango-$VERSION
+tar xjvf $CWD/pango-$VERSION.tar.bz2
+cd pango-$VERSION
+pkghelpers_permissions
+
+LDFLAGS="-L/usr/lib" \
+CFLAGS="$SLKCFLAGS" \
+./configure \
+  --prefix=/usr \
+  --sysconfdir=/etc \
+  --build=$ARCH-$DISTRO-linux
+make -j4 || exit 1
+make install DESTDIR=$PKG
+# Spamming your root partition:
+make install
+
+EXTRAETC=
+mkdir -p $PKG/etc/pango$EXTRAETC
+cp -a /etc/pango$EXTRAETC/* $PKG/etc/pango$EXTRAETC
+
+mkdir $PKG/usr/bin/32
+mv $PKG/usr/bin/* $PKG/usr/bin/32
+
+rm -rf $PKG/usr/{share,include,man}
+
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+
+cd $PKG
+pkghelpers_fixup
+pkghelpers_makepkg
