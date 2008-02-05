@@ -1,0 +1,53 @@
+#!/bin/sh
+# Set initial variables:
+PKGNAM=apr
+VERSION=1.2.12
+BUILD=${BUILD:-1}
+
+. /etc/pkghelpers
+pkghelpers_env
+
+rm -rf $PKG
+mkdir -p $PKG
+
+cd $TMP
+rm -rf apr-$VERSION
+tar xjvf $CWD/apr-$VERSION.tar.bz2
+cd apr-$VERSION
+
+pkghelpers_permissions
+
+CFLAGS="$SLKCFLAGS" \
+./configure \
+  --prefix=/usr \
+	--libdir=/usr/lib$LIBSUFFIX \
+  --with-installbuilddir=/usr/lib$LIBSUFFIX/apr-${VERSION}/build-1 \
+  --disable-static \
+  --with-devrandom=/dev/urandom \
+  $ARCH-$DISTRO-linux
+
+make -j6 || exit 1
+make dox || exit 1
+make install DESTDIR=$PKG || exit 1
+
+mkdir -p $PKG/usr/doc/apr-$VERSION
+cp -a \
+  CHANGES LICENSE NOTICE README.dev \
+  $PKG/usr/doc/apr-$VERSION
+
+# This just seems like way too much stuff...
+#mv docs/dox/html $PKG/usr/doc/apr-$VERSION
+
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+
+# Build the package:
+cd $PKG
+pkghelpers_fixup
+pkghelpers_makepkg
+
+# Clean up the extra stuff:
+if [ "$1" = "--cleanup" ]; then
+  rm -rf $TMP/apr-$VERSION
+  rm -rf $PKG
+fi
