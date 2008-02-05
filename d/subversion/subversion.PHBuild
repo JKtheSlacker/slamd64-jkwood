@@ -1,0 +1,60 @@
+#!/bin/sh
+PKGNAM=subversion
+VERSION=1.4.6
+BUILD=1
+
+. /etc/pkghelpers
+pkghelpers_env
+
+rm -rf $PKG
+mkdir -p $PKG
+
+cd $TMP
+rm -rf subversion-$VERSION
+tar xjvf $CWD/subversion-$VERSION.tar.bz2 || exit 1
+cd subversion-$VERSION
+pkghelpers_permissions
+CFLAGS="$SLKCFLAGS" \
+./configure \
+  --prefix=/usr \
+	--libdir=/usr/lib$LIBSUFFIX \
+  --enable-shared \
+  --disable-static \
+  --with-apr=/usr \
+  --with-apr-util=/usr \
+  --with-apxs=/usr/sbin/apxs \
+  --with-neon=/usr \
+  --with-pic \
+  --with-ssl \
+  --with-zlib \
+  --build=$ARCH-$DISTRO-linux
+make -j12 || exit 1
+make install DESTDIR=$PKG
+make install-docs DESTDIR=$PKG
+
+# What is this junk for?  Since I don't know, I'll erase it.  :-)
+rm -rf $PKG/usr/build
+
+mkdir -p $PKG/usr/doc/subversion-$VERSION
+cp -a \
+  BUGS CHANGES COMMITTERS COPYING HACKING INSTALL README TRANSLATING doc \
+  $PKG/usr/doc/subversion-$VERSION
+# too big && useless for most || if you think not, can be found in the source tarball
+rm -rf $PKG/usr/doc/subversion-$VERSION/doc/tools
+# Add the HTML svn book:
+( cd $PKG/usr/doc/subversion-$VERSION
+  tar xjf $CWD/svn-book-html.tar.bz2
+  mv svn-book-html book
+  cd book
+  find . -type d -exec chmod 755 {} \;
+  find . -type f -exec chmod 644 {} \;
+  chown -R root:root .
+) 
+
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+
+cd $PKG
+pkghelpers_fixup
+pkghelpers_makepkg
+
