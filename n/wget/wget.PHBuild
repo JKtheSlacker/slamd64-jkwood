@@ -1,7 +1,7 @@
 #!/bin/sh
 PKGNAM=wget
 VERSION=1.10.2
-BUILD=${BUILD:-2}
+BUILD=${BUILD:-3}
 
 . /etc/pkghelpers
 pkghelpers_env
@@ -17,8 +17,9 @@ chown -R root.root .
 CFLAGS="$SLKCFLAGS" \
 ./configure --prefix=/usr \
   --sysconfdir=/etc \
+  --with-libssl-prefix=/usr/lib$LIBSUFFIX \
   ${ARCH}-$DISTRO-linux
-make -j12 || exit 1
+make -j5 || exit 1
 make install DESTDIR=$PKG
 mv $PKG/etc/wgetrc $PKG/etc/wgetrc.new
 gzip -9 $PKG/usr/info/* $PKG/usr/man/man?/*
