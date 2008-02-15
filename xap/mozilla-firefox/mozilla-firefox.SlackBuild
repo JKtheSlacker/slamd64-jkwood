@@ -9,7 +9,7 @@ PKG=$TMP/package-mozilla-firefox
 # unless you have permission from the mozilla foundation.
 # XXX XXX XXX XXX
 
-VERSION=2.0.0.11
+VERSION=2.0.0.12
 ARCH=${ARCH:-x86_64}
 BUILD=${BUILD:-1}
 
