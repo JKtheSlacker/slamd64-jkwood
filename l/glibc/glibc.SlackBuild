@@ -35,7 +35,7 @@ TARGET32=${TARGET32:-i486} # only needed on multilib
 
 DISTRO=${DISTRO:-slamd64}
 
-BUILD=${BUILD:-1}
+BUILD=${BUILD:-2}
 
 # Automatically work out our libdir
 if [ $DISTRO = slamd64 ]; then
@@ -204,7 +204,7 @@ build_glibc() {
 	  --without-cvs \
 	  $TARGET-$DISTRO-linux || exit 1
 
-	make -j12 || exit 1
+	make -j5 || exit 1
 	make install install_root=$PKG || exit 1
 	make localedata/install-locales install_root=$PKG || exit 1
 }
