@@ -24,8 +24,8 @@
 
 
 PKGNAM=httpd
-VERSION=${VERSION:-2.2.4}
-BUILD=${BUILD:-3}
+VERSION=${VERSION:-2.2.8}
+BUILD=${BUILD:-1}
 
 . /etc/pkghelpers
 pkghelpers_env
@@ -89,7 +89,7 @@ CXXFLAGS="$SLKCFLAGS" \
   --build=$ARCH-$DISTRO-linux || exit 1
 
 # Build and install:
-make -j4 || exit 1
+make -j5 || exit 1
 make install DESTDIR=$PKG || exit 1
 
 rmdir $PKG/usr/bin
