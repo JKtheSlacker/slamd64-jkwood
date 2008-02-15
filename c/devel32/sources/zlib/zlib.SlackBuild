@@ -40,7 +40,8 @@ make
   --shared
 make
 mkdir -p $PKG/usr/lib$LIBSUFFIX $PKG/lib$LIBSUFFIX
-cp -a libz.a libz.so* $PKG/usr/lib$LIBSUFFIX
+cp -a libz.a $PKG/usr/lib$LIBSUFFIX
+cp -a libz.so* $PKG/lib$LIBSUFFIX
 chmod 755 $PKG/usr/lib$LIBSUFFIX/*
 chmod 644 $PKG/usr/lib$LIBSUFFIX/libz.a
 
