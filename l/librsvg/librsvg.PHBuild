@@ -1,6 +1,6 @@
 #!/bin/sh
 PKGNAM=librsvg
-VERSION=2.18.2
+VERSION=2.22.1
 BUILD=1
 
 . /etc/pkghelpers
@@ -8,13 +8,15 @@ pkghelpers_env
 
 rm -rf $PKG
 mkdir -p $PKG
-cd /tmp
+cd $TMP
 rm -rf librsvg-$VERSION
-tar xjvf $CWD/librsvg-$VERSION.tar.bz2
+tar xjvf $CWD/librsvg-$VERSION.tar.bz2 || true
 cd librsvg-$VERSION
-chown -R root:root .
-find . -perm 777 -exec chmod 755 {} \;
-find . -perm 664 -exec chmod 644 {} \;
+pkghelpers_permissions
+
+# Patch configure to detect seamonkey-config or mozilla-config
+zcat $CWD/librsvg_seamonkey-config.diff.gz | patch -p1 --verbose || exit 1
+
 CFLAGS="$SLKCFLAGS" \
 ./configure \
   --prefix=/usr \
@@ -23,13 +25,17 @@ CFLAGS="$SLKCFLAGS" \
   --sysconfdir=/etc \
   --localstatedir=/var/lib \
   --enable-static=no \
-  --build=$ARCH-$DISTRO-linux
+  --build=$ARCH-$DISTRO-linux \
+  --host=$ARCH-$DISTRO-linux
+
 make -j10 || exit 1
 make install DESTDIR=$PKG
+
 mkdir -p $PKG/usr/doc/librsvg-$VERSION
 cp -a \
   AUTHORS COPYING* NEWS README TODO \
   $PKG/usr/doc/librsvg-$VERSION
+
 mkdir -p $PKG/install
 cat $CWD/slack-desc > $PKG/install/slack-desc
 
