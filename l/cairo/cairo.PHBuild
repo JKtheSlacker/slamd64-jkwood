@@ -1,0 +1,44 @@
+#!/bin/sh
+PKGNAM=cairo
+VERSION=1.4.14
+BUILD=1
+
+. /etc/pkghelpers
+pkghelpers_env
+
+rm -rf $PKG
+mkdir -p $PKG
+cd $TMP
+rm -rf cairo-$VERSION
+tar xjvf $CWD/cairo-$VERSION.tar.bz2
+cd cairo-$VERSION
+pkghelpers_permissions
+CFLAGS="$SLKCFLAGS" \
+./configure \
+  --prefix=/usr \
+	--libdir=/usr/lib$LIBSUFFIX \
+  --mandir=/usr/man \
+  --sysconfdir=/etc \
+  --enable-warnings \
+  --disable-atsui \
+  --disable-gtk-doc \
+  --disable-glitz \
+  --disable-quartz \
+  --disable-xcb \
+  --disable-static \
+  --disable-win32
+make -j10 || exit 1
+make install DESTDIR=$PKG
+#mv $PKG/usr/share/gtk-doc/
+#rm -rf $PKG/usr/share/gtk-doc
+mkdir -p $PKG/usr/doc/cairo-$VERSION
+cp -a \
+  AUTHORS COPYING* NEWS README TODO \
+  $PKG/usr/doc/cairo-$VERSION
+( cd $PKG/usr/doc/cairo-$VERSION ; ln -sf /usr/share/gtk-doc/html/cairo html )
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+
+cd $PKG
+pkghelpers_fixup
+pkghelpers_makepkg
