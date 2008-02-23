@@ -1,0 +1,36 @@
+#!/bin/sh
+PKGNAM=taglib
+VERSION=1.5
+BUILD=1
+
+. /etc/pkghelpers
+pkghelpers_env
+
+rm -rf $PKG
+mkdir -p $PKG
+cd $TMP
+rm -rf taglib-$VERSION
+tar xjvf $CWD/taglib-$VERSION.tar.bz2
+cd taglib-$VERSION
+pkghelpers_permissions
+CFLAGS="-O2 -fPIC" \
+CXXFLAGS="-O2 -fPIC" \
+./configure \
+  --prefix=/usr \
+	--libdir=/usr/lib$LIBSUFFIX \
+  --program-prefix="" \
+  --program-suffix="" \
+  --build=$ARCH-$DISTRO-linux
+make -j6
+make install DESTDIR=$PKG
+mkdir -p $PKG/usr/doc/taglib-$VERSION
+cp -a \
+  AUTHORS COPYING INSTALL README TODO \
+  $PKG/usr/doc/taglib-$VERSION
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+
+cd $PKG
+pkghelpers_fixup
+pkghelpers_makepkg
+
