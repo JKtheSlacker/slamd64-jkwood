@@ -1,26 +1,15 @@
 #!/bin/sh
-CWD=`pwd`
-TMP=/tmp
-PKG=$TMP/package-arts
 
 ##### WARNING #####
 # Uninstall xine-lib before running this
 ##### WARNING #####
 
-VERSION=${VERSION:-1.5.8}
-ARCH=${ARCH:-x86_64}
+PKGNAM=arts
+VERSION=${VERSION:-1.5.9}
 BUILD=${BUILD:-1}
-DISTRO=${DISTRO:-slamd64}
 
-if [ $DISTRO = slackware ]; then
-	PKGARCH=$ARCH
-else
-	PKGARCH=${ARCH}_${DISTRO}
-fi
-
-if [ $DISTRO = slamd64 ]; then
-	LIBSUFFIX=${LIBSUFFIX:-64}
-fi
+. /etc/pkghelpers
+pkghelpers_env
 
 rm -rf $PKG
 mkdir -p $PKG/usr
@@ -36,9 +25,9 @@ cd arts-$VERSION
 
 zcat $CWD/arts.tmpdir.diff.gz | patch -p1 --verbose || exit 1
 
-chown -R root:root .
-CFLAGS=$CPUOPT \
-CXXFLAGS=$CPUOPT \
+pkghelpers_permissions
+CFLAGS="$SLKCFLAGS" \
+CXXFLAGS="$SLKCFLAGS" \
 ./configure \
   --prefix=/usr \
 	--libdir=/usr/lib$LIBSUFFIX \
@@ -56,14 +45,8 @@ cp -a \
   $PKG/usr/doc/arts-$VERSION
 mkdir -p $PKG/install
 cat $CWD/slack-desc > $PKG/install/slack-desc
-( cd $PKG
-  find . | xargs file | grep "executable" | grep ELF | cut -f 1 -d : | xargs strip --strip-unneeded 2> /dev/null
-  find . | xargs file | grep "shared object" | grep ELF | cut -f 1 -d : | xargs strip --strip-unneeded 2> /dev/null
-)
-if [ -d $PKG/usr/man ]; then
-  gzip -9 $PKG/usr/man/man?/*
-fi
 
 cd $PKG
-makepkg -l y -c n ../arts-$VERSION-$PKGARCH-$BUILD.tgz
+pkghelpers_fixup
+pkghelpers_makepkg
 
