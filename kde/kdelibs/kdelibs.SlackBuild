@@ -23,13 +23,12 @@ fi
 
 cd $TMP
 echo "Building kdelibs-$VERSION.tar.bz2..."
-tar xjvf $CWD/kdelibs-$VERSION.tar.bz2 || exit 1
+tar xjvf $CWD/../src/kdelibs-$VERSION.tar.bz2 || exit 1
 cd kdelibs-$VERSION || exit 1
-chown -R root:root .
 
-zcat $CWD/kdelibs-utempter.diff.gz | patch -p1 --verbose --backup --suffix=.orig || exit 1
-zcat $CWD/kdelibs-kstartupinfo.diff.gz | patch -p4 --verbose --backup --suffix=.orig || exit 1
-zcat $CWD/kdelibs-3.5.8.kio_http.diff.gz | patch -p1 --verbose --backup --suffix=.orig || exit 1
+if [ -r $CWD/apply-patches.sh ]; then
+  . $CWD/apply-patches.sh
+fi
 
 if [ $LIBSUFFIX ]; then
   sed -i s%/usr/lib/utempter%/usr/lib$LIBSUFFIX/utempter% kdecore/kpty.cpp || exit 1

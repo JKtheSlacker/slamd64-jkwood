@@ -22,8 +22,12 @@ if [ -d /usr/lib$LIBSUFFIX/qt ]; then
 fi
 cd $TMP
 echo "Building kdebindings-$VERSION.tar.bz2..."
-tar xjvf $CWD/kdebindings-$VERSION.tar.bz2 || exit 1
+tar xjvf $CWD/../src/kdebindings-$VERSION.tar.bz2 || exit 1
 cd kdebindings-$VERSION || exit 1
+
+if [ -r $CWD/apply-patches.sh ]; then
+  . $CWD/apply-patches.sh
+fi
 
 ( cd python/pykde ; zcat $CWD/PyKDE-3.16.0.py25.diff.gz | patch -p1 --verbose ) || exit 1
 
@@ -45,6 +49,12 @@ CXXFLAGS=$CPUOPT \
   --program-prefix="" \
   --program-suffix="" \
   --build=$TARGET-$DISTRO-linux
+
+# Compile perl bindings first due to the vendor_perl:
+cd dcopperl
+  perl Makefile.PL INSTALLDIRS=vendor
+  make
+cd ..
 
 # Lately I've needed this big hammer.  I don't know why.
 make $NUMJOBS
