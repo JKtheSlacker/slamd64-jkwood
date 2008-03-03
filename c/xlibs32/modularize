@@ -9,6 +9,8 @@ libX11
 libXt
 libXfixes
 libXext
+libXv
+libXScrnSaver
 libXpm
 libXtst
 libXxf86vm
