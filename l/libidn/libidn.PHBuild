@@ -1,6 +1,6 @@
 #!/bin/sh
 PKGNAM=libidn
-VERSION=0.8.10
+VERSION=1.5
 BUILD=${BUILD:-1}
 
 . /etc/pkghelpers
