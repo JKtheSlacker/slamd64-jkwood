@@ -278,22 +278,22 @@ tar xjvf $CWD/gcc-$VERSION.tar.bz2
   # Start the build:
 
   # Include all debugging info (for now):
-  make -j3 bootstrap || exit 1
+  make -j5 bootstrap || exit 1
 
   ( cd gcc
-    make -j3 gnatlib GNATLIBCFLAGS="$SLKCFLAGS"
+    make -j5 gnatlib GNATLIBCFLAGS="$SLKCFLAGS"
     # This wants a shared -ladd2line?
     #make gnatlib-shared
     
     CFLAGS="$SLKCFLAGS" \
     CXXFLAGS="$SLKCFLAGS" \
-    make -j3 gnattools
+    make -j5 gnattools
   )
-  make -j4 info || exit 1
+  make -j5 info || exit 1
 
   # Set GCCCHECK=something to run the tests
   if [ ! -z $GCCCHECK ]; then
-    make -j4 check || exit 1
+    make -j5 check || exit 1
   fi
 
   make install DESTDIR=$PKG1 || exit 1
