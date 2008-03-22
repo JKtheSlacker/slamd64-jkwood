@@ -4,32 +4,22 @@
 # maintained by:  <volkerdi@slackware.com>
 # modified for multilib by:  Fred Emmott <mail@fredemmott.co.uk>
 
-CWD=`pwd`
-TMP=/tmp
-PKG=$TMP/package-perl
-
+PKGNAM=perl
 VERSION=5.8.8
 # IMPORTANT: also update -Dinc_version_list in ./configure below!
 
-ARCH=${ARCH:-x86_64}
-BUILD=3
+BUILD=4
 
 # Additional required modules:
-DBI=1.53
+DBI=1.602
 DBDMYSQL=4.001
 XMLPARSER=2.34
+XMLSIMPLE=2.18
 # For XFce:
 URI=1.35
 
-if [ "$ARCH" = "i386" ]; then
-  SLKCFLAGS="-O2 -march=i386 -mcpu=i686"
-elif [ "$ARCH" = "i486" ]; then
-  SLKCFLAGS="-O2 -march=i486 -mtune=i686"
-elif [ "$ARCH" = "s390" ]; then
-  SLKCFLAGS="-O2"
-elif [ "$ARCH" = "x86_64" ]; then
-  SLKCFLAGS="-O2 -fPIC"
-fi
+. /etc/pkghelpers
+pkghelpers_env
 
 if [ -x /usr/bin/perl ]; then
   echo "Perl detected."
@@ -52,9 +42,7 @@ tar xjvf $CWD/perl-$VERSION.tar.bz2
 cd perl-$VERSION
 
 # Adjust owner/perms to standard values:
-chown -R root:root .
-find . -perm 555 -exec chmod 755 {} \;
-find . -perm 444 -exec chmod 644 {} \;
+pkghelpers_permissions
 
 # If after all this time you still don't trust threads, comment
 # out the variable below:
@@ -80,6 +68,7 @@ echo 'installstyle="lib64/perl5"' >>hints/linux.sh
 # Configure perl:
 ./Configure -de \
   -Dprefix=/usr \
+  -Dvendorprefix=/usr \
   -Dcccdlflags='-fPIC' \
   -Dinstallprefix=/usr \
   -Doptimize="$SLKCFLAGS" \
@@ -88,6 +77,12 @@ echo 'installstyle="lib64/perl5"' >>hints/linux.sh
   -Dpager='/usr/bin/less -isr' \
   -Dinc_version_list='5.8.7 5.8.6 5.8.5 5.8.4 5.8.3 5.8.2 5.8.1 5.8.0' \
   -Darchname=$ARCH-linux
+
+# Kludge for gcc-4.2.3's needlessly changed output:
+cat makefile | grep -v '\<command-line\>' > foo
+mv foo makefile
+cat x2p/makefile | grep -v '\<command-line\>' > foo
+mv foo x2p/makefile
 
 # Build perl
 make -j6 || exit 1
@@ -100,16 +95,18 @@ make install
   ln -sf c2ph pstruct
   ln -sf s2p psed
 )
+mkdir -p /usr/lib$LIBSUFFIX/perl5/vendor_perl/${VERSION}/${ARCH}-linux-thread-multi
 
 # Install perl package:
 make install DESTDIR=$PKG
+mkdir -p $PKG/usr/lib$LIBSUFFIX/perl5/vendor_perl/${VERSION}/${ARCH}-linux-thread-multi
 
 # Add additional modules:
 ( cd ext
   ( tar xzvf $CWD/DBI-${DBI}.tar.gz
     cd DBI-${DBI}
     chown -R root:root .
-    perl Makefile.PL
+    perl Makefile.PL INSTALLDIRS=vendor
     make
     make test
     make install
@@ -121,7 +118,7 @@ make install DESTDIR=$PKG
   ( tar xzvf $CWD/DBD-mysql-${DBDMYSQL}.tar.gz
     cd DBD-mysql-${DBDMYSQL}
     chown -R root:root .
-    perl Makefile.PL
+    perl Makefile.PL INSTALLDIRS=vendor
     make
     make test
     make install
@@ -133,7 +130,7 @@ make install DESTDIR=$PKG
   ( tar xzvf $CWD/XML-Parser-${XMLPARSER}.tar.gz
     cd XML-Parser-${XMLPARSER}
     chown -R root:root .
-    perl Makefile.PL
+    perl Makefile.PL INSTALLDIRS=vendor
     make
     make test
     make install
@@ -142,10 +139,22 @@ make install DESTDIR=$PKG
     cp -a README $PKG/usr/doc/perl-$VERSION/XML-Parser-${XMLPARSER}
     chmod 644 $PKG/usr/doc/perl-$VERSION/XML-Parser-${XMLPARSER}/*
   )
+  ( tar xzvf $CWD/XML-Simple-${XMLSIMPLE}.tar.gz
+    cd XML-Simple-${XMLSIMPLE}
+    chown -R root:root .
+    perl Makefile.PL INSTALLDIRS=vendor
+    make
+    make test
+    make install
+    make install DESTDIR=$PKG
+    mkdir -p $PKG/usr/doc/perl-$VERSION/XML-Simple${XMLSIMPLE}
+    cp -a README $PKG/usr/doc/perl-$VERSION/XML-Simple${XMLSIMPLE}
+    chmod 644 $PKG/usr/doc/perl-$VERSION/XML-Simple${XMLSIMPLE}/*
+  )
   ( tar xzvf $CWD/URI-${URI}.tar.gz
     cd URI-${URI}
     chown -R root:root .
-    perl Makefile.PL
+    perl Makefile.PL INSTALLDIRS=vendor
     make
     make test
     make install
@@ -154,12 +163,6 @@ make install DESTDIR=$PKG
     cp -a README $PKG/usr/doc/perl-$VERSION/URI-${URI}
     chmod 644 $PKG/usr/doc/perl-$VERSION/URI-${URI}/*
   )
-)
-
-# Strip everything:
-( cd $PKG
-  find . | xargs file | grep "executable" | grep ELF | cut -f 1 -d : | xargs strip --strip-unneeded 2> /dev/null
-  find . | xargs file | grep "shared object" | grep ELF | cut -f 1 -d : | xargs strip --strip-unneeded 2> /dev/null
 )
 
 # There are also miniperl and microperl.
@@ -199,11 +202,17 @@ chmod 755 $PKG/usr/bin/*
 chmod 644 $PKG/usr/man/man?/*
 rmdir $PKG/usr/share
 
+# This file shouldn't get clobbered:
+if [ -r $PKG/usr/lib$LIBSUFFIX/perl5/${VERSION}/${ARCH}-linux-thread-multi/perllocal.pod ]; then
+  mv $PKG/usr/lib$LIBSUFFIX/perl5/${VERSION}/${ARCH}-linux-thread-multi/perllocal.pod $PKG/usr/lib$LIBSUFFIX/perl5/${VERSION}/${ARCH}-linux-thread-multi/perllocal.pod.new
+fi
+
 # Insert the slack-desc:
 mkdir -p $PKG/install
 cat $CWD/slack-desc > $PKG/install/slack-desc
 
 # Build the package:
 cd $PKG
-makepkg -l y -c n $TMP/perl-$VERSION-${ARCH}_slamd64-$BUILD.tgz
+pkghelpers_fixup
+pkghelpers_makepkg
 

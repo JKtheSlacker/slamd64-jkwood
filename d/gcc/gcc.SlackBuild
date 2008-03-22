@@ -2,7 +2,7 @@
 # GCC package build script (written by volkerdi@slackware.com)
 #
 # Copyright 2003, 2004  Slackware Linux, Inc., Concord, California, USA
-# Copyright 2005, 2006, 2007  Patrick J. Volkerding, Sebeka, Minnesota, USA
+# Copyright 2005, 2006, 2007, 2008  Patrick J. Volkerding, Sebeka, Minnesota, USA
 # Copyright 2007 Frederick Emmott <mail@fredemmott.co.uk>
 # All rights reserved.
 #
@@ -43,11 +43,11 @@
 # I see no reason to continue 386 support in the latest Slackware (and indeed
 # it's no longer easily possible).
 
-VERSION=4.1.2
+VERSION=4.2.3
 ARCH=${ARCH:-x86_64}
 DISTRO=${DISTRO:-slamd64}
 TARGET=$ARCH-$DISTRO-linux
-BUILD=2
+BUILD=1
 
 if [ $DISTRO = slackware ]; then
 	PKGARCH=$ARCH
@@ -57,8 +57,12 @@ fi
 
 if [ $DISTRO == slamd64 ]; then # add your multilib distro here
 	LIBSUFFIX=64
+	# Compile breaks on GCJ's 64 bit midi support (keeps trying to pull in
+	# the 32 bit Alsa library instead), so disable it for now on 4.2.3
+	SLKCONF="--disable-alsa"
 else
 	LIBSUFFIX=
+	SLKCONF=
 fi
 
 if [ "$ARCH" = "i386" ]; then
@@ -101,10 +105,36 @@ if [ -d $TMP ]; then
 fi
 mkdir -p $PKG{1,2,3,4,5,6,7}/usr/doc/gcc-$VERSION
 
+if [ "x$LIBSUFFIX" == "x64" ]; then
+  mkdir -p $PKG{1_32,2_32,3_32,4_32,5_32,6_32,7_32}/usr/doc/gcc-$VERSION
+fi
+
+# Insert package descriptions:
+mkdir -p $PKG{1,2,3,4,5,6,7}/install
+cat $CWD/slack-desc.gcc > $PKG1/install/slack-desc
+cat $CWD/slack-desc.gcc-g++ > $PKG2/install/slack-desc
+cat $CWD/slack-desc.gcc-gfortran > $PKG3/install/slack-desc
+cat $CWD/slack-desc.gcc-gnat > $PKG4/install/slack-desc
+cat $CWD/slack-desc.gcc-java > $PKG5/install/slack-desc
+cat $CWD/slack-desc.gcc-objc > $PKG6/install/slack-desc
+# cat $CWD/slack-desc.gcc-g++-gch > $PKG7/install/slack-desc
+
+if [ "x$LIBSUFFIX" = "x64" ]; then
+  mkdir -p $PKG{1_32,2_32,3_32,4_32,5_32,6_32,7_32}/install
+  cat $CWD/slack-desc.gcc32 > $PKG1_32/install/slack-desc
+  cat $CWD/slack-desc.gcc32-g++ > $PKG2_32/install/slack-desc
+  cat $CWD/slack-desc.gcc32-gfortran > $PKG3_32/install/slack-desc
+  cat $CWD/slack-desc.gcc32-java > $PKG5_32/install/slack-desc
+  cat $CWD/slack-desc.gcc32-objc > $PKG6_32/install/slack-desc
+fi
+
 cd $TMP
 tar xjvf $CWD/gcc-$VERSION.tar.bz2
+
 # install docs
 ( cd gcc-$VERSION
+  # Smite the fixincludes:
+  zcat $CWD/gcc-no_fixincludes.diff.gz | patch -p1 || exit 1
   # Fix perms/owners
   chown -R root:root .
   find . -perm 777 -exec chmod 755 {} \;
@@ -112,22 +142,9 @@ tar xjvf $CWD/gcc-$VERSION.tar.bz2
   find . -perm 754 -exec chmod 755 {} \;
   find . -perm 664 -exec chmod 644 {} \;
   mkdir -p $PKG1/usr/doc/gcc-$VERSION
-
-	# Patchtime
-	# Fix some multilib issues
-	if [ $DISTRO = slamd64 ]; then
-		# Thanks to CLFS
-		zcat $CWD/gcc-4.1.2-PR20425-1.diff.gz | patch -p1 --verbose || exit 1 
-	fi
-	# Fix some x86_64 gcj issues
-	if [ $ARCH = x86_64 ]; then
-		# Thanks to oneforall
-		zcat $CWD/i386-signal.h.diff.gz | patch -p1 --verbose || exit 1
-	fi
-
   # Only the most recent ChangeLog... shouldn't be too big. :)
   cp -a \
-    BUGS COPYING COPYING.LIB ChangeLog \
+    BUGS COPYING* ChangeLog \
     ChangeLog.tree-ssa FAQ INSTALL \
     LAST_UPDATED MAINTAINERS NEWS \
     README* *.html \
@@ -182,14 +199,6 @@ tar xjvf $CWD/gcc-$VERSION.tar.bz2
     $PKG3/usr/doc/gcc-${VERSION}/libada
   )
 
-  mkdir -p $PKG5/usr/doc/gcc-${VERSION}/fastjar
-  ( cd fastjar
-    cp -a \
-      AUTHORS CHANGES COPYING ChangeLog INSTALL \
-      NEWS README \
-    $PKG5/usr/doc/gcc-${VERSION}/fastjar
-  )
-
   mkdir -p $PKG5/usr/doc/gcc-${VERSION}/libffi
   ( cd libffi
     cp -a \
@@ -201,7 +210,7 @@ tar xjvf $CWD/gcc-$VERSION.tar.bz2
   mkdir -p $PKG5/usr/doc/gcc-${VERSION}/libjava
   ( cd libjava
     cp -a \
-      COPYING ChangeLog HACKING LIBGCJ_LICENSE \
+      COPYING* ChangeLog HACKING LIBGCJ_LICENSE \
       NEWS README THANKS \
     $PKG5/usr/doc/gcc-${VERSION}/libjava
   )
@@ -211,6 +220,13 @@ tar xjvf $CWD/gcc-$VERSION.tar.bz2
     cp -a \
       ChangeLog \
     $PKG1/usr/doc/gcc-${VERSION}/libmudflap
+  )
+
+  mkdir -p $PKG1/usr/doc/gcc-${VERSION}/libgomp
+  ( cd libgomp
+    cp -a \
+      ChangeLog \
+    $PKG1/usr/doc/gcc-${VERSION}/libgomp
   )
   
   mkdir -p $PKG6/usr/doc/gcc-${VERSION}/libobjc
@@ -227,8 +243,8 @@ tar xjvf $CWD/gcc-$VERSION.tar.bz2
     $PKG2/usr/doc/gcc-${VERSION}/libstdc++-v3
     
     cp -a \
-      docs/html/faq/index.html \
-    $PKG2/usr/doc/gcc-${VERSION}/libstdc++-v3/faq.html
+      docs/html/faq \
+    $PKG2/usr/doc/gcc-${VERSION}/libstdc++-v3
   )
 )
 # build gcc
@@ -254,6 +270,7 @@ tar xjvf $CWD/gcc-$VERSION.tar.bz2
      --enable-__cxa_atexit \
      --disable-checking \
      --with-gnu-ld \
+     $SLKCONF \
      --verbose \
      --target=${TARGET} \
      --host=${TARGET} || exit 1
@@ -261,22 +278,16 @@ tar xjvf $CWD/gcc-$VERSION.tar.bz2
   # Start the build:
 
   # Include all debugging info (for now):
-  make -j 6 bootstrap || exit 1
-  # Include less debugging info:
-  # make CFLAGS='$SLKCFLAGS' LIBCFLAGS='-g $SLKCFLAGS' LIBCXXFLAGS='-g $SLKCFLAGS -fno-implicit-templates' -j2 bootstrap
-  # Include even less debugging info:
-  # make BOOT_CFLAGS='$SLKCFLAGS' STAGE1_CFLAGS='$SLKCFLAGS' CFLAGS='$SLKCFLAGS' CXXFLAGS='$SLKCFLAGS' LIBCFLAGS='-g $SLKCFLAGS' LIBCXXFLAGS='-g $SLKCFLAGS -fno-implicit-templates' GCJFLAGS='$SLKCFLAGS' bootstrap
+  make -j3 bootstrap || exit 1
 
   ( cd gcc
-    # make gnatlib GNATLIBCFLAGS="-g $SLKCFLAGS"
-    make gnatlib GNATLIBCFLAGS="$SLKCFLAGS" || exit 1
-    # make -j2 gnatlib
+    make -j3 gnatlib GNATLIBCFLAGS="$SLKCFLAGS"
     # This wants a shared -ladd2line?
     #make gnatlib-shared
     
     CFLAGS="$SLKCFLAGS" \
     CXXFLAGS="$SLKCFLAGS" \
-    make -j4 gnattools || exit 1
+    make -j3 gnattools
   )
   make -j4 info || exit 1
 
@@ -287,9 +298,9 @@ tar xjvf $CWD/gcc-$VERSION.tar.bz2
 
   make install DESTDIR=$PKG1 || exit 1
 
-# Be sure the "specs" file is installed.  There was an issue with that on 4.1.1:
+# Be sure the "specs" file is installed.
 if [ ! -r $PKG1/usr/lib${LIBSUFFIX}/gcc/${ARCH}-$DISTRO-linux/${VERSION}/specs ]; then
-  cat gcc/stage2/specs > $PKG1/usr/lib${LIBSUFFIX}/gcc/${ARCH}-$DISTRO-linux/${VERSION}/specs
+  cat stage1-gcc/specs > $PKG1/usr/lib${LIBSUFFIX}/gcc/${ARCH}-$DISTRO-linux/${VERSION}/specs
 fi
 
 #  make ada.install-common DESTDIR=$PKG1
@@ -301,15 +312,6 @@ fi
   # This is provided by binutils, so delete it here:
   rm -f $PKG1/usr/lib${LIBSUFFIX}/libiberty.a
 	rm -f $PKG1/usr/lib${LIBSUFFIX}/32/libiberty.a
-
-  # Strip out unneeded stuff from the libraries and binaries:
-  ( cd $PKG1
-    find . | xargs file | grep "executable" | grep ELF | cut -f 1 -d : | xargs strip --strip-unneeded 2> /dev/null
-    find . | xargs file | grep "shared object" | grep ELF | cut -f 1 -d : | xargs strip --strip-unneeded 2> /dev/null
-  )
-  # Most people debug their own code (not the libraries), so we'll strip these.
-  # It cuts the size down quite a bit.
-  find $PKG1 -name "*.a" | xargs file | grep "archive" | cut -f 1 -d : | xargs strip -g
 
   # Fix stuff up:
   ( cd $PKG1/usr/info ; rm dir ; gzip -9 * )
@@ -359,24 +361,6 @@ fi
 	else
 		echo "Not making -m32 package directories."
 	fi
-  # Install the descriptions:
-  ( cd $CWD
-    cat slack-desc.gcc > $PKG1/install/slack-desc
-    cat slack-desc.gcc-g++ > $PKG2/install/slack-desc
-    cat slack-desc.gcc-gfortran > $PKG3/install/slack-desc
-    cat slack-desc.gcc-gnat > $PKG4/install/slack-desc
-    cat slack-desc.gcc-java > $PKG5/install/slack-desc
-    cat slack-desc.gcc-objc > $PKG6/install/slack-desc
-    cat slack-desc.gcc-g++-gch > $PKG7/install/slack-desc
-		
-		if [ "x$LIBSUFFIX" = "x64" ]; then
-	    cat slack-desc.gcc32 > $PKG1_32/install/slack-desc
-	    cat slack-desc.gcc32-g++ > $PKG2_32/install/slack-desc
-	    cat slack-desc.gcc32-gfortran > $PKG3_32/install/slack-desc
-	    cat slack-desc.gcc32-java > $PKG5_32/install/slack-desc
-	    cat slack-desc.gcc32-objc > $PKG6_32/install/slack-desc
-		fi
-  )
 
   ## build the tgz package
   #(
@@ -422,14 +406,19 @@ fi
 
   mkdir -p usr/lib
   mv $PKG1/usr/lib/libgfortran* usr/lib
+  mkdir -p usr/lib/gcc/$TARGET/$VERSION
+  mv $PKG1/usr/lib/gcc/$TARGET/$VERSION/finclude usr/lib/gcc/$TARGET/$VERSION
 
 	if [ "x$LIBSUFFIX" != "x" ]; then
 	  mkdir -p usr/lib${LIBSUFFIX}
- 		mv $PKG1/usr/lib${LIBSUFFIX}/libgfortran* usr/lib${LIBSUFFIX}
+ 	  mv $PKG1/usr/lib${LIBSUFFIX}/libgfortran* usr/lib${LIBSUFFIX}
+	  mkdir -p usr/lib${LIBSUFFIX}/gcc/$TARGET/$VERSION
+  	  mv $PKG1/usr/lib${LIBSUFFIX}/gcc/$TARGET/$VERSION/finclude usr/lib${LIBSUFFIX}/gcc/$TARGET/$VERSION
 	fi
 
   mkdir -p usr/libexec/gcc/$TARGET/$VERSION
   mv $PKG1/usr/libexec/gcc/$TARGET/$VERSION/f951 usr/libexec/gcc/$TARGET/$VERSION/f951
+  mv $PKG1/usr/libexec/gcc/$TARGET/$VERSION/libgfortran* usr/libexec/gcc/$TARGET/$VERSION
   mkdir -p usr/man/man1
   mv $PKG1/usr/man/man1/gfortran* usr/man/man1
 )
@@ -441,11 +430,8 @@ fi
   mv $PKG1/usr/bin/gpr* usr/bin
   mkdir -p usr/info
   mv $PKG1/usr/info/gnat* usr/info
-  mkdir -p usr/share
-  mv $PKG1/usr/share/gnat usr/share
   mkdir -p usr/libexec/gcc/$TARGET/$VERSION
   mv $PKG1/usr/libexec/gcc/$TARGET/$VERSION/gnat1 usr/libexec/gcc/$TARGET/$VERSION
-
   mkdir -p usr/lib/gcc/$TARGET/$VERSION
   mv $PKG1/usr/lib/gcc/$TARGET/$VERSION/adainclude usr/lib/gcc/$TARGET/$VERSION
   mv $PKG1/usr/lib/gcc/$TARGET/$VERSION/adalib usr/lib/gcc/$TARGET/$VERSION
@@ -461,10 +447,13 @@ fi
 ( cd $PKG5
   mkdir -p usr/bin
   mv $PKG1/usr/bin/addr2name.awk usr/bin
-  mv $PKG1/usr/bin/fastjar usr/bin
+  # mv $PKG1/usr/bin/fastjar usr/bin
+  mv $PKG1/usr/bin/gappletviewer usr/bin
   mv $PKG1/usr/bin/*gcj* usr/bin
   mv $PKG1/usr/bin/gij usr/bin
+  mv $PKG1/usr/bin/gjarsigner usr/bin
   mv $PKG1/usr/bin/gjnih usr/bin
+  mv $PKG1/usr/bin/gkeytool usr/bin
   mv $PKG1/usr/bin/grepjar usr/bin
   mv $PKG1/usr/bin/grmic usr/bin
   mv $PKG1/usr/bin/grmiregistry usr/bin
@@ -476,40 +465,35 @@ fi
   mv $PKG1/usr/include/ffi.h usr/include
   mkdir -p usr/lib${LIBSUFFIX}/gcc/$TARGET/$VERSION/include
   mv $PKG1/usr/lib${LIBSUFFIX}/gcc/$TARGET/$VERSION/include/jawt.h usr/lib${LIBSUFFIX}/gcc/$TARGET/$VERSION/include
+  mv $PKG1/usr/lib${LIBSUFFIX}/gcc/$TARGET/$VERSION/include/ffi.h usr/lib${LIBSUFFIX}/gcc/$TARGET/$VERSION/include
+  mv $PKG1/usr/lib${LIBSUFFIX}/gcc/$TARGET/$VERSION/include/ffitarget.h usr/lib${LIBSUFFIX}/gcc/$TARGET/$VERSION/include
   mv $PKG1/usr/lib${LIBSUFFIX}/gcc/$TARGET/$VERSION/include/jawt_md.h usr/lib${LIBSUFFIX}/gcc/$TARGET/$VERSION/include
   mv $PKG1/usr/lib${LIBSUFFIX}/gcc/$TARGET/$VERSION/include/jni.h usr/lib${LIBSUFFIX}/gcc/$TARGET/$VERSION/include
   mv $PKG1/usr/lib${LIBSUFFIX}/gcc/$TARGET/$VERSION/include/jvmpi.h usr/lib${LIBSUFFIX}/gcc/$TARGET/$VERSION/include
   mv $PKG1/usr/lib${LIBSUFFIX}/gcc/$TARGET/$VERSION/include/libffi usr/lib${LIBSUFFIX}/gcc/$TARGET/$VERSION/include
   mkdir -p usr/info
   mv $PKG1/usr/info/gcj.* usr/info
-  mv $PKG1/usr/info/fastjar.* usr/info
-	
+  # mv $PKG1/usr/info/fastjar.* usr/info
   mkdir -p usr/lib
   mv $PKG1/usr/lib/libffi* usr/lib
-  strip -g usr/lib/libffi.a
   mv $PKG1/usr/lib/gcj* usr/lib
   mv $PKG1/usr/lib/libgcj* usr/lib
-  strip -g usr/lib/libgcj.a
   mv $PKG1/usr/lib/libgij* usr/lib
-  strip -g usr/lib/libgij.a
   mv $PKG1/usr/lib/lib-org* usr/lib
   mv $PKG1/usr/lib/security usr/lib
 	
 	if [ "x$LIBSUFFIX" != "x" ]; then
 	  mkdir -p usr/lib${LIBSUFFIX}
 	  mv $PKG1/usr/lib${LIBSUFFIX}/libffi* usr/lib${LIBSUFFIX}
-	  strip -g usr/lib${LIBSUFFIX}/libffi.a
 	  mv $PKG1/usr/lib${LIBSUFFIX}/gcj* usr/lib${LIBSUFFIX}
 	  mv $PKG1/usr/lib${LIBSUFFIX}/libgcj* usr/lib${LIBSUFFIX}
-	  strip -g usr/lib${LIBSUFFIX}/libgcj.a
 	  mv $PKG1/usr/lib${LIBSUFFIX}/libgij* usr/lib${LIBSUFFIX}
-	  strip -g usr/lib${LIBSUFFIX}/libgij.a
 	  mv $PKG1/usr/lib${LIBSUFFIX}/lib-org* usr/lib${LIBSUFFIX}
 	  mv $PKG1/usr/lib${LIBSUFFIX}/security usr/lib${LIBSUFFIX}
 	fi
 
   mkdir -p usr/lib${LIBSUFFIX}/pkgconfig
-  mv $PKG1/usr/lib${LIBSUFFIX}/pkgconfig/libgcj.pc usr/lib${LIBSUFFIX}/pkgconfig
+  mv $PKG1/usr/lib${LIBSUFFIX}/pkgconfig/libgcj*.pc usr/lib${LIBSUFFIX}/pkgconfig
   rmdir $PKG1/usr/lib${LIBSUFFIX}/pkgconfig 2> /dev/null
   mkdir -p usr/libexec/gcc/$TARGET/$VERSION
   mv $PKG1/usr/libexec/gcc/$TARGET/$VERSION/jc1 usr/libexec/gcc/$TARGET/$VERSION
@@ -517,7 +501,6 @@ fi
   mkdir -p usr/lib${LIBSUFFIX}/gcc/$TARGET/$VERSION/include
   mv $PKG1/usr/lib${LIBSUFFIX}/gcc/$TARGET/$VERSION/include/gcj usr/lib${LIBSUFFIX}/gcc/$TARGET/$VERSION/include
   mkdir -p usr/man/man1
-  mv $PKG1/usr/man/man1/fastjar.1.gz usr/man/man1
   mv $PKG1/usr/man/man1/gcj.1.gz usr/man/man1
   mv $PKG1/usr/man/man1/gcjh.1.gz usr/man/man1
   mv $PKG1/usr/man/man1/gcj-dbtool.1.gz usr/man/man1
@@ -567,6 +550,15 @@ fi
 
 # Filter out 32-bit stuff
 if [ "x$LIBSUFFIX" = "x64" ]; then
+	for dir in $PKG{1_32,2_32,3_32,5_32,6_32}; do
+	  ( cd $dir
+	    find . -name "lib*so*" -exec strip --strip-unneeded "{}" \;
+	    find . -name "lib*a" -exec strip -g "{}" \;
+	    strip --strip-unneeded usr/bin/* 2> /dev/null
+	    find . | xargs file | grep "executable" | grep ELF | cut -f 1 -d : | xargs strip --strip-unneeded 2> /dev/null
+	    find . | xargs file | grep "shared object" | grep ELF | cut -f 1 -d : | xargs strip --strip-unneeded 2> /dev/null
+	  )
+	done
 	( # gcc32
 		cd $PKG1_32
 		mkdir -p usr/lib64/gcc/$ARCH-$DISTRO-linux/$VERSION
@@ -584,6 +576,17 @@ if [ "x$LIBSUFFIX" = "x64" ]; then
 	done
 fi
 
+## Strip bloated binaries and libraries:
+for dir in $PKG{1,2,3,4,5,6}; do
+  ( cd $dir
+    find . -name "lib*so*" -exec strip --strip-unneeded "{}" \;
+    find . -name "lib*a" -exec strip -g "{}" \;
+    strip --strip-unneeded usr/bin/* 2> /dev/null
+    find . | xargs file | grep "executable" | grep ELF | cut -f 1 -d : | xargs strip --strip-unneeded 2> /dev/null
+    find . | xargs file | grep "shared object" | grep ELF | cut -f 1 -d : | xargs strip --strip-unneeded 2> /dev/null
+  )
+done
+
 # Build main packages
 ( cd $PKG1
   makepkg -l y -c n $TMP/gcc-$VERSION-$PKGARCH-$BUILD.tgz )
@@ -596,7 +599,7 @@ fi
 ( cd $PKG5
   makepkg -l y -c n $TMP/gcc-java-$VERSION-$PKGARCH-$BUILD.tgz )
 ( cd $PKG6
-	makepkg -l y -c n $TMP/gcc-objc-$VERSION-$PKGARCH-$BUILD.tgz )
+  makepkg -l y -c n $TMP/gcc-objc-$VERSION-$PKGARCH-$BUILD.tgz )
 #( cd $PKG7
 #  makepkg -l y -c n $TMP/gcc-g++-gch-$VERSION-$PKGARCH-$BUILD.tgz )
 
@@ -611,7 +614,7 @@ if [ "x$LIBSUFFIX" == "x64" ]; then
 	( cd $PKG5_32
 	  makepkg -l y -c n $TMP/gcc32-java-$VERSION-$PKGARCH-$BUILD.tgz )
 	( cd $PKG6_32
-		makepkg -l y -c n $TMP/gcc32-objc-$VERSION-$PKGARCH-$BUILD.tgz )
+	  makepkg -l y -c n $TMP/gcc32-objc-$VERSION-$PKGARCH-$BUILD.tgz )
 fi
 
 echo

@@ -1,7 +1,7 @@
 #!/bin/sh
 
 PKGNAM=doxygen
-VERSION=1.5.2
+VERSION=1.5.5
 BUILD=1
 
 . /etc/pkghelpers
@@ -15,7 +15,7 @@ tar xjvf $CWD/doxygen-${VERSION}.src.tar.bz2 || exit 1
 cd doxygen-$VERSION
 # Allow setting complete docdir:
 zcat $CWD/doxygen.docdir.diff.gz | patch -p1 --verbose || exit 1
-chown -R root:root .
+pkghelpers_permissions
 ./configure \
   --shared \
   --release \
