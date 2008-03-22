@@ -3,7 +3,7 @@ CWD=`pwd`
 TMP=${TMP:-/tmp}
 PKG=$TMP/package-mozilla-thunderbird
 
-VERSION=2.0.0.9
+VERSION=2.0.0.12
 ARCH=${ARCH:-x86_64}
 BUILD=${BUILD:-1}
 
@@ -65,14 +65,9 @@ export MOZ_CO_PROJECT="mail" &&
 	--disable-profilesharing \
 	--disable-gnomeui
 
-make -j10 || exit 1
-# Make some more extesnsions
-#make -j6 -C mail/extensions/offline || exit 1
+make -j5 || exit 1
 
 make install DESTDIR=$PKG
-
-# Install some more extensions
-#make -C mail/extensions/offline install DESTDIR=$PKG
 
 ( cd $PKG/usr/lib64/thunderbird-$VERSION
 echo "Applying firefox patch"
