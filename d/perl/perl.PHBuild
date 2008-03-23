@@ -210,6 +210,7 @@ fi
 # Insert the slack-desc:
 mkdir -p $PKG/install
 cat $CWD/slack-desc > $PKG/install/slack-desc
+zcat $CWD/doinst.sh.gz | sed "s,%LIBSUFFIX%,$LIBSUFFIX," | sed "s,%ARCH%,$ARCH," > $PKG/install/doinst.sh
 
 # Build the package:
 cd $PKG
