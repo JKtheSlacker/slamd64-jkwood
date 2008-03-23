@@ -31,7 +31,7 @@ mkdir -p $PKG
 
 cd $TMP
 rm -rf ${PKGNAM}-${VERSION}
-tar xjvf $CWD/${PKGNAM}-$VERSION.tar.bz2 || exit 1
+tar xvf $CWD/${PKGNAM}-$VERSION.tar.gz || exit 1
 cd ${PKGNAM}-$VERSION
 
 bzcat $CWD/glib1.2_1.2.10-17.diff.bz2 | patch -p1 --verbose || exit 1
@@ -51,7 +51,7 @@ CFLAGS="$SLKCFLAGS" \
   --build=$ARCH-$DISTRO-linux
 
 # Build and install:
-make -j12 CFLAGS="$SLKCFLAGS" || exit 1
+make -j5 CFLAGS="$SLKCFLAGS" || exit 1
 make CFLAGS="$SLKCFLAGS" install DESTDIR=$PKG || exit 1
 
 # Fix library permissions:
