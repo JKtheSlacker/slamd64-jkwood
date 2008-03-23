@@ -26,7 +26,7 @@ cp -a \
   $PKG/usr/doc/git-$VERSION
 ( cd $PKG/usr/doc/git-$VERSION/Documentation ; rm *.1 *.3 *.7 )
 
-make -j10 prefix=/usr mandir=/usr/man CFLAGS="$SLKCFLAGS" INSTALLDIRS=vendor all doc || exit 1
+make -j5 prefix=/usr mandir=/usr/man CFLAGS="$SLKCFLAGS" INSTALLDIRS=vendor all doc || exit 1
 
 make prefix=/usr mandir=/usr/man "CFLAGS=$SLKCFLAGS" INSTALLDIRS=vendor install install-doc DESTDIR=$PKG || exit 1
 
