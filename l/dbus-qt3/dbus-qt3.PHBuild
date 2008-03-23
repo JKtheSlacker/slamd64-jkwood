@@ -1,0 +1,55 @@
+#!/bin/sh
+
+# SlackBuild script for dbus-qt3 bindings
+
+# Written by Robby Workman <http://rlworkman.net>
+
+# I realize that this is a very generic script, but PiterPunk deserves
+# credit for it, as I just took his and changed a few things to be
+# more consistent with my usual style...
+
+# In case you're curious as to why we're not using the qt bindings 
+# on the dbus.freedesktop.org page, it's because they were back-ported
+# from the qt4 bindings, and they won't compile against kde-3.5.x
+# See Comment #'s 5 and 6 of http://bugs.kde.org/show_bug.cgi?id=131035
+# for more information. 
+
+# Source obtained from the Gentoo repository
+# http://ftp.osuosl.org/pub/gentoo/distfiles/dbus-qt3-0.70.tar.bz2
+
+PRGNAM=dbus-qt3
+VERSION=0.70
+BUILD=${BUILD:-2}
+
+. /etc/pkghelpers
+pkghelpers_env
+
+rm -rf $PKG
+mkdir -p $TMP $PKG
+cd $TMP
+rm -rf $PRGNAM-$VERSION
+tar -xvjf $CWD/$PRGNAM-$VERSION.tar.bz2
+cd $PRGNAM-$VERSION
+pkghelpers_permissions
+
+CFLAGS="$SLKCFLAGS" \
+./configure \
+  --prefix=/usr \
+	--libdir=/usr/lib$LIBSUFFIX \
+  --enable-static=no \
+  --build=$ARCH-$DISTRO-linux \
+  --host=$ARCH-$DISTRO-linux
+
+make -j9 || exit 1
+make install DESTDIR=$PKG
+
+mkdir -p $PKG/usr/doc/$PRGNAM-$VERSION
+cp -a AUTHORS COPYING INSTALL NEWS README \
+	$PKG/usr/doc/$PRGNAM-$VERSION
+
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+
+cd $PKG
+pkghelpers_fixup
+pkghelpers_makepkg
