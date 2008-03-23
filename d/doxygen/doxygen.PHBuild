@@ -22,14 +22,14 @@ pkghelpers_permissions
   --prefix /usr \
   --docdir /usr/doc/doxygen-$VERSION \
   --with-doxywizard
-make -j10 || exit 1
+make -j5 || exit 1
 # Bugfix for 1.5.1(+?)
 ( cd src
   rm unistd.h
   ln -sf /usr/include/unistd.h .
 )
 make clean
-make -j 10
+make -j5
 make install INSTALL=$PKG/usr DOCDIR=$PKG/usr/doc/doxygen-$VERSION
 make install_docs INSTALL=$PKG/usr DOCDIR=$PKG/usr/doc/doxygen-$VERSION
 mkdir -p $PKG/usr/doc/doxygen-$VERSION
