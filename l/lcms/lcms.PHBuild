@@ -1,6 +1,6 @@
 #!/bin/sh
 PKGNAM=lcms
-VERSION=1.16
+VERSION=1.17
 BUILD=${BUILD:-1}
 
 . /etc/pkghelpers
@@ -12,9 +12,7 @@ cd /tmp
 rm -rf lcms-$VERSION
 tar xjvf $CWD/lcms-$VERSION.tar.bz2 || exit 1
 cd lcms-$VERSION
-chown -R root:root .
-find . -perm 777 -exec chmod 755 {} \;
-find . -perm 664 -exec chmod 644 {} \;
+pkghelpers_permissions
 CFLAGS=$SLKCFLAGS \
 ./configure \
   --prefix=/usr \
