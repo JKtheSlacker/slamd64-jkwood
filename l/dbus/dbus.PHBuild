@@ -22,36 +22,13 @@
 # ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 PRGNAM=dbus
-VERSION=1.0.2
+PKGNAM=$PRGNAM
+VERSION=1.1.20
 ARCH=${ARCH:-x86_64}
-BUILD=${BUILD:-3}
-DISTRO=${DISTRO:-slamd64}
+BUILD=${BUILD:-1}
 
-if [ $DISTRO = slackware ]; then
-	PKGARCH=$ARCH
-else
-	PKGARCH=${ARCH}_${DISTRO}
-fi
-
-if [ $DISTRO = slamd64 ]; then
-	LIBSUFFIX=64
-else
-	LIBSUFFIX=
-fi
-
-CWD=$(pwd)
-TMP=${TMP:-/tmp}
-PKG=$TMP/package-$PRGNAM
-
-if [ "$ARCH" = "i386" ]; then
-  SLKCFLAGS="-O2 -march=i386 -mcpu=i686"
-elif [ "$ARCH" = "i486" ]; then
-  SLKCFLAGS="-O2 -march=i486 -mtune=i686"
-elif [ "$ARCH" = "s390" ]; then
-  SLKCFLAGS="-O2"
-elif [ "$ARCH" = "x86_64" ]; then
-  SLKCFLAGS="-O2 -fPIC"
-fi
+. /etc/pkghelpers
+pkghelpers_env
 
 rm -rf $PKG
 mkdir -p $TMP $PKG
@@ -60,18 +37,7 @@ rm -rf $PRGNAM-$VERSION
 tar xjvf $CWD/$PRGNAM-$VERSION.tar.bz2 || exit 1
 cd $PRGNAM-$VERSION
 
-chown -R root:root .
-find . -perm 666 -exec chmod 644 {} \;
-find . -perm 664 -exec chmod 644 {} \;
-find . -perm 600 -exec chmod 644 {} \;
-find . -perm 444 -exec chmod 644 {} \;
-find . -perm 400 -exec chmod 644 {} \;
-find . -perm 440 -exec chmod 644 {} \;
-find . -perm 777 -exec chmod 755 {} \;
-find . -perm 775 -exec chmod 755 {} \;
-find . -perm 511 -exec chmod 755 {} \;
-find . -perm 711 -exec chmod 755 {} \;
-find . -perm 555 -exec chmod 755 {} \;
+pkghelpers_permissions
 
 CFLAGS="$SLKCFLAGS" \
 CXXFLAGS="$SLKCFLAGS" \
@@ -80,10 +46,14 @@ CXXFLAGS="$SLKCFLAGS" \
 	--libdir=/usr/lib$LIBSUFFIX \
   --sysconfdir=/etc \
   --localstatedir=/var \
+  --mandir=/usr/man \
+  --infodir=/usr/info \
+  --docdir=/usr/doc/$PRGNAM-$VERSION \
   --enable-shared=yes \
   --enable-static=no \
   --with-system-pid-file=/var/run/dbus/dbus.pid \
   --with-system-socket=/var/run/dbus/system_bus_socket \
+  --with-init-scripts=slackware \
   --program-prefix="" \
   --program-suffix="" \
   --build=$ARCH-$DISTRO-linux \
@@ -91,16 +61,6 @@ CXXFLAGS="$SLKCFLAGS" \
 
 make -j9 || exit 1
 make install DESTDIR=$PKG || exit 1
-
-( cd $PKG
-  find . | xargs file | grep "executable" | grep ELF | cut -f 1 -d : | xargs strip --strip-unneeded 2> /dev/null
-  find . | xargs file | grep "shared object" | grep ELF | cut -f 1 -d : | xargs strip --strip-unneeded 2> /dev/null
-)
-
-( cd $PKG/usr/man
-  find . -type f -exec gzip -9 {} \;
-  for i in $( find . -type l ) ; do ln -s $( readlink $i ).gz $i.gz ; rm $i ; done
-)
 
 # Install a custom init script for dbus - the included one is bad
 rm $PKG/etc/rc.d/*
@@ -113,7 +73,7 @@ mv $PKG/etc/dbus-1/session.conf $PKG/etc/dbus-1/session.conf.new
 mv $PKG/etc/dbus-1/system.conf $PKG/etc/dbus-1/system.conf.new
 
 # Fix some directory ownership
-chown dbus $PKG/var/lib/dbus
+chown messagebus $PKG/var/lib/dbus
 
 # Add documentation
 mkdir -p $PKG/usr/doc/$PRGNAM-$VERSION
@@ -127,4 +87,5 @@ cat $CWD/slack-desc > $PKG/install/slack-desc
 zcat $CWD/doinst.sh.gz > $PKG/install/doinst.sh
 
 cd $PKG
-/sbin/makepkg -l y -c n $TMP/$PRGNAM-$VERSION-$PKGARCH-$BUILD.tgz
+pkghelpers_fixup
+pkghelpers_makepkg
