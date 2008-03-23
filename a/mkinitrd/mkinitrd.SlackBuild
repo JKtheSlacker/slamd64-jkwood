@@ -1,10 +1,11 @@
 #!/bin/sh
-CWD=`pwd`
+CWD=$(pwd)
 PKG=/tmp/package-mkinitrd
 
-VERSION=1.1.3
-BB=1.4.2
+VERSION=1.3.1
+BB=1.7.2
 ARCH=${ARCH:-x86_64}
+PKGARCH=x86_64_slamd64
 BUILD=1
 
 rm -rf $PKG
@@ -14,7 +15,8 @@ rm -rf busybox-$BB
 tar xjvf $CWD/busybox-$BB.tar.bz2 || exit 1
 cd busybox-$BB
 
-zcat $CWD/busybox-${BB}.static.diff.gz | patch -p1 --verbose || exit 1
+zcat $CWD/busybox-${BB}.remove_warning.diff.gz | patch -p1 --verbose || exit 1
+zcat $CWD/busybox-${BB}.no-gc-sections.diff.gz | patch -p1 --verbose || exit 1
 
 chown -R root:root .
 cp $CWD/busybox-dot-config .config
@@ -30,15 +32,20 @@ cp busybox $PKG/usr/share/mkinitrd/initrd-tree/bin
 rm -rf $PKG/usr/share/mkinitrd/initrd-tree
 # Add busybox docs:
 mkdir -p $PKG/usr/doc/busybox-$BB
-cp -a \
-  AUTHORS INSTALL LICENSE README \
+cp -a AUTHORS INSTALL LICENSE README \
   $PKG/usr/doc/busybox-$BB
+
 mkdir -p $PKG/sbin
 cat $CWD/mkinitrd > $PKG/sbin/mkinitrd
 chmod 755 $PKG/sbin/mkinitrd
-mkdir -p $PKG/usr/man/man8
+
+mkdir -p $PKG/usr/man/man{5,8}
 cat $CWD/mkinitrd.8 | gzip -9c > $PKG/usr/man/man8/mkinitrd.8.gz
-mkdir $PKG/boot
+cat $CWD/mkinitrd.conf.5 | gzip -9c > $PKG/usr/man/man5/mkinitrd.conf.5.gz
+
+mkdir -p $PKG/etc
+cat $CWD/mkinitrd.conf.sample > $PKG/etc/mkinitrd.conf.sample
+
 mkdir -p $PKG/usr/doc/mkinitrd-$VERSION
 cp -a $CWD/README.initrd $PKG/usr/doc/mkinitrd-$VERSION
 
@@ -56,9 +63,10 @@ cp -a $CWD/README.initrd $PKG/usr/doc/mkinitrd-$VERSION
   cat README.initrd6 | sed -e s/@BUILD@/"$BUILD"/ > README.initrd
   rm -f README.initrd{1,2,3,4,5,6}
 )
-
 chmod 644 $PKG/usr/doc/mkinitrd-$VERSION/*
 chown root:root $PKG/usr/doc/mkinitrd-$VERSION/*
+
+mkdir $PKG/boot
 ( cd $PKG/boot
   ln -sf /usr/doc/mkinitrd-$VERSION/README.initrd .
 )
@@ -70,5 +78,4 @@ mkdir -p $PKG/install
 cat $CWD/slack-desc > $PKG/install/slack-desc
 
 cd $PKG
-makepkg -l y -c n ../mkinitrd-$VERSION-${ARCH}_slamd64-$BUILD.tgz
-
+makepkg -l y -c n ../mkinitrd-$VERSION-$PKGARCH-$BUILD.tgz

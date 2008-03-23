@@ -7,16 +7,22 @@
 .ie \\n(.$=0:((0\\$1)*2u>(\\n(.lu-\\n(.iu)) .TP
 .el .TP "\\$1"
 ..
-.TH MKINITRD 8 "11 May 2007" "Slackware Version 12.0"
+.TH MKINITRD 8 "05 February 2008" "Slackware Version 12.1"
 .SH NAME
 mkinitrd \- create or rebuilt an initrd (initial ramdisk) using initramfs (simple cpio+gzip).
 .SH SYNOPSIS
 .B mkinitrd
 [
+.B \-F
+]
+[
 .B \-c
 ]
 [
 .B \-f filesystem
+]
+[
+.B \-h hibernate_partition
 ]
 [
 .B \-k kernel_version
@@ -40,9 +46,11 @@ mkinitrd \- create or rebuilt an initrd (initial ramdisk) using initramfs (simpl
 .B \-L
 ]
 [
+.B \-R
+]
+[
 .B \-V
 ]
-.SH DESCRIPTION
 .SH DESCRIPTION
 .B mkinitrd
 is used to build an initial ramdisk.  An initial ramdisk is a very small set of files
@@ -57,6 +65,13 @@ many different kernels to try to cover everyone's needs.  It's a lot more
 flexible to ship a generic kernel and a set of kernel modules for it. 
 .SH OPTIONS
 .TP
+.B \-F
+Use the contents of /etc/mkinitrd.conf as options to mkinitrd (optional).
+If this is used in conjunction with any other options passed on the command 
+line, the command-line options will override the config file options.  
+.br
+See mkinitrd.conf(5) for details.
+.TP
 .B \-c
 Clear the existing initrd tree (by default in /boot/initrd-tree/) first.
 If this is not done, running mkinitrd will add additional modules to the
@@ -69,6 +84,9 @@ mount will usually figure it out.  This option must be used together with the
 .TP
 .B \--help
 Display a help summary.
+.TP
+.B \-h hibernate_partition
+Specify the swap partition holding the hibernation image.
 .TP
 .B \-k kernel version
 Use kernel modules from the specified kernel version.  mkinitrd will look for them in
@@ -91,6 +109,10 @@ together with the \-f option in order to be beneficial.
 .B \-s source tree
 The directory to use as the source for the initrd.  (default: /boot/initrd-tree/)
 .TP
+.B \-w
+The -w option specifies how long to wait in seconds before assuming that all the
+drives are spun up and ready to go.
+.TP
 .B \-C
 Use cryptsetup to enable the underlying device of an encrypted root partition.
 Requires '-r' parameter with the *mapped* device name as an argument, like this:
@@ -103,6 +125,10 @@ where the actual root device name in /etc/fstab is:
 .TP
 .B \-L
 This option adds LVM support to the initrd, if the tools are
+available on the system.
+.TP
+.B \-R
+This option adds RAID support to the initrd, if a static mdadm binary is
 available on the system.
 .TP
 .B \-V
@@ -142,5 +168,9 @@ need to run 'lilo' to write out the changed boot block.  The next
 time you reboot the initrd should be loaded along with the kernel.
 
 Have fun!
+
+.SH SEE ALSO
+mkinitrd.conf (5)
+
 .SH AUTHOR
 Patrick J. Volkerding <volkerdi@slackware.com>

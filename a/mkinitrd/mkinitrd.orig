@@ -1,7 +1,7 @@
 #!/bin/sh
 # Copyright 2004  Slackware Linux, Inc., Concord, CA, USA
 # Copyright 2004  Patrick J. Volkerding, Concord, CA, USA
-# Copyright 2007, 2008  Patrick J. Volkerding, Sebeka, MN, USA
+# Copyright 2007  Patrick J. Volkerding, Sebeka, MN, USA
 # All rights reserved.
 #
 # Redistribution and use of this script, with or without modification, is
@@ -27,7 +27,7 @@
 # passing arguments to kernel modules - No additional license terms added
 # volkderdi - feel free to remove these :)
 
-MKINITRD_VERSION=1.3.1
+MKINITRD_VERSION=1.3.0
 
 print_usage() {
   cat << EOF
@@ -46,8 +46,6 @@ initrd, and the script is easy to modify.  Be creative.  :-)
   -c      Clear the existing initrd tree first
   -f      Filesystem to use for root partition (must be used with -r)
   --help  Display this message
-  -h      Device to resume from hibernation. Needs to be the name of
-          the swap partition holding the hibernation image.
   -k      Kernel version to use
   -m      A colon (:) delimited list of kernel modules to load.
           Additional options may be added to use when loading the
@@ -58,22 +56,13 @@ initrd, and the script is easy to modify.  Be creative.  :-)
   -r      Root partition device (must be used with -f)
   -s      Initrd source tree (default /boot/initrd-tree/)
   -w      Time to wait until all disks are detected
-  -C      Use cryptsetup to unlock the underlying device of an
-          encrypted root filesystem (must be used with '-r' parameter).
-          Two scenarios are possible. (1) root filesystem was created on the
-          encrypted disk/LVM partition, example:
+  -C      Use cryptsetup to enable the underlying device of an
+          encrypted root partition.  Requires '-r' parameter with the
+          *mapped* device name as argument, like:
             -C /dev/sda2 -r cryptroot
-          where /dev/sda2 is the encrypted partition and
-          the actual root device name in /etc/fstab is:
+          where the actual root device name in /etc/fstab is:
             /dev/mapper/cryptroot
-          (2) the encrypted partition contains a LVM volume which holds the
-          root filesystem, example:
-            -C /dev/sda2 -r /dev/vg/root
-          where /dev/sda2 is the encrypted partition and
-          the actual root device name in /etc/fstab is:
-            /dev/vg/root
   -L      Add support for LVM partitions
-  -R      Add support for RAID partitions
   -V      Display version number
 
 A simple example:  Build an initrd for a reiserfs root partition:
@@ -100,23 +89,16 @@ EOF
 
 create_new_source_tree() {
   mkdir -p $SOURCE_TREE
-  # Make sure a kernel module directory exists:
-  mkdir -p $SOURCE_TREE/lib/modules/${KERNEL_VERSION}
-  # Add the initrd-tree skeleton:
   ( cd $SOURCE_TREE ; tar xzf /usr/share/mkinitrd/initrd-tree.tar.gz )
   # Make sure we have any block devices that might be needed:
-
   SLOPPY_DEV_LIST=$(cat /proc/partitions)
   for device in $SLOPPY_DEV_LIST ; do
-    if [ ! -r $SOURCE_TREE/dev/$device ]; then
-      if [ -b /dev/$device ]; then
-        if [ -L /dev/$device ]; then
-          cp -a --parents $(readlink -e /dev/$device) $SOURCE_TREE
-        fi
-        cp -a --parents /dev/$device $SOURCE_TREE
-      fi
+    if [ ! -r $SOURCE_TREE/dev/$device -a -b /dev/$device ]; then
+      cp -a --parents /dev/$device $SOURCE_TREE
     fi
   done
+  # Make sure a kernel module directory exists:
+  mkdir -p $SOURCE_TREE/lib/modules/${KERNEL_VERSION}
 }
 
 clear_source_tree() {
@@ -129,13 +111,8 @@ build_initrd_image() {
   # Make sure we have any block devices that might be needed:
   SLOPPY_DEV_LIST=$(cat /proc/partitions)
   for device in $SLOPPY_DEV_LIST ; do
-    if [ ! -r $SOURCE_TREE/dev/$device ]; then
-      if [ -b /dev/$device ]; then
-        if [ -L /dev/$device ]; then
-          cp -a --parents $(readlink -e /dev/$device) $SOURCE_TREE
-        fi
-        cp -a --parents /dev/$device $SOURCE_TREE
-      fi
+    if [ ! -r $SOURCE_TREE/dev/$device -a -b /dev/$device ]; then
+      cp -a /dev/$device $SOURCE_TREE
     fi
   done
   # Wrap the initrd as an initramfs image and move it into place:
@@ -216,10 +193,6 @@ while [ ! -z "$1" ]; do
       ROOTFS="$2"
       shift 2
       ;;
-    -h)
-      RESUMEDEV="$2" 
-      shift 2
-      ;;
     -k)
       KERNEL_VERSION="$2"
       shift 2
@@ -230,9 +203,6 @@ while [ ! -z "$1" ]; do
       ;;
     -o)
       OUTPUT_IMAGE="$2"
-      if [ ! "$(echo $OUTPUT_IMAGE | cut -b1)" = "/" ]; then
-        OUTPUT_IMAGE=$(pwd)/$OUTPUT_IMAGE
-      fi
       shift 2
       ;;
     -r)
@@ -254,10 +224,6 @@ while [ ! -z "$1" ]; do
       ;;
     -L)
       LVM=1
-      shift
-      ;;
-    -R)
-      RAID=1
       shift
       ;;
     *) # unknown, prevent infinite loop
@@ -299,25 +265,9 @@ echo $WAIT > $SOURCE_TREE/wait-for-root
 INITRD_NAME=$(basename $OUTPUT_IMAGE)
 echo $INITRD_NAME > $SOURCE_TREE/initrd-name
 
-# Fill /resumedev with the swap partition holding the hibernation image
-if [ ! -z "$RESUMEDEV" ]; then
-  echo $RESUMEDEV > $SOURCE_TREE/resumedev
-fi
-
 # If LUKSDEV was set in the config file, then we need to set CRYPT=1
 if [ ! -z "$LUKSDEV" ]; then
   CRYPT=1
-fi
-
-# Include RAID support in initrd
-if [ ! -z "$RAID" ]; then
-  if [ -r /sbin/mdadm ]; then
-    mkdir -p $SOURCE_TREE/sbin
-    cp /sbin/mdadm $SOURCE_TREE/sbin/mdadm
-    chmod 755 $SOURCE_TREE/sbin/mdadm
-  else
-    echo "ERROR:  mdadm binary is missing, RAID support not installed"
-  fi
 fi
 
 # Include LVM support in initrd
@@ -328,9 +278,7 @@ if [ ! -z "$LVM" ]; then
     ( cd $SOURCE_TREE/sbin
       ln -s lvm.static vgchange 2>/dev/null
       ln -s lvm.static vgscan 2>/dev/null )
-    if [ -z ${MODULE_LIST} ] ; then
-      MODULE_LIST="dm-mod"
-    elif ! echo ${MODULE_LIST} | grep -q dm-mod ; then
+    if ! echo ${MODULE_LIST} | grep -q dm-mod ; then
       MODULE_LIST="$MODULE_LIST:dm-mod"
     fi
   else
@@ -346,9 +294,7 @@ if [ ! -z "$CRYPT" ]; then
     ( cd $SOURCE_TREE/sbin
       ln -s cryptsetup.static cryptsetup 2>/dev/null
     )
-    if [ -z ${MODULE_LIST} ] ; then
-      MODULE_LIST="dm-mod"
-    elif ! echo ${MODULE_LIST} | grep -q dm-mod ; then
+    if ! echo ${MODULE_LIST} | grep -q dm-mod ; then
       MODULE_LIST="$MODULE_LIST:dm-mod"
     fi
     # Write the underlying luks device to the initrd-tree:
@@ -401,13 +347,13 @@ while [ $i -ne $INDEX ]; do
   MODULE="$(echo "$FULL_MOD" | cut -d ' ' -f 1 )"
   # Test for arguments
   if echo "$FULL_MOD" | grep ' ' > /dev/null; then
-    ARGS=" $(echo "$FULL_MOD" | cut -d ' ' -f 2- )"
+    ARGS="$(echo "$FULL_MOD" | cut -d ' ' -f 2- )"
   else
     unset ARGS
   fi
 
   # Get MODULE deps and prepare insmod lines
-  /sbin/modprobe --set-version $KERNEL_VERSION --show-depends $MODULE 2> /dev/null \
+  /sbin/modprobe --set-version $KERNEL_VERSION --show-depends $MODULE \
     | cut -f 2 -d ' ' | while read SRCMOD; do
 
     if ! grep -q "$SRCMOD" $SOURCE_TREE/load_kernel_modules 2>/dev/null ; then
@@ -417,7 +363,7 @@ while [ $i -ne $INDEX ]; do
       # Over-ride the previously defined LINE variable if so
       if [ "$(basename $SRCMOD .ko)" = "$MODULE" ]; then
         # SRCMOD and MODULE are same, ARGS can be passed
-        LINE="$LINE$ARGS"
+        LINE="$LINE $ARGS"
       fi
 
     fi
