@@ -1,5 +1,5 @@
 #!/bin/sh
-# rc.modules 12.1  Mon Oct 15 14:54:40 CDT 2007  pp (rb), pjv
+# rc.modules 12.1  Wed Mar  5 23:51:09 CST 2008  pp (rb), pjv
 #
 # This file loads extra drivers into the Linux kernel.
 #
@@ -811,16 +811,6 @@ fi
 #/sbin/modprobe ip_nat_ftp
 #/sbin/modprobe ip_nat_irc
 #/sbin/modprobe ip_nat_snmp_basic
-
-### Kernel security models:
-# Default Linux Capabilities
-# This enables the "default" Linux capabilities functionality.
-/sbin/modprobe capability
-# BSD Secure Levels
-# An implementation of BSD Secure Levels for Linux.
-# See Documentation/seclvl.txt in the Linux kernel source
-# for information about how this works.
-#/sbin/modprobe seclvl
 
 ### CPU frequency scaling modules:
 # generic ACPI P-States based driver
