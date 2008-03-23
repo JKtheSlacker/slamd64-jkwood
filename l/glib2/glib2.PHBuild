@@ -21,7 +21,7 @@ CFLAGS="$SLKCFLAGS" \
   --sysconfdir=/etc \
   --mandir=/usr/man \
   --build=$ARCH-$DISTRO-linux
-make -j12 || exit 1
+make -j5 || exit 1
 make install DESTDIR=$PKG
 
 # Install profile scripts:
