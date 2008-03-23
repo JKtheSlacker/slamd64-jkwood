@@ -6,6 +6,8 @@
 # Modified by:  David Cantrell <david@slackware.com>, 06-Oct-2000
 #
 # ChangeLog:
+# 2008-03-10:   Updated timezones from tzdata2008a. <pjv>
+# 2007-12-21:   Updated timezones from tzdata2007j. <pjv>
 # 2006-12-03:   Updated timezones from tzdata2006p. <pjv>
 # 2006-09-14:   Updated timezones from tzdata2006k. <pjv>
 # 2006-08-22:   Updated timezones from tzdata2006j.
@@ -281,6 +283,7 @@ if [ "$COLOR" = "on" -o -r $TMP/SeTcolor -o "$T_PX" = "/" ]; then
 "America/Maceio" " " \
 "America/Managua" " " \
 "America/Manaus" " " \
+"America/Marigot" " " \
 "America/Martinique" " " \
 "America/Mazatlan" " " \
 "America/Mendoza" " " \
@@ -321,6 +324,7 @@ if [ "$COLOR" = "on" -o -r $TMP/SeTcolor -o "$T_PX" = "/" ]; then
 "America/Sao_Paulo" " " \
 "America/Scoresbysund" " " \
 "America/Shiprock" " " \
+"America/St_Barthelemy" " " \
 "America/St_Johns" " " \
 "America/St_Kitts" " " \
 "America/St_Lucia" " " \
@@ -826,6 +830,7 @@ if [ "$COLOR" = "on" -o -r $TMP/SeTcolor -o "$T_PX" = "/" ]; then
 "posix/America/Maceio" " " \
 "posix/America/Managua" " " \
 "posix/America/Manaus" " " \
+"posix/America/Marigot" " " \
 "posix/America/Martinique" " " \
 "posix/America/Mazatlan" " " \
 "posix/America/Mendoza" " " \
@@ -866,6 +871,7 @@ if [ "$COLOR" = "on" -o -r $TMP/SeTcolor -o "$T_PX" = "/" ]; then
 "posix/America/Sao_Paulo" " " \
 "posix/America/Scoresbysund" " " \
 "posix/America/Shiprock" " " \
+"posix/America/St_Barthelemy" " " \
 "posix/America/St_Johns" " " \
 "posix/America/St_Kitts" " " \
 "posix/America/St_Lucia" " " \
@@ -1384,6 +1390,7 @@ if [ "$COLOR" = "on" -o -r $TMP/SeTcolor -o "$T_PX" = "/" ]; then
 "right/America/Maceio" " " \
 "right/America/Managua" " " \
 "right/America/Manaus" " " \
+"right/America/Marigot" " " \
 "right/America/Martinique" " " \
 "right/America/Mazatlan" " " \
 "right/America/Mendoza" " " \
@@ -1424,6 +1431,7 @@ if [ "$COLOR" = "on" -o -r $TMP/SeTcolor -o "$T_PX" = "/" ]; then
 "right/America/Sao_Paulo" " " \
 "right/America/Scoresbysund" " " \
 "right/America/Shiprock" " " \
+"right/America/St_Barthelemy" " " \
 "right/America/St_Johns" " " \
 "right/America/St_Kitts" " " \
 "right/America/St_Lucia" " " \
@@ -1981,6 +1989,7 @@ America/Louisville
 America/Maceio
 America/Managua
 America/Manaus
+America/Marigot
 America/Martinique
 America/Mazatlan
 America/Mendoza
@@ -2021,6 +2030,7 @@ America/Santo_Domingo
 America/Sao_Paulo
 America/Scoresbysund
 America/Shiprock
+America/St_Barthelemy
 America/St_Johns
 America/St_Kitts
 America/St_Lucia
@@ -2526,6 +2536,7 @@ posix/America/Louisville
 posix/America/Maceio
 posix/America/Managua
 posix/America/Manaus
+posix/America/Marigot
 posix/America/Martinique
 posix/America/Mazatlan
 posix/America/Mendoza
@@ -2566,6 +2577,7 @@ posix/America/Santo_Domingo
 posix/America/Sao_Paulo
 posix/America/Scoresbysund
 posix/America/Shiprock
+posix/America/St_Barthelemy
 posix/America/St_Johns
 posix/America/St_Kitts
 posix/America/St_Lucia
@@ -3084,6 +3096,7 @@ right/America/Louisville
 right/America/Maceio
 right/America/Managua
 right/America/Manaus
+right/America/Marigot
 right/America/Martinique
 right/America/Mazatlan
 right/America/Mendoza
@@ -3124,6 +3137,7 @@ right/America/Santo_Domingo
 right/America/Sao_Paulo
 right/America/Scoresbysund
 right/America/Shiprock
+right/America/St_Barthelemy
 right/America/St_Johns
 right/America/St_Kitts
 right/America/St_Lucia

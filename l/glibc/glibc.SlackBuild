@@ -35,7 +35,7 @@ TARGET32=${TARGET32:-i486} # only needed on multilib
 
 DISTRO=${DISTRO:-slamd64}
 
-BUILD=${BUILD:-4}
+BUILD=${BUILD:-5}
 
 # Automatically work out our libdir
 if [ $DISTRO = slamd64 ]; then
@@ -93,18 +93,18 @@ apply_patches() {
   zcat $CWD/glibc.getcwd.max.macro.diff.gz | patch -p1 --verbose || exit 1
   # Update the timezone information.
   ( cd timezone
-    tar xzf $CWD/tzdata2008a.tar.gz
+    tar xzf $CWD/tzdata2008a.tar.gz || exit 1
     chown root:root *
     mv yearistype.sh yearistype
     chmod 644 *
     chmod 755 yearistype
     mkdir tzcode
     cd tzcode
-    tar xzf $CWD/tzcode2008a.tar.gz
+    tar xzf $CWD/tzcode2008a.tar.gz || exit 1
     chown -R root:root .
     chmod 644 *
     cp -a *.c *.h ..
-  )
+  ) || exit 1
 }
 
 # I'll break this out as an option for fun  :-)
