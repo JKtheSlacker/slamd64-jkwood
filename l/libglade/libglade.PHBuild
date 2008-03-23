@@ -1,0 +1,34 @@
+#!/bin/sh
+PKGNAM=libglade
+VERSION=2.6.2
+BUILD=1
+
+. /etc/pkghelpers
+pkghelpers_env
+
+rm -rf $PKG
+mkdir -p $PKG/usr
+
+cd $TMP
+tar xjvf $CWD/libglade-$VERSION.tar.bz2
+cd libglade-$VERSION
+pkghelpers_permissions
+CFLAGS="$SLKCFLAGS" \
+./configure \
+  --prefix=/usr \
+	--libdir=/usr/lib$LIBSUFFIX \
+  --localstatedir=/var/lib \
+  --build=$ARCH-$DISTRO-linux || exit 1
+make -j12 || exit 1
+make install DESTDIR=$PKG
+
+mkdir -p $PKG/usr/doc/libglade-$VERSION
+cp -a \
+  AUTHORS COPYING NEWS README \
+  $PKG/usr/doc/libglade-$VERSION
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+
+cd $PKG
+pkghelpers_fixup
+pkghelpers_makepkg

@@ -1,0 +1,76 @@
+#!/bin/sh
+# Copyright 2006, 2007  Patrick J. Volkerding, Sebeka, MN, USA
+# Copyright 2007  Frederick Emmott <mail@fredemmott.co.uk>
+# All rights reserved.
+#
+# Redistribution and use of this script, with or without modification, is
+# permitted provided that the following conditions are met:
+#
+# 1. Redistributions of this script must retain the above copyright
+#    notice, this list of conditions and the following disclaimer.
+#
+#  THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR IMPLIED
+#  WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+#  MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.  IN NO
+#  EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+#  SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+#  PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+#  OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+#  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+#  OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+#  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+
+PKGNAM=libmad
+VERSION=${VERSION:-0.15.1b}
+BUILD=${BUILD:-3}
+
+. /etc/pkghelpers
+pkghelpers_env
+
+rm -rf $PKG
+mkdir -p $PKG
+
+cd $TMP
+rm -rf ${PKGNAM}-${VERSION}
+tar xzvf $CWD/${PKGNAM}-$VERSION.tar.gz || exit 1
+cd ${PKGNAM}-$VERSION
+
+# Make sure ownerships and permissions are sane:
+pkghelpers_permissions
+
+# Configure:
+CFLAGS="$SLKCFLAGS" \
+./configure \
+  --prefix=/usr \
+	--libdir=/usr/lib$LIBSUFFIX \
+  --sysconfdir=/etc \
+  --mandir=/usr/man \
+  --disable-static \
+  --disable-debugging \
+  --program-prefix= \
+  --program-suffix= \
+  --build=$ARCH-$DISTRO-linux
+
+# Build and install:
+make -j6 || exit 1
+make install DESTDIR=$PKG || exit 1
+
+# This is what happens when every distro makes up its own standards
+mkdir -p $PKG/usr/lib$LIBSUFFIX/pkgconfig
+cat $CWD/mad.pc > $PKG/usr/lib$LIBSUFFIX/pkgconfig/mad.pc
+
+sed -i s%/lib%/lib$LIBSUFFIX% $PKG/usr/lib$LIBSUFFIX/pkgconfig/mad.pc
+
+# Add a documentation directory:
+mkdir -p $PKG/usr/doc/${PKGNAM}-$VERSION
+cp -a \
+  CHANGES COPYING COPYRIGHT CREDITS README TODO VERSION \
+  $PKG/usr/doc/${PKGNAM}-$VERSION
+
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+
+cd $PKG
+pkghelpers_fixup
+pkghelpers_makepkg

@@ -1,6 +1,6 @@
 #!/bin/sh
 PKGNAM=pcre
-VERSION=7.3
+VERSION=7.6
 BUILD=1
 
 . /etc/pkghelpers
@@ -8,22 +8,25 @@ pkghelpers_env
 
 rm -rf $PKG
 mkdir -p $PKG
-cd /tmp
+cd $TMP
 rm -rf pcre-$VERSION
 tar xjvf $CWD/pcre-$VERSION.tar.bz2
 cd pcre-$VERSION
-chown -R root.root .
-find . -perm 777 -exec chmod 755 {} \;
-find . -perm 664 -exec chmod 644 {} \;
+
+pkghelpers_permissions
+
 CFLAGS="$SLKCFLAGS" \
 ./configure \
   --enable-utf8 \
   --prefix=/usr \
   --libdir=/usr/lib$LIBSUFFIX \
   --mandir=/usr/man
-make -j12
-make install DESTDIR=$PKG
+
+make -j12 || exit 1
+make install DESTDIR=$PKG || exit 1
+
 chmod 755 $PKG/usr/lib$LIBSUFFIX/libpcre.so.* $PKG/usr/lib$LIBSUFFIX/libpcreposix.so.*
+
 mkdir -p $PKG/usr/doc/pcre-$VERSION
 cp -a \
   AUTHORS COPYING INSTALL LICENCE NEWS NON-UNIX-USE README \
@@ -34,6 +37,7 @@ chown -R root.root $PKG/usr/doc/pcre-$VERSION
 # Eliminate redundant docs:
 rm -rf $PKG/usr/share/doc
 rmdir $PKG/usr/share
+
 mkdir -p $PKG/install
 cat $CWD/slack-desc > $PKG/install/slack-desc
 

@@ -1,0 +1,53 @@
+#!/bin/sh
+PKGNAM=pango
+VERSION=1.19.4
+BUILD=1
+
+. /etc/pkghelpers
+pkghelpers_env
+
+rm -rf $PKG
+mkdir -p $PKG/usr
+cd $TMP
+rm -rf pango-$VERSION
+tar xjvf $CWD/pango-$VERSION.tar.bz2
+cd pango-$VERSION
+pkghelpers_permissions
+if [ "x$LIBSUFFIX" != "x" ]; then
+	# Thanks to http://cblfs.cross-lfs.org/index.php/Pango for original patch
+	zcat $CWD/pango-$VERSION-multilib-1.diff.gz | patch -p1 --verbose || exit 1
+	sed -i "s/BUILDENV/64/" pango/pango-utils.c \
+    modules/Makefile.am modules/Makefile.in \
+    pango/Makefile.am pango/Makefile.in || exit 1
+fi
+	
+CFLAGS="$SLKCFLAGS" \
+./configure \
+  --prefix=/usr \
+  	--libdir=/usr/lib$LIBSUFFIX \
+  --sysconfdir=/etc \
+  --mandir=/usr/man \
+  --build=$ARCH-$DISTRO-linux
+make -j10 || exit 1
+make install DESTDIR=$PKG
+# Spamming your root partition:
+make install
+
+if [ "x$LIBSUFFIX" = "x64" ]; then
+	EXTRAETC=-64
+else
+	EXTRAETC=
+fi
+mkdir -p $PKG/etc/pango$EXTRAETC
+cp -a /etc/pango$EXTRAETC/* $PKG/etc/pango$EXTRAETC
+
+mkdir -p $PKG/usr/doc/pango-$VERSION
+cp -a \
+  AUTHORS COPYING ChangeLog NEWS README TODO \
+  $PKG/usr/doc/pango-$VERSION
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+
+cd $TMP/package-pango
+pkghelpers_fixup
+pkghelpers_makepkg

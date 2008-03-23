@@ -1,0 +1,40 @@
+#!/bin/sh
+PKGNAM=alsa-lib
+VERSION=1.0.15
+BUILD=1
+
+. /etc/pkghelpers
+pkghelpers_env
+
+rm -rf $PKG
+mkdir -p $PKG
+cd $TMP
+rm -rf alsa-lib-$VERSION
+tar xjvf $CWD/alsa-lib-$VERSION.tar.bz2 || exit 1
+cd alsa-lib-$VERSION
+pkghelpers_permissions
+CFLAGS="$SLKCFLAGS" \
+ ./configure \
+ 	--libdir=/usr/lib$LIBSUFFIX \
+  --build=$ARCH-$DISTRO-linux
+make -j10 || exit 1
+make install DESTDIR=$PKG
+
+# TODO
+# ( cd src/pcm/ext
+# make jack
+# make jack-install )
+
+mkdir -p $PKG/usr/doc/alsa-lib-$VERSION
+cp -a \
+  INSTALL TODO \
+  $PKG/usr/doc/alsa-lib-$VERSION
+cp -a COPYING $PKG/usr/doc/alsa-lib-$VERSION/COPYING.lib
+cp -a aserver/COPYING $PKG/usr/doc/alsa-lib-$VERSION/COPYING.aserver
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+
+cd $PKG
+pkghelpers_fixup
+pkghelpers_makepkg
+

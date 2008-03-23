@@ -1,6 +1,6 @@
 #!/bin/sh
 PKGNAM=glib2
-VERSION=2.12.13
+VERSION=2.14.6
 BUILD=1
 
 . /etc/pkghelpers
@@ -13,22 +13,32 @@ cd $TMP
 rm -rf glib-$VERSION
 tar xjvf $CWD/glib-$VERSION.tar.bz2
 cd glib-$VERSION
-chown -R root:root .
-find . -perm 664 -exec chmod 644 {} \;
+pkghelpers_permissions
 CFLAGS="$SLKCFLAGS" \
 ./configure \
   --prefix=/usr \
 	--libdir=/usr/lib$LIBSUFFIX \
   --sysconfdir=/etc \
-  --mandir=/usr/man
+  --mandir=/usr/man \
+  --build=$ARCH-$DISTRO-linux
 make -j12 || exit 1
 make install DESTDIR=$PKG
+
+# Install profile scripts:
+mkdir -p $PKG/etc/profile.d/
+cp -a $CWD/glib2.{csh,sh} $PKG/etc/profile.d/
+chown root:root $PKG/etc/profile.d/*
+chmod 755 $PKG/etc/profile.d/*
+mv $PKG/etc/profile.d/glib2.csh $PKG/etc/profile.d/glib2.csh.new
+mv $PKG/etc/profile.d/glib2.sh $PKG/etc/profile.d/glib2.sh.new
+
 mkdir -p $PKG/usr/doc/glib-$VERSION
 cp -a \
   AUTHORS COPYING NEWS README \
   $PKG/usr/doc/glib-$VERSION
 mkdir -p $PKG/install
 cat $CWD/slack-desc > $PKG/install/slack-desc
+zcat $CWD/doinst.sh.gz > $PKG/install/doinst.sh
 
 cd $TMP/package-glib2
 pkghelpers_fixup

@@ -1,6 +1,6 @@
 #!/bin/sh
 PKGNAM=libwpd
-VERSION=0.8.9
+VERSION=0.8.14
 BUILD=1
 
 . /etc/pkghelpers
@@ -13,9 +13,7 @@ cd $TMP
 rm -rf libwpd-$VERSION
 tar xjvf $CWD/libwpd-$VERSION.tar.bz2
 cd libwpd-$VERSION
-chown -R root:root .
-find . -perm 666 -exec chmod 644 {} \;
-find . -perm 664 -exec chmod 644 {} \;
+pkghelpers_permissions
 CFLAGS="$SLKCFLAGS" \
 CXXFLAGS="$SLKCFLAGS" \
 ./configure \

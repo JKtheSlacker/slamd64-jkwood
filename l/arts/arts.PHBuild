@@ -1,0 +1,52 @@
+#!/bin/sh
+
+##### WARNING #####
+# Uninstall xine-lib before running this
+##### WARNING #####
+
+PKGNAM=arts
+VERSION=${VERSION:-1.5.9}
+BUILD=${BUILD:-1}
+
+. /etc/pkghelpers
+pkghelpers_env
+
+rm -rf $PKG
+mkdir -p $PKG/usr
+
+# Avoid a version number in .la files:
+if [ -d /usr/lib$LIBSUFFIX/qt ]; then
+  QTDIR=/usr/lib$LIBSUFFIX/qt
+fi
+cd $TMP
+echo "Building arts-$VERSION.tar.bz2..."
+tar xjvf $CWD/arts-$VERSION.tar.bz2
+cd arts-$VERSION
+
+zcat $CWD/arts.tmpdir.diff.gz | patch -p1 --verbose || exit 1
+
+pkghelpers_permissions
+CFLAGS="$SLKCFLAGS" \
+CXXFLAGS="$SLKCFLAGS" \
+./configure \
+  --prefix=/usr \
+	--libdir=/usr/lib$LIBSUFFIX \
+  --sysconfdir=/etc \
+  --with-xinerama \
+  --disable-debug \
+  --program-prefix="" \
+  --program-suffix="" \
+  --build=$ARCH-$DISTRO-linux
+make -j10 || exit 1
+make install DESTDIR=$PKG
+mkdir -p $PKG/usr/doc/arts-$VERSION
+cp -a \
+  COPYING COPYING.LIB INSTALL doc/NEWS doc/README doc/TODO \
+  $PKG/usr/doc/arts-$VERSION
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+
+cd $PKG
+pkghelpers_fixup
+pkghelpers_makepkg
+

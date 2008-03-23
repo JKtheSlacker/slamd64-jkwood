@@ -4,8 +4,8 @@ PKG=/tmp/package-jre
 rm -rf $PKG
 mkdir -p $PKG
 
-VERSION=6u2
-DVER=1.6.0_02
+VERSION=6u5
+DVER=1.6.0_05
 ARCH=x86_64
 JARCH=amd64
 BUILD=1

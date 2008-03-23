@@ -1,0 +1,93 @@
+#!/bin/sh
+PKGNAM=gtk+2
+VERSION=2.12.8
+BUILD=${BUILD:-1}
+
+. /etc/pkghelpers
+pkghelpers_env
+
+rm -rf $PKG
+mkdir -p $PKG/usr
+cd $TMP
+rm -rf gtk+-$VERSION
+tar xjvf $CWD/gtk+-$VERSION.tar.bz2
+cd gtk+-$VERSION
+
+if [ "x$LIBSUFFIX" = "x64" ]; then
+	# Multilib fixes from http://cblfs.cross-lfs.org/index.php/Gtk2
+	zcat $CWD/gtk+-2.12.5-multilib-1.diff.gz | patch -p1 --verbose || exit 1
+
+	# Multilib fix missed by CLFS
+	zcat $CWD/gtk+-2.12.5-multilib-input.diff.gz | patch -p1 --verbose || exit 1
+
+	sed -i "s/BUILDENV/64/" \
+	gdk-pixbuf/gdk-pixbuf-io.c \
+	gdk-pixbuf/Makefile.am \
+	gdk-pixbuf/Makefile.in \
+	modules/input/Makefile.am \
+	modules/input/Makefile.in \
+	gtk/gtkrc.c
+elif [ "x$LIBSUFFIX" != "x" ]; then
+	echo "Unsupported libsuffix!"
+	exit 1
+fi
+
+# There's been this long standing debate about PNG and -lz
+# and this patch is the workaround.  ;-)
+zcat $CWD/gtk.pnglz.diff.gz | patch -p1 --verbose || exit 1
+# Fix Flash in Konquoror:
+zcat $CWD/gtk.nsplugin.diff.gz | patch -p1 --verbose || exit 1
+
+pkghelpers_permissions
+
+CFLAGS="$SLKCFLAGS" \
+./configure \
+  --prefix=/usr \
+	--libdir=/usr/lib$LIBSUFFIX \
+  --sysconfdir=/etc \
+  --mandir=/usr/man \
+  --with-xinput=yes \
+  --build=$ARCH-$DISTRO-linux
+
+make -j9 || exit 1
+make install DESTDIR=$PKG || exit 1
+
+mkdir -p $PKG/var/log/setup
+cat << EOF > $PKG/var/log/setup/setup.07.gtk-update-icon-cache
+chroot . /usr/bin/gtk-update-icon-cache -f -t /usr/share/icons/hicolor 1> /dev/null 2> /dev/null
+EOF
+chmod 755 $PKG/var/log/setup/setup.07.gtk-update-icon-cache
+
+# I'm spamming your root partition because /etc/gtk-2.0 won't install to $DESTDIR
+make install || exit 1
+if [ "x$LIBSUFFIX" = "x64" ]; then
+	EXTRAETC=-64
+else
+	EXTRAETC=
+fi
+mkdir -p $PKG/etc/gtk-2.0$EXTRAETC
+cp -a /etc/gtk-2.0$EXTRAETC/* $PKG/etc/gtk-2.0$EXTRAETC
+mv $PKG/etc/gtk-2.0$EXTRAETC/im-multipress.conf $PKG/etc/gtk-2.0$EXTRAETC/im-multipress.conf.new || exit 1
+
+mkdir -p $PKG/usr/doc/gtk+-$VERSION
+cp -a \
+  AUTHORS COPYING NEWS README TODO \
+  $PKG/usr/doc/gtk+-$VERSION
+
+# I'm almost inclined to think this stuff is obsolete, but I don't know for sure.
+# I do know that leaving it in doesn't hurt (aside from a few wasted bytes, but
+# probably less than the comments here waste ;-)
+mkdir -p $PKG/etc/profile.d
+cp -a $CWD/profile.d/* $PKG/etc/profile.d
+chmod 755 $PKG/etc/profile.d/*
+chown -R root:root $PKG/etc/profile.d/*
+
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+zcat $CWD/doinst.sh.gz > $PKG/install/doinst.sh
+
+sed -i s%etc/gtk-2.0/%etc/gtk-2.0$EXTRAETC/%g $PKG/install/doinst.sh
+
+cd $PKG
+pkghelpers_fixup
+pkghelpers_makepkg

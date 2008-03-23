@@ -1,7 +1,7 @@
 #!/bin/sh
 PKGNAM=slang
-VERSION=${VERSION:-2.0.7}
-DOCV=${DOCV:-2.0.4}
+VERSION=${VERSION:-2.1.3}
+#DOCV=${DOCV:-2.0.4}
 BUILD=${BUILD:-1}
 
 . /etc/pkghelpers
@@ -14,15 +14,16 @@ cd $TMP
 rm -rf slang-$VERSION
 tar xjvf $CWD/slang-$VERSION.tar.bz2 || exit 1
 cd slang-$VERSION
-chown -R root:root .
+pkghelpers_permissions
 CFLAGS="$SLKCFLAGS" \
   ./configure \
   --prefix=/usr \
 	--libdir=/usr/lib$LIBSUFFIX \
+  --mandir=/usr/man \
   --sysconfdir=/etc \
   --includedir=/usr/include \
   --disable-static \
-  $ARCH-$DISTRO-linux
+  --build=$ARCH-$DISTRO-linux
 
 make -j12 || exit 1
 make install DESTDIR=$PKG
@@ -43,9 +44,9 @@ cp -a \
   COPYING INSTALL.pc INSTALL.unx INSTALL.vms NEWS README UPGRADE.txt \
   $PKG/usr/doc/slang-$VERSION
 # Add some additional documentation:
-tar xjvf $CWD/slangdoc-$DOCV.tar.bz2
-chown -R root:root doc
-cp -a doc/html $PKG/usr/doc/slang-$VERSION
+#tar xjvf $CWD/slangdoc-$DOCV.tar.bz2
+#chown -R root:root doc
+#cp -a doc/html $PKG/usr/doc/slang-$VERSION
 
 mkdir -p $PKG/install
 cat $CWD/slack-desc > $PKG/install/slack-desc

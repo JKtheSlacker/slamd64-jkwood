@@ -1,0 +1,65 @@
+#!/bin/sh
+PKGNAM=pilot-link
+VERSION=0.12.3
+BUILD=${BUILD:-1}
+
+. /etc/pkghelpers
+pkghelpers_env
+
+rm -rf $PKG
+mkdir -p $PKG
+
+cd $TMP
+rm -rf pilot-link-$VERSION
+tar xjvf $CWD/pilot-link-$VERSION.tar.bz2 || exit 1
+cd pilot-link-$VERSION
+
+zcat $CWD/pilot-link.serial.group.is.uucp.diff.gz | patch -p1 --verbose || exit 1
+
+pkghelpers_permissions
+
+sed -i "s#PYTHON_EXEC_PREFIX/lib/#PYTHON_EXEC_PREFIX/lib$LIBSUFFIX/#g" configure
+CFLAGS="$SLKCFLAGS" \
+./configure \
+  --prefix=/usr \
+  --libdir=/usr/lib$LIBSUFFIX \
+  --localstatedir=/var/lib \
+  --mandir=/usr/man \
+  --enable-static=no \
+  --enable-conduits \
+  --enable-threads \
+  --enable-libusb \
+  --with-libpng \
+  --with-perl \
+  --with-python \
+  --program-prefix="" \
+  --program-suffix="" \
+  --build=$ARCH-$DISTRO-linux
+
+make -i -j4 || exit 1
+make -i install DESTDIR=$PKG
+
+# Get rid of perllocal.pod:
+rm -rf $PKG/usr/lib$LIBSUFFIX/perl5/site_perl/$(perl -v | head -2 | tail -1 | cut -f 2 -d v | cut -f 1 -d ' ')
+
+# Right.
+mkdir -p $PKG/etc/udev/rules.d
+mv $PKG/usr/share/pilot-link/udev/60-libpisock.rules $PKG/etc/udev/rules.d/80-libpisock.rules
+rmdir $PKG/usr/share/pilot-link/udev
+
+mkdir -p $PKG/usr/doc/pilot-link-$VERSION
+cp -a \
+  AUTHORS COPYING COPYING.LIB INSTALL NEWS README \
+  $PKG/usr/doc/pilot-link-$VERSION
+
+# Install man pages:
+mkdir -p $PKG/usr/man/man{1,7}
+cp -a doc/man/*.1 $PKG/usr/man/man1
+cp -a doc/man/*.7 $PKG/usr/man/man7
+
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+
+cd $PKG
+pkghelpers_fixup
+pkghelpers_makepkg

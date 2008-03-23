@@ -1,0 +1,50 @@
+#!/bin/sh
+PKGNAM=libpng
+VERSION=1.2.25
+BUILD=1
+
+. /etc/pkghelpers
+pkghelpers_env
+
+cd $TMP
+rm -rf libpng-$VERSION
+tar xjvf $CWD/libpng-$VERSION.tar.bz2
+cd libpng-$VERSION
+pkghelpers_permissions
+
+# Need this to substitute macros, but we'll keep using the
+# pre-built Makefile for now anyway...
+./configure --prefix=/usr --libdir=/usr/lib$LIBSUFFIX
+
+# Might as well link to -lz -lm, since the ./configure seems
+# to be doing it that way now...  finally.  That'll prevent
+# a couple of emails a week.  :-)
+zcat $CWD/libpng.libs.diff.gz | patch -p1 --verbose || exit 1
+
+# Link the custom makefile:
+ln -sf scripts/makefile.linux ./Makefile
+
+make prefix=/usr LIBPATH=/usr/lib$LIBSUFFIX
+make install prefix=/usr LIBPATH=/usr/lib$LIBSUFFIX DESTDIR=$PKG
+
+# This symlink is needed to keep old applications running:
+# I guess the real lib used the major number 3, then 0 for
+# a short while, and now .3 again.  Hopefully it will stay
+# this way as it was .3 in Slackware 10.2.  One can hope.
+( cd $PKG/usr/lib$LIBSUFFIX
+  if [ ! -e libpng.so.0 -a -e libpng.so.3 ]; then
+    ln -sf libpng.so.3 libpng.so.0
+  fi
+)
+
+mkdir -p $PKG/usr/doc/libpng-$VERSION
+cp -a \
+  ANNOUNCE CHANGES INSTALL KNOWNBUG LICENSE README TODO Y2KINFO libpng.txt example.c \
+  $PKG/usr/doc/libpng-$VERSION
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+
+cd $PKG
+pkghelpers_fixup
+pkghelpers_makepkg
+

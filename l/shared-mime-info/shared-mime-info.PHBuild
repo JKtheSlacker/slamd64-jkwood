@@ -1,0 +1,49 @@
+#!/bin/sh
+PKGNAM=shared-mime-info
+VERSION=0.23
+BUILD=1
+
+. /etc/pkghelpers
+pkghelpers_env
+
+set -e
+
+rm -rf $PKG
+mkdir -p $PKG
+cd $TMP
+rm -rf shared-mime-info-$VERSION
+tar xjvf $CWD/shared-mime-info-$VERSION.tar.bz2 || exit 1
+cd shared-mime-info-$VERSION
+pkghelpers_permissions
+./configure \
+  --prefix=/usr \
+  --mandir=/usr/man \
+  --build=$ARCH-$DISTRO-linux
+
+make -j4
+make install DESTDIR=$PKG
+
+mkdir -p $PKG/usr/lib$LIBSUFFIX
+mv $PKG/usr/share/pkgconfig $PKG/usr/lib$LIBSUFFIX
+
+mkdir -p $PKG/var/log/setup
+cat << EOF > $PKG/var/log/setup/setup.07.update-mime-database
+#BLURB="Run update-mime-database."
+chroot . update-mime-database /usr/share/mime 1> /dev/null 2> /dev/null
+EOF
+chmod 755 $PKG/var/log/setup/setup.07.update-mime-database
+
+mkdir -p $PKG/usr/doc/shared-mime-info-$VERSION
+cp -a \
+  COPYING NEWS README \
+  $PKG/usr/doc/shared-mime-info-$VERSION
+chmod 644 $PKG/usr/doc/shared-mime-info-$VERSION/*
+
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+zcat $CWD/doinst.sh.gz > $PKG/install/doinst.sh
+
+cd $PKG
+pkghelpers_fixup
+pkghelpers_makepkg
+

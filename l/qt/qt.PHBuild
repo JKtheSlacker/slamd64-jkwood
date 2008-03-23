@@ -1,0 +1,157 @@
+#!/bin/sh
+# Copyright 2006, 2007  Patrick J. Volkerding, Sebeka, MN, USA
+# All rights reserved.
+#
+# Redistribution and use of this script, with or without modification, is
+# permitted provided that the following conditions are met:
+#
+# 1. Redistributions of this script must retain the above copyright
+#    notice, this list of conditions and the following disclaimer.
+#
+#  THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR IMPLIED
+#  WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+#  MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.  IN NO
+#  EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+#  SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+#  PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+#  OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+#  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+#  OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+#  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+PKGNAM=qt
+VERSION=${VERSION:-3.3.8b}
+BUILD=${BUILD:-1}
+QTPLATFORM=linux-g++-64
+
+. /etc/pkghelpers
+pkghelpers_env
+
+
+rm -rf $PKG
+mkdir -p $PKG
+
+#cd $TMP
+# I have *many* times tried building this package in /tmp, and it always
+# ends up with a "/tmp" directory embedded in some wrong place.  Hopefully
+# the next time I see this comment I'll remember that and not make the
+# same mistake again just for the sake of doing things "right" (but having
+# the package come out wrong...)
+#rm -rf ${PKGNAM}-${VERSION}
+cd /usr/lib$LIBSUFFIX
+rm -rf qt qt-3.*
+tar xjvf $CWD/qt-x11-free-$VERSION.tar.bz2 || exit 1
+mv qt-x11-free-$VERSION qt
+cd qt
+
+if [ $ARCH = "i486" ]; then
+  zcat $CWD/qt.x86.cflags.diff.gz | patch -p1 || exit 1
+fi
+
+zcat $CWD/qt-x11.diff.gz | patch -p1 || exit 1
+zcat $CWD/qt.mysql.h.diff.gz | patch -p1 || exit 1
+
+# Make sure ownerships and permissions are sane:
+pkghelpers_permissions
+
+sed -i 's#/X11R6##g' mkspecs/*/qmake.conf
+# Configure:
+CFLAGS="$SLKCFLAGS" \
+
+# And here's what we are currently using.  The "yes" agrees to the GPL, so don't run this script if you
+# don't agree.  :-)
+echo "yes" | ./configure \
+ -platform $QTPLATFORM \
+ -prefix /usr/lib$LIBSUFFIX/qt-${VERSION} \
+ -release \
+ -system-zlib \
+ -system-libpng \
+ -qt-imgfmt-png \
+ -system-libmng \
+ -qt-imgfmt-mng \
+ -system-libjpeg \
+ -qt-imgfmt-jpeg \
+ -qt-gif \
+ -thread \
+ -stl \
+ -no-g++-exceptions \
+ -xft \
+ -plugin-sql-mysql \
+ -plugin-style-cde \
+ -plugin-style-compact \
+ -qt-style-motif \
+ -plugin-style-motifplus \
+ -plugin-style-platinum \
+ -plugin-style-sgi \
+ -plugin-style-windows \
+ -enable-opengl
+
+# We're using '-i' to work around a bug where the build tries to strip html files.
+# Build the important stuff:
+make -j10 -i symlinks sub-src sub-tools || exit 1
+make install INSTALL_ROOT=$PKG || exit 1
+
+# The infamous qt -> qt-${VERSION} link that lets us cheat on the QTDIR ;-)
+( cd $PKG/usr/lib$LIBSUFFIX ; ln -sf qt-${VERSION} qt)
+
+# Link the shared libraries into /usr/lib$LIBSUFFIX:
+( cd $PKG/usr/lib$LIBSUFFIX
+  for file in qt/lib/*.so* ; do
+    ln -sf $file .
+  done
+)
+
+# Add man pages:
+mkdir -p $PKG/usr/man
+cp -a doc/man/* $PKG/usr/man
+
+if [ $ARCH = "i486" ]; then
+  # Put this back as shipped:
+  ( cd $PKG/usr/lib/qt
+    zcat $CWD/qt.x86.cflags.diff.gz | patch -p1 -R )
+fi
+
+mkdir -p $PKG/etc/profile.d
+cat $CWD/profile.d/qt.sh > $PKG/etc/profile.d/qt.sh
+cat $CWD/profile.d/qt.csh > $PKG/etc/profile.d/qt.csh
+chmod 755 $PKG/etc/profile.d/*
+
+# Put a ton of links to more "normal" places.  I'd just use a prefix of /usr, but it
+# creates a ton of new (and ambiguously named) /usr directories...
+
+mkdir -p $PKG/usr/bin
+( cd $PKG/usr/bin
+  for file in assistant designer linguist lrelease lupdate moc qm2ts qmake qtconfig uic ; do
+    ln -sf /usr/lib$LIBSUFFIX/qt/bin/$file .
+  done
+)
+
+sed -i "s#/lib\$#/lib$LIBSUFFIX#" $PKG/usr/lib$LIBSUFFIX/qt-${VERSION}/lib/pkgconfig/qt-mt.pc || exit 1
+mkdir -p $PKG/usr/lib$LIBSUFFIX/pkgconfig
+( cd $PKG/usr/lib$LIBSUFFIX/pkgconfig
+  ln -sf /usr/lib$LIBSUFFIX/qt-${VERSION}/lib/pkgconfig/qt-mt.pc .
+)
+
+# Some things want $QTDIR/lib (correct), others want $QTDIR/lib$LIBSUFFIX (incorrect)
+if [ "x$LIBSUFFIX" != "x" ]; then
+	(
+		cd $PKG/usr/lib$LIBSUFFIX/qt;
+		ln -s lib lib$LIBSUFFIX
+	)
+fi
+
+# Add a documentation directory:
+mkdir -p $PKG/usr/doc/${PKGNAM}-$VERSION
+cp -a \
+  FAQ INSTALL LICENSE.GPL* LICENSE.QPL MANIFEST PLATFORMS README* changes* \
+  $PKG/usr/doc/${PKGNAM}-$VERSION
+( cd $PKG/usr/doc/${PKGNAM}-$VERSION ; ln -sf /usr/lib/qt-3.3.8/doc/html . )
+
+mkdir -p $PKG/install
+zcat $CWD/doinst.sh.gz > $PKG/install/doinst.sh
+cat $CWD/slack-desc > $PKG/install/slack-desc
+
+cd $PKG
+pkghelpers_fixup
+pkghelpers_makepkg
+

@@ -6,12 +6,12 @@ if [ -e /var/log/packages/arts* ]; then
 fi
 
 PKGNAM=sdl
-VERSION=1.2.11
-IMAGE=1.2.5
-MIXER=1.2.7
-NET=1.2.6
-TTF=2.0.8
-BUILD=${BUILD:-4}
+VERSION=1.2.13
+IMAGE=1.2.6
+MIXER=1.2.8
+NET=1.2.7
+TTF=2.0.9
+BUILD=${BUILD:-1}
 
 . /etc/pkghelpers
 pkghelpers_env
@@ -22,9 +22,7 @@ cd $TMP
 rm -rf sdl-$VERSION
 tar xjf $CWD/SDL-$VERSION.tar.bz2
 cd SDL-$VERSION
-chown -R root:root .
-find . -perm 777 -exec chmod 755 {} \;
-find . -perm 664 -exec chmod 644 {} \;
+pkghelpers_permissions
 
 # We must use --disable-x11-shared or programs linked with SDL will
 # crash on machines that use the closed source nVidia drivers.
@@ -33,6 +31,7 @@ CFLAGS="$SLKCFLAGS" \
 ./configure \
   --prefix=/usr \
 	--libdir=/usr/lib$LIBSUFFIX \
+  --mandir=/usr/man \
   --enable-shared=yes \
   --enable-static=no \
   --disable-x11-shared
@@ -53,14 +52,13 @@ cd $TMP
 rm -rf SDL_image-$IMAGE
 tar xjf $CWD/SDL_image-$IMAGE.tar.bz2
 cd SDL_image-$IMAGE
-chown -R root:root .
-find . -perm 777 -exec chmod 755 {} \;
-find . -perm 664 -exec chmod 644 {} \;
+pkghelpers_permissions
 # we don't want sdl to load the libs with dlopen(), gcc is smarter...
 CFLAGS="$SLKCFLAGS" \
 ./configure \
   --prefix=/usr \
 	--libdir=/usr/lib$LIBSUFFIX \
+  --mandir=/usr/man \
   --enable-shared=yes \
   --enable-static=no \
   --enable-jpg-shared=no \
@@ -79,9 +77,15 @@ cd $TMP
 rm -rf SDL_mixer-$MIXER
 tar xjf $CWD/SDL_mixer-$MIXER.tar.bz2
 cd SDL_mixer-$MIXER
-chown -R root:root .
-find . -perm 777 -exec chmod 755 {} \;
-find . -perm 664 -exec chmod 644 {} \;
+
+# Don't look for things in /usr/local, since this is an installed package:
+zcat $CWD/SDL_mixer-1.2.8.usrlocal.diff.gz | patch -p1 --verbose || exit 1
+
+if [ $LIBSUFFIX != "" ]; then
+  sed s%/usr/lib/timidity%/usr/lib/$LIBSUFFIX/timidity% timidity/config.h
+fi
+
+pkghelpers_permissions
 CFLAGS="$SLKCFLAGS" \
 ./configure \
   --prefix=/usr \
@@ -100,13 +104,12 @@ cd $TMP
 rm -rf SDL_net-$NET
 tar xjf $CWD/SDL_net-$NET.tar.bz2
 cd SDL_net-$NET
-chown -R root:root .
-find . -perm 777 -exec chmod 755 {} \;
-find . -perm 664 -exec chmod 644 {} \;
+pkghelpers_permissions
 CFLAGS="$SLKCFLAGS" \
 ./configure \
   --prefix=/usr \
 	--libdir=/usr/lib$LIBSUFFIX \
+  --mandir=/usr/man \
   --enable-shared=yes \
   --enable-static=no
 make -j12 || exit 1
@@ -121,15 +124,12 @@ cd $TMP
 rm -rf SDL_ttf-$TTF
 tar xjf $CWD/SDL_ttf-$TTF.tar.bz2
 cd SDL_ttf-$TTF
-chown -R root:root .
-find . -perm 777 -exec chmod 755 {} \;
-find . -perm 664 -exec chmod 644 {} \;
-# http://freetype.fis.uniroma2.it/freetype2/patches/SDL_ttf-2.0.7-noftinternals.patch
-zcat $CWD/SDL_ttf-2.0.7-noftinternals.patch.gz | patch --verbose SDL_ttf.c || exit 1
+pkghelpers_permissions
 CFLAGS="$SLKCFLAGS" \
 ./configure \
   --prefix=/usr \
 	--libdir=/usr/lib$LIBSUFFIX \
+  --mandir=/usr/man \
   --enable-shared=yes \
   --enable-static=no
 make -j12 || exit 1
