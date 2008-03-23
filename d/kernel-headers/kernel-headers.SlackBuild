@@ -2,7 +2,7 @@
 set -e
 CWD=`pwd`
 
-VERSION=${VERSION:-2.6.24.2}
+VERSION=${VERSION:-2.6.24.3}
 ARCH=${ARCH:-x86_64}
 BUILD=${BUILD:-1}
 
@@ -10,8 +10,12 @@ PKG=/tmp/package-kernel-headers
 rm -rf $PKG
 
 cd /usr/src/linux-$VERSION
-make headers_check
-make headers_install INSTALL_HDR_PATH=$PKG/usr
+# This was meant for 2.6.25, not 2.6.24 - see http://lkml.org/lkml/2008/3/21/450
+zcat $CWD/commit-dded91611a728d65721cdab3dd41d801a356fa15.diff.gz | patch -p1 -R --verbose
+make headers_check || exit 1
+make headers_install INSTALL_HDR_PATH=$PKG/usr 
+# Apply the [bad] patch again to leave the source tree in a clean state
+zcat $CWD/commit-dded91611a728d65721cdab3dd41d801a356fa15.diff.gz | patch -p1 --verbose
 
 cd $PKG
 mkdir install
