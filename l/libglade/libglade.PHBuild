@@ -19,7 +19,7 @@ CFLAGS="$SLKCFLAGS" \
 	--libdir=/usr/lib$LIBSUFFIX \
   --localstatedir=/var/lib \
   --build=$ARCH-$DISTRO-linux || exit 1
-make -j12 || exit 1
+make -j5 || exit 1
 make install DESTDIR=$PKG
 
 mkdir -p $PKG/usr/doc/libglade-$VERSION
