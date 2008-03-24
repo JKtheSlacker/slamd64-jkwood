@@ -19,7 +19,7 @@ while [ 0 ]; do # the bootdisk menu loop
    [ -r /sys/block/$BDEV/removable -a "$(cat /sys/block/$BDEV/removable)" == "1" ] \
      && echo $BDEV >> $TMP/remov_prior
  done
- dialog --title "MAKE USB FLASH BOOT" --ok-label Continue --cancel-label Skip --menu \
+ dialog --title "MAKE USB FLASH BOOT" --default-item "Skip" --menu \
 "If your computer supports booting from a USB device, it is recommended that you make \
 a USB boot stick for your system at this time. It will boot your computer straight \
 into the root filesystem on $ROOT_DEVICE. \n\

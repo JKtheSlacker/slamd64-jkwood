@@ -64,6 +64,17 @@ if [ -r etc/rc.d/rc.dnsmasq ]; then
 EOF
 fi
 
+if [ -r etc/rc.d/rc.fuse ]; then
+  if [ -x etc/rc.d/rc.fuse ]; then
+    RC_FUSE=on
+  else
+    RC_FUSE=off
+  fi
+  cat << EOF >> $TMP/tmpscript
+    "rc.fuse" "Filesystem in Userspace library" $RC_FUSE "FUSE is an interface to allow userspace programs to use filesystems." \\
+EOF
+fi
+
 if [ -r etc/rc.d/rc.hald ]; then
   if [ -x etc/rc.d/rc.hald ]; then
     RC_HALD=on
@@ -207,17 +218,6 @@ if [ -r etc/rc.d/rc.saslauthd ]; then
 EOF
 fi
 
-if [ -r etc/rc.d/rc.scanluns ]; then
-  if [ -x etc/rc.d/rc.scanluns ]; then
-    RC_SCANLUNS=on
-  else
-    RC_SCANLUNS=off
-  fi
-  cat << EOF >> $TMP/tmpscript
-    "rc.scanluns" "Scan for extra LUNs" $RC_SCANLUNS "Logical Unit Numbers are scanned to detect USB and other devices." \\
-EOF
-fi
-
 if [ -r etc/rc.d/rc.sendmail ]; then
   if [ -x etc/rc.d/rc.sendmail ]; then
     RC_SENDMAIL=on
@@ -273,7 +273,7 @@ if [ ! $? = 0 ]; then
   exit
 fi
 
-for service in rc.atalk rc.bind rc.cups rc.dnsmasq rc.hald rc.hplip rc.httpd rc.inetd rc.ip_forward rc.lprng rc.messagebus rc.mysqld rc.ntpd rc.pcmcia rc.rpc rc.samba rc.saslauthd rc.scanluns rc.snmpd rc.sendmail rc.syslog rc.sshd ; do
+for service in rc.atalk rc.bind rc.cups rc.dnsmasq rc.fuse rc.hald rc.hplip rc.httpd rc.inetd rc.ip_forward rc.lprng rc.messagebus rc.mysqld rc.ntpd rc.pcmcia rc.rpc rc.samba rc.saslauthd rc.snmpd rc.sendmail rc.syslog rc.sshd ; do
   if [ -f etc/rc.d/$service ]; then
     if grep -w $service $TMP/reply 1> /dev/null ; then
       chmod 755 etc/rc.d/$service
