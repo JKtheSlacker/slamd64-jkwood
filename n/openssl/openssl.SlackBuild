@@ -25,7 +25,7 @@
 CWD=$(pwd)
 TMP=${TMP:-/tmp}
 
-VERSION=${VERSION:-0.9.8e}
+VERSION=${VERSION:-0.9.8g}
 ARCH=${ARCH:-x86_64}
 BUILD=${BUILD:-1}
 DISTRO=${DISTRO:-slamd64}
@@ -54,8 +54,6 @@ if [ "$ARCH" = "i486" ]; then
   # Build with -march=i486 -mtune=i686:
   zcat $CWD/openssl.optsx86.diff.gz | patch -p1 --backup --verbose --suffix=.orig || exit 1
 fi
-# This tiny bug was prventing openssl-0.9.8e (and maybe d) from unencrypting older archives:
-zcat $CWD/openssl.evp_lib.diff.gz | patch -p1 --backup --verbose --suffix=.orig || exit 1
 chown -R root:root .
 mkdir -p $PKG1/usr/doc/openssl-$VERSION
 cp -a CHANGES CHANGES.SSLeay FAQ INSTALL INSTALL.MacOS INSTALL.VMS INSTALL.W32 \
