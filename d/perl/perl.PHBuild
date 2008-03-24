@@ -8,12 +8,12 @@ PKGNAM=perl
 VERSION=5.8.8
 # IMPORTANT: also update -Dinc_version_list in ./configure below!
 
-BUILD=4
+BUILD=5
 
 # Additional required modules:
 DBI=1.602
 DBDMYSQL=4.001
-XMLPARSER=2.34
+XMLPARSER=2.36
 XMLSIMPLE=2.18
 # For XFce:
 URI=1.35
