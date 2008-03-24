@@ -1,5 +1,5 @@
 #!/bin/sh
-# Copyright 2006, 2007  Patrick J. Volkerding, Sebeka, MN, USA
+# Copyright 2006, 2007, 2008  Patrick J. Volkerding, Sebeka, MN, USA
 # Copyright 2007  Frederick Emmott
 # All rights reserved.
 #
@@ -22,7 +22,8 @@
 
 
 PKGNAM=pidgin
-VERSION=${VERSION:-2.2.1}
+VERSION=${VERSION:-2.4.0}
+PIDGINENC=${PIDGINENC:-3.0}
 BUILD=${BUILD:-1}
 
 . /etc/pkghelpers
@@ -37,18 +38,7 @@ tar xjvf $CWD/${PKGNAM}-$VERSION.tar.bz2
 cd ${PKGNAM}-$VERSION
 
 # Make sure ownerships and permissions are sane:
-chown -R root:root .
-find . -perm 666 -exec chmod 644 {} \;
-find . -perm 664 -exec chmod 644 {} \;
-find . -perm 600 -exec chmod 644 {} \;
-find . -perm 444 -exec chmod 644 {} \;
-find . -perm 400 -exec chmod 644 {} \;
-find . -perm 440 -exec chmod 644 {} \;
-find . -perm 777 -exec chmod 755 {} \;
-find . -perm 775 -exec chmod 755 {} \;
-find . -perm 511 -exec chmod 755 {} \;
-find . -perm 711 -exec chmod 755 {} \;
-find . -perm 555 -exec chmod 755 {} \;
+pkghelpers_permissions
 
 # Configure:
 CFLAGS="$SLKCFLAGS" \
@@ -58,17 +48,19 @@ CFLAGS="$SLKCFLAGS" \
   --sysconfdir=/etc \
   --mandir=/usr/man \
   --enable-dot=no \
+  --disable-schemas-install \
   --disable-gstreamer \
   --enable-dbus \
   --enable-gnutls=yes \
   --enable-nss=no \
   --enable-cyrus-sasl \
+  --with-perl-lib=vendor \
   --program-prefix= \
   --program-suffix= \
   --build=$ARCH-$DISTRO-linux
 
 # Build and install:
-make -j12 || exit 1
+make -j6 || exit 1
 make install DESTDIR=$PKG || exit 1
 
 # Fix misplaced items:
@@ -76,11 +68,35 @@ make install DESTDIR=$PKG || exit 1
 PERLDIR=$(/bin/ls -d /usr/lib$LIBSUFFIX/perl5/5.?.?/*thread-multi)
 mv $PKG/$PERLDIR/perllocal.pod $PKG/$PERLDIR/Pidgin.pod
 mkdir -p $PKG/usr/man/man3
-mv $PKG/*.3 $PKG/usr/man/man3
-mkdir -p $PKG/$PERLDIR/auto
-mv $PKG/auto/* $PKG/$PERLDIR/auto
-rmdir $PKG/auto
-mv $PKG/*.pm $PKG/$PERLDIR
+find $PKG/usr/share/man -type f -name *.3 -exec mv {} $PKG/usr/man/man3 \;
+rm -rf $PKG/usr/share/man
+find $PKG -type f -name .packlist -exec rm -f {} \;
+find $PKG -type f -name '*.bs' -empty -exec rm -f {} \;
+
+### add gaim-encryption
+( cd $TMP
+  rm -rf pidgin-encryption-$PIDGINENC
+  tar xzvf $CWD/pidgin-encryption-$PIDGINENC.tar.gz
+  cd pidgin-encryption-$PIDGINENC
+  PIDGIN_CFLAGS="-I${PKG}/usr/include/pidgin" \
+  PIDGIN_LIBS="-L${PKG}/usr/lib$LIBSUFFIX" \
+  PURPLE_CFLAGS="-I${PKG}/usr/include/libpurple" \
+  PURPLE_LIBS="-L${PKG}/usr/lib$LIBSUFFIX" \
+  ./configure \
+  --prefix=/usr \
+	--libdir=/usr/lib$LIBSUFFIX \
+  --disable-static \
+  --with-nss-includes=/usr/include/seamonkey/nss \
+  --with-nspr-includes=/usr/include/seamonkey/nspr \
+  --with-nss-libs=/usr/lib$LIBSUFFIX/seamonkey/ \
+  --with-nspr-libs=/usr/lib$LIBSUFFIX/seamonkey/ \
+  --program-prefix="" \
+  --program-suffix="" \
+  --build=$ARCH-$DISTRO-linux
+  make -j6 || exit 1
+  make install DESTDIR=$PKG || exit 1
+)
+### end add gaim-encryption
 
 # Add a documentation directory:
 mkdir -p $PKG/usr/doc/${PKGNAM}-$VERSION
