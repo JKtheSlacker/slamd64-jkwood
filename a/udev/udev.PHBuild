@@ -1,40 +1,44 @@
 #!/bin/sh
-CWD=$(pwd)
-if [ "$TMP" = "" ]; then
-  TMP=/tmp
-fi
-PKG=$TMP/package-udev
 
-VERSION=${VERSION:-116}
-ARCH=${ARCH:-x86_64}
-BUILD=${BUILD:-3}
-DISTRO=${DISTRO:-slamd64}
+# Slackware build script for udev
 
-if [ $DISTRO = slackware ]; then
-	PKGARCH=$ARCH
-else
-	PKGARCH=${ARCH}_${DISTRO}
-fi
+# Copyright 2006, 2008  Patrick J. Volkerding, Sebeka, MN, USA
+# All rights reserved.
+#
+# Redistribution and use of this script, with or without modification, is
+# permitted provided that the following conditions are met:
+#
+# 1. Redistributions of this script must retain the above copyright
+#    notice, this list of conditions and the following disclaimer.
+#
+#  THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR IMPLIED
+#  WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+#  MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.  IN NO
+#  EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+#  SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+#  PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+#  OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+#  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+#  OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+#  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-if [ $DISTRO = slamd64 ]; then
-	LIBSUFFIX=${LIBSUFFIX:-64}
-fi
+
+PKGNAM=udev
+VERSION=${VERSION:-118}
+BUILD=${BUILD:-1}
+
+. /etc/pkghelpers
+pkghelpers_env
 
 rm -rf $PKG
-mkdir -p $PKG/lib/udev
+mkdir -p $TMP $PKG/lib/udev
 cd $TMP
 rm -rf udev-$VERSION
 tar xvf $CWD/udev-$VERSION.tar.bz2 || exit 1
-
 cd udev-$VERSION || exit 1
-patch -p1 < $CWD/rule_generator.patch
+pkghelpers_permissions
 
-chown -R root:root .
-find . \
- \( -perm 777 -o -perm 775 -o -perm 711 -o -perm 555 -o -perm 511 \) \
- -exec chmod 755 {} \; -o \
- \( -perm 666 -o -perm 664 -o -perm 600 -o -perm 444 -o -perm 440 -o -perm 400 \) \
- -exec chmod 644 {} \;
+zcat $CWD/rule_generator.patch.gz | patch -p1 || exit 1
 
 make EXTRAS="extras/ata_id extras/cdrom_id \
 		extras/firmware extras/floppy extras/path_id \
@@ -52,29 +56,23 @@ cp -a extras/ata_id/ata_id $PKG/lib/udev
 cp -a extras/usb_id/usb_id $PKG/lib/udev
 ( cd extras/floppy ; make install-bin DESTDIR=$PKG )
 ( cd extras/rule_generator ; make install-bin DESTDIR=$PKG ) 
-( cd extras/volume_id ; make install-bin DESTDIR=$PKG \
-	usrlibdir=/usr/lib$LIBSUFFIX libdir=/lib$LIBSUFFIX )
+( cd extras/volume_id ; make install-bin DESTDIR=$PKG usrlibdir=/usr/lib$LIBSUFFIX libdir=/lib$LIBSUFFIX )
 ( cd extras/edd_id ; make install-bin DESTDIR=$PKG )
 ( cd extras/cdrom_id ; make install-bin DESTDIR=$PKG )
 
-#scsi_id is needed by multipath
+# scsi_id is needed by multipath
 mkdir -p $PKG/sbin
-( cd $PKG/sbin
-  ln -sf ../lib/udev/scsi_id scsi_id
+( cd $PKG
+  ln -s ../lib/udev/scsi_id sbin/scsi_id
 )
 
-#vol_id is needed by multipath, too
-( cd $PKG/sbin
-  ln -s ../lib/udev/vol_id vol_id
+# vol_id is needed by multipath, too
+( cd $PKG
+  ln -s ../lib/udev/vol_id sbin/vol_id
 )
 
 mv $PKG/usr/share/man $PKG/usr
 rmdir $PKG/usr/share
-
-( cd $PKG
-  find . | xargs file | grep "executable" | grep ELF | cut -f 1 -d : | xargs strip --strip-unneeded 2> /dev/null
-  find . | xargs file | grep "shared object" | grep ELF | cut -f 1 -d : | xargs strip --strip-unneeded 2> /dev/null
-)
 
 mkdir -p $PKG/etc/udev/rules.d \
 	 $PKG/lib/firmware \
@@ -85,6 +83,7 @@ mkdir -p $PKG/etc/udev/rules.d \
 cp -a $CWD/config/udev.conf $PKG/etc/udev/udev.conf
 # Copy Slackware custom rules
 cp -a $CWD/config/rules.d/* $PKG/etc/udev/rules.d/
+# Copy some files from upstream
 cp -a etc/udev/packages/40-alsa.rules $PKG/etc/udev/rules.d/
 
 cp -a $CWD/config/rc.d/rc.udev.new $PKG/etc/rc.d/rc.udev.new
@@ -92,23 +91,13 @@ cp -a $CWD/config/modprobe.d/blacklist.new $PKG/etc/modprobe.d/blacklist.new
 cp -a $CWD/config/modprobe.d/isapnp.new $PKG/etc/modprobe.d/isapnp.new
 cp -a $CWD/config/modprobe.d/psmouse.new $PKG/etc/modprobe.d/psmouse.new
 
-find $PKG/etc -type f -exec chmod 644 {} \;
-find $PKG/etc -type d -exec chmod 755 {} \;
-chmod 755 $PKG/etc/rc.d/rc.udev.new
-
-chown -R root:root $PKG/etc
-
 # Add extra device nodes to the package that udev doesn't make:
-tar -xvzf $CWD/udev-fixed-devices.tar.gz -C $PKG/
+tar xvf $CWD/udev-fixed-devices.tar.gz -C $PKG/
 
 # Add various helper scripts:
 for file in $CWD/config/scripts/* ; do
   cp -a $file $PKG/lib/udev/
 done
-
-chmod 755 $PKG/lib/udev/*
-chmod -x $PKG/lib/udev/rc.optical-symlinks
-chown root:root $PKG/lib/udev/*
 
 mkdir -p $PKG/usr/doc/udev-$VERSION
 cp -a COPYING FAQ README TODO RELEASE-NOTES docs \
@@ -117,27 +106,20 @@ cp -a COPYING FAQ README TODO RELEASE-NOTES docs \
 # Copy manpages of helper applications in /extra
 find extras/ -name "*\.8" -exec cp -a {} $PKG/usr/man/man8 \;
 
-# Compress and fix manpage symlinks:
-if [ -d $PKG/usr/man ]; then
-  ( cd $PKG/usr/man
-    for manpagedir in $(find . -type d -name "man*") ; do
-      ( cd $manpagedir
-        for eachpage in $( find . -type l -maxdepth 1) ; do
-          ln -s $( readlink $eachpage ).gz $eachpage.gz
-          rm $eachpage
-        done
-        gzip -9 *.?
-      )
-    done
-  )
-fi
+# Fix up permissions and ownership of the package
+chown -R root:root $PKG
+find $PKG/etc -type f -exec chmod 644 {} \;
+find $PKG/etc -type d -exec chmod 755 {} \;
+chmod 755 $PKG/etc/rc.d/rc.udev.new $PKG/lib/udev/*
+chmod -x $PKG/lib/udev/rc.optical-symlinks
 
 # Fix pkgconfig files
 sed -i "s#/lib\$#/lib$LIBSUFFIX#" $PKG/usr/lib$LIBSUFFIX/pkgconfig/*.pc
 
 mkdir -p $PKG/install
-cat $CWD/doinst.sh > $PKG/install/doinst.sh
+zcat $CWD/doinst.sh.gz > $PKG/install/doinst.sh
 cat $CWD/slack-desc > $PKG/install/slack-desc
 
 cd $PKG
-makepkg -l y -c y ../udev-$VERSION-$PKGARCH-$BUILD.tgz
+pkghelpers_fixup
+pkghelpers_makepkg

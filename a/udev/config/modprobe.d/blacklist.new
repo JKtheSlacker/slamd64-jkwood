@@ -4,6 +4,11 @@
 # no matter which driver happens to get probed first.  Sometimes user
 # mode tools can also control driver binding.
 
+# PC Speaker support:
+# This one is loaded by /etc/rc.d/rc.modules. If you don't like
+# the beeps and buzz from speaker, edit /etc/rc.d/rc.modules.
+blacklist pcspkr
+
 # tulip ... de4x5, xircom_tulip_cb, dmfe (...) handle same devices
 blacklist de4x5
 
@@ -29,6 +34,10 @@ blacklist hostap_cs
 blacklist hostap_pci
 blacklist hostap_plx
 blacklist hostap
+
+# Deprecated BCM43xx driver. List it here so it won't conflict with
+# b43 or b43legacy drivers.
+blacklist bcm43xx
 
 # Ethernet over IEEE1394 module.  In too many cases this will load
 # when there's no eth1394 device present (just an IEEE1394 port)
