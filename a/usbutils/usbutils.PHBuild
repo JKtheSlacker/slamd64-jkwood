@@ -1,8 +1,8 @@
 #!/bin/sh
 # Set initial variables:
 PKGNAM=usbutils
-VERSION=${VERSION:-0.72}
-BUILD=${BUILD:-2}
+VERSION=${VERSION:-0.73}
+BUILD=${BUILD:-1}
 
 . /etc/pkghelpers
 pkghelpers_env
@@ -15,32 +15,30 @@ rm -rf usbutils-$VERSION
 tar xjvf $CWD/usbutils-$VERSION.tar.bz2
 cd usbutils-$VERSION
 
-chown -R root:root .
-find . -perm 666 -exec chmod 644 {} \;
-find . -perm 664 -exec chmod 644 {} \;
-find . -perm 600 -exec chmod 644 {} \;
-find . -perm 444 -exec chmod 644 {} \;
-find . -perm 400 -exec chmod 644 {} \;
-find . -perm 440 -exec chmod 644 {} \;
-find . -perm 777 -exec chmod 755 {} \;
-find . -perm 775 -exec chmod 755 {} \;
-find . -perm 511 -exec chmod 755 {} \;
-find . -perm 711 -exec chmod 755 {} \;
-find . -perm 555 -exec chmod 755 {} \;
-
-# Enable the building of usbmodules, still needed for now on 2.4 systems:
-zcat $CWD/usbutils.usbmodules.diff.gz | patch -p1 --verbose || exit 1
+pkghelpers_permissions
 
 # Fetch the latest usb.ids:
-rm -f usb.ids
+rm -f usb.ids*
 sh ./update-usbids.sh
+
+# Patch update-usbids.sh to update the file in /usr/share:
+zcat $CWD/usbutils.ids.dest.gz | patch -p1 --verbose || exit 1
 
 ./configure \
   --prefix=/usr \
   --sbindir=/sbin
 
-make -j1 || exit 1
+make -j3 || exit 1
 make install DESTDIR=$PKG || exit 1
+
+# HAL needs this to be an uncompressed file:
+if [ -r $PKG/usr/share/usb.ids.gz ]; then
+  gzip -d --force $PKG/usr/share/usb.ids.gz
+fi
+
+mkdir -p $PKG/usr/sbin
+cat update-usbids.sh > $PKG/usr/sbin/update-usbids
+chmod 755 $PKG/usr/sbin/update-usbids
 
 mkdir -p $PKG/usr/doc/usbutils-$VERSION
 cp -a \
