@@ -24,7 +24,7 @@ CFLAGS="$SLKCFLAGS" \
   --mandir=/usr/man \
   --disable-static \
   $ARCH-$DISTRO-linux
-make -j12 || exit 1
+make -j5 || exit 1
 make install DESTDIR=$PKG
 
 # This is useless, describing a command that's not installed:
