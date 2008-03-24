@@ -6,7 +6,7 @@ if [ "$TMP" = "" ]; then
 fi
 PKG=$TMP/package-sendmail-cf
 
-VERSION=8.14.1
+VERSION=8.14.2
 ARCH=noarch
 BUILD=1
 
