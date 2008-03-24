@@ -43,8 +43,8 @@ zcat $CWD/pkgconfig.path.diff.gz | patch -p1 --verbose || exit
 
 CFLAGS="$SLKCFLAGS" ./configure --prefix=/usr --libdir=/usr/lib$LIBSUFFIX
   
-make
-make install DESTDIR=$PKG
+make || exit 1
+make install DESTDIR=$PKG || exit 1
 
 mkdir -p $PKG/usr/doc/$PRGNAM-$VERSION
 cp -a AUTHORS COPYING ChangeLog INSTALL NEWS README \
