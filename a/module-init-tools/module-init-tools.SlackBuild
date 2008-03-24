@@ -8,10 +8,9 @@ PKG=$TMP/package-module-init-tools
 rm -rf $PKG
 mkdir -p $TMP $PKG
 
-VERSION=3.2.2
-PKGVER=3.2.2
+VERSION=3.4
 ARCH=${ARCH:-x86_64}
-BUILD=${BUILD:-3}
+BUILD=${BUILD:-1}
 DISTRO=${DISTRO:-slamd64}
 
 if [ $DISTRO = slackware ]; then
@@ -62,7 +61,7 @@ for file in *.8 ; do
 done
 
 mkdir -p $PKG/usr/doc/module-init-tools-$VERSION
-cp -a AUTHORS CODING COPYING ChangeLog FAQ INSTALL NEWS README TODO \
+cp -a AUTHORS CODING COPYING ChangeLog FAQ HACKING INSTALL NEWS README TODO \
   $PKG/usr/doc/module-init-tools-$VERSION
 
 # Strip things:
@@ -71,10 +70,7 @@ cp -a AUTHORS CODING COPYING ChangeLog FAQ INSTALL NEWS README TODO \
   find . | xargs file | grep "shared object" | grep ELF | cut -f 1 -d : | xargs strip --strip-unneeded 2> /dev/null
 )
 
-mkdir -p $PKG/etc/cron.hourly
-zcat $CWD/kmod.gz > $PKG/etc/cron.hourly/kmod
-chmod 755 $PKG/etc/cron.hourly/kmod
-
+mkdir -p $PKG/etc
 cat << EOF > $PKG/etc/modprobe.conf.new
 # /etc/modprobe.conf (old location for Linux 2.6+ config)
 #
@@ -84,6 +80,8 @@ cat << EOF > $PKG/etc/modprobe.conf.new
 #
 # For more information, see "man modprobe.conf".
 EOF
+
+mkdir -p $PKG/etc/modprobe.d/
 
 mkdir -p $PKG/etc/modprobe.d/
 
@@ -97,7 +95,7 @@ zcat $CWD/doinst.sh.gz > $PKG/install/doinst.sh
 
 # Build the package:
 cd $PKG
-makepkg -l y -c n $TMP/module-init-tools-$PKGVER-$PKGARCH-$BUILD.tgz
+makepkg -l y -c n $TMP/module-init-tools-$VERSION-$PKGARCH-$BUILD.tgz
 
 # Clean up the extra stuff:
 if [ "$1" = "--cleanup" ]; then
