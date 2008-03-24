@@ -1,6 +1,6 @@
 #!/bin/sh
 PKGNAM=gnome-icon-theme
-VERSION=2.20.0
+VERSION=2.22.0
 ARCH=noarch
 BUILD=1
 
@@ -21,7 +21,7 @@ zcat $CWD/gnome-icon-theme.pkgconfig.path.diff.gz | patch -p1 --verbose || exit 
 
 ./configure \
   --prefix=/usr \
-	--libdir=/usr/lib$LIBSUFFIX \
+  --libdir=/usr/lib$LIBSUFFIX \
   --sysconfdir=/etc \
   --localstatedir=/var/lib
 
