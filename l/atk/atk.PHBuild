@@ -19,7 +19,7 @@ CFLAGS="$SLKCFLAGS" \
 	--libdir=/usr/lib$LIBSUFFIX \
   --sysconfdir=/etc \
   --build=$ARCH-$DISTRO-linux
-make -j10 || exit 1
+make -j5 || exit 1
 make install DESTDIR=$PKG || exit 1
 
 mkdir -p $PKG/usr/doc/atk-$VERSION
