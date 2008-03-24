@@ -21,9 +21,9 @@
 
 
 PKGNAM=mesa32
-VERSION=${VERSION:-7.0.1}
+VERSION=${VERSION:-7.0.2}
 ARCH=${ARCH:-x86_64}
-BUILD=${BUILD:-3}
+BUILD=${BUILD:-1}
 DISTRO=${DISTRO:-slamd64}
 MESAARCH=x86
 
@@ -61,7 +61,7 @@ cd $TMP
 rm -rf Mesa-${VERSION}
 tar xjvf $CWD/MesaLib-$VERSION.tar.bz2
 tar xjvf $CWD/MesaGLUT-$VERSION.tar.bz2
-#tar xjvf $CWD/MesaDemos-$VERSION.tar.bz2
+tar xjvf $CWD/MesaDemos-$VERSION.tar.bz2
 cd Mesa-$VERSION
 
 # Make sure ownerships and permissions are sane:
@@ -90,7 +90,7 @@ find . -perm 555 -exec chmod 755 {} \;
 	zcat $CWD/mesa.linux-dri-$MESAARCH-$ARCH.diff.gz | patch -p1 --verbose  || exit 1
 
 	. /etc/profile.d/32dev.sh # Sort out gcc -m32 for us; this is from the 'devel32' package
-	make -j 10 linux-dri-$MESAARCH || exit 1 # no -j, breaks.
+	make -j5 linux-dri-$MESAARCH || exit 1 # no -j, breaks.
 
 	# Patch to put into /tmp/package-mesa:  (sorry, I know this should use $PKG ;-)
 	zcat $CWD/mesa.linux-dri-$MESAARCH-fake-destdir.diff.gz | patch -p1 --verbose  || exit 1
@@ -99,13 +99,13 @@ find . -perm 555 -exec chmod 755 {} \;
 )
 
 # Install some "demos":
-#( cd progs/xdemos
-#  make -i
-#  mkdir -p $PKG/usr/bin/32
-#  cp glthreads glxcontexts glxdemo glxgears glxgears_fbconfig glxheads \
-#    glxinfo glxpbdemo glxpixmap \
-#    $PKG/usr/bin/32
-#)
+( cd progs/xdemos
+  make -i
+  mkdir -p $PKG/usr/bin/32
+  cp glthreads glxcontexts glxdemo glxgears glxgears_fbconfig glxheads \
+    glxinfo glxpbdemo glxpixmap \
+    $PKG/usr/bin/32
+)
 
 ( cd $PKG
 	# Remove stuff in common with the 64-bit package
