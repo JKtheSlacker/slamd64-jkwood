@@ -12,7 +12,7 @@ mkdir -p $PKG
 
 VERSION=${VERSION:-1.2}
 ARCH=${ARCH:-noarch}
-BUILD=${BUILD:-4}
+BUILD=${BUILD:-5}
 
 # Install Slackware scripts and config files from $CWD/scripts/:
 mkdir -p $PKG/etc/rc.d
@@ -21,8 +21,6 @@ for file in rc.{4,6,K,M,S} rc.local rc.scanluns rc.sysvinit ; do
   chmod 755 $PKG/etc/rc.d/${file}.new
   chown root:root $PKG/etc/rc.d/${file}.new
 done
-# Don't scan LUNs by default unless selected in the install menu.
-chmod 644 $PKG/etc/rc.d/rc.scanluns.new
 cat $CWD/scripts/inittab > $PKG/etc/inittab.new
 chmod 644 $PKG/etc/inittab.new
 chown root:root $PKG/etc/inittab.new

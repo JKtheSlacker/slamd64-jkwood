@@ -66,6 +66,7 @@ if [ -f /etc/crypttab -a -x /sbin/cryptsetup.static ]; then
     # Try to load a device-mapper kernel module:
     /sbin/modprobe -q dm-mod
   fi
+  # NOTE: we only support LUKS formatted volumes (except for swap)!
   cat /etc/crypttab | grep -v "^#" | grep -v "^$" | while read line; do
     LUKS=$(echo $line | tr '\t' ' ' | tr -s ' ' | cut -f1 -d' ')
     DEV=$(echo $line | tr '\t' ' ' | tr -s ' ' | cut -f2 -d' ')
@@ -74,13 +75,15 @@ if [ -f /etc/crypttab -a -x /sbin/cryptsetup.static ]; then
     LUKSOPTS=""
     if echo $OPTS | grep -wq ro ; then LUKSOPTS="${LUKSOPTS} --readonly" ; fi
 
-    # NOTE: we only support LUKS formatted volumes (except for swap)!
+    # Skip LUKS volumes that were already unlocked (in the initrd):
+    /sbin/cryptsetup.static status $LUKS 1>/dev/null 2>/dev/null && continue
     if /sbin/cryptsetup.static isLuks $DEV 2>/dev/null ; then
       echo "Unlocking LUKS crypt volume '${LUKS}' on device '$DEV':"
       if [ -n "${PASS}" ]; then
         if [ -f ${PASS} ]; then
           /sbin/cryptsetup.static ${LUKSOPTS} --key-file=${PASS} luksOpen $DEV $LUKS
         elif [ "${PASS}" != "none" ]; then
+          # A password field of 'none' indicates a line for swap:
           echo "${PASS}" | /sbin/cryptsetup.static ${LUKSOPTS} luksOpen $DEV $LUKS
         fi
       else
@@ -101,6 +104,11 @@ fi
 
 # Enable swapping:
 /sbin/swapon -a
+
+# Start FUSE, if requested:
+if [ -x /etc/rc.d/rc.fuse ]; then
+  sh /etc/rc.d/rc.fuse start
+fi
 
 # Set the system time from the hardware clock using hwclock --hctosys.
 if [ -x /sbin/hwclock ]; then
