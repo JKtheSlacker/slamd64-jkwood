@@ -22,7 +22,7 @@
 
 
 PKGNAM=syslinux
-VERSION=${VERSION:-3.36}
+VERSION=${VERSION:-3.52}
 BUILD=${BUILD:-1}
 
 . /etc/pkghelpers
@@ -38,19 +38,8 @@ tar xjvf $CWD/${PKGNAM}-$VERSION.tar.bz2 || exit 1
 cd ${PKGNAM}-$VERSION
 
 # Make sure ownerships and permissions are sane:
-chown -R root:root .
-find . -perm 666 -exec chmod 644 {} \;
-find . -perm 664 -exec chmod 644 {} \;
-find . -perm 600 -exec chmod 644 {} \;
-find . -perm 444 -exec chmod 644 {} \;
-find . -perm 400 -exec chmod 644 {} \;
-find . -perm 440 -exec chmod 644 {} \;
+pkghelpers_permissions
 find . -perm 2775 -exec chmod 755 {} \;
-find . -perm 777 -exec chmod 755 {} \;
-find . -perm 775 -exec chmod 755 {} \;
-find . -perm 511 -exec chmod 755 {} \;
-find . -perm 711 -exec chmod 755 {} \;
-find . -perm 555 -exec chmod 755 {} \;
 
 # Build:
 make -j7 || exit 1
