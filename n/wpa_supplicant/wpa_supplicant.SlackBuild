@@ -1,27 +1,97 @@
 #!/bin/sh
-# Copyright (c) 2006,2007 Eric Hameleers <alien@slackware.com>
+# $Id: wpa_supplicant.SlackBuild,v 1.15 2008/02/15 15:47:58 root Exp root $
+# Copyright (c) 2004-2008 Eric Hameleers <alien@slackware.com>
+#  Permission to use, copy, modify, and distribute this software for
+#  any purpose with or without fee is hereby granted, provided that
+#  the above copyright notice and this permission notice appear in all
+#  copies.
 #
-# Redistribution and use of this script, with or without modification, is
-# permitted provided that the following conditions are met:
-#
-# 1. Redistributions of this script must retain the above copyright
-#    notice, this list of conditions and the following disclaimer.
-#
-#  THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR IMPLIED
+#  THIS SOFTWARE IS PROVIDED ``AS IS'' AND ANY EXPRESSED OR IMPLIED
 #  WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
-#  MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.  IN NO
-#  EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
-#  SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
-#  PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
-#  OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
-#  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
-#  OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
-#  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+#  MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+#  IN NO EVENT SHALL THE AUTHORS AND COPYRIGHT HOLDERS AND THEIR
+#  CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+#  SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+#  LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF
+#  USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+#  ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+#  OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT
+#  OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+#  SUCH DAMAGE.
+# -----------------------------------------------------------------------------
+#
+# Slackware SlackBuild script 
+# ===========================
+# By:        Eric Hameleers <alien@slackware.com>
+# For:       wpa_supplicant
+# Descr:     WPA/WPA2/IEEE 802.1X Supplicant
+# URL:       http://hostap.epitest.fi/wpa_supplicant/
+# Needs:     Source code for supported wireless card drivers
+#            openssl >= 0.9.7
+# Changelog:
+# 20040923CVS-1: * 23/sep/2004 by Eric Hameleers
+#                First release.
+# 0.3.8-1:       * 09/apr/2005 by Eric Hameleers
+#                Update
+# 0.3.8-2:       * 09/apr/2005 by Eric Hameleers
+#                Enabled support for ndiswrapper.
+#                Parametrized the location for the madwifi driver sources.
+# 20050415-1:    * 15/apr/2005 by Eric Hameleers
+#                Switched from 'stable' to 'development'.
+#                The development branch has support for the 'any' ESSID, needed
+#                to connect to 'any open' WiFi network (think: hotel/airport).
+# 20050806-1:    * 06/aug/2005 by Eric Hameleers
+#                This snapshot uses a madwifi-20050707 snapshot.
+#                Make snapshot version visible in the program output.
+# 20050809-1:    * 09/aug/2005 by Eric Hameleers
+#                New snapshot, uses a madwifi-20050809 snapshot for testing
+#                reportedly, tha last madwifi CVS snapshot to work with new
+#                wpa_supplicant snapshots is 20050707.
+# 20050913-1:    * 13/sep/2005 by Eric Hameleers
+#                New snapshot from hostap cvs. Also, make the docs.
+# 20051005-1:    * 05/oct/2005 by Eric Hameleers
+#                New snapshot from hostap cvs, to test against today's madwifi
+#                snapshot.
+# 20051007-1:    * 07/oct/2005 by Eric Hameleers
+#                New snapshot from hostap cvs, to test against today's madwifi.
+#                This time, also incorporate a patch found here:
+#                http://hostap.epitest.fi/bugz/show_bug.cgi?id=63 , which should
+#                make madwifi/WPA work again.
+# 20051008-1:    * 08/oct/2005 by Eric Hameleers
+#                Looks like the patch made it into CVS! We can remove out patch.
+# 20051014-1:    * 14/oct/2005 by Eric Hameleers
+#                Update.
+# 0.4.7-1:       * 31/jan/2006 by Eric Hameleers <alien@slackware.com>
+#                Try a "stable" version for the madwifi-ng (Atheros driver) code
+#                Also, get rid of the developer docs.
+# 0.4.8-1:       * 17/feb/2006 by Eric Hameleers <alien@slackware.com>
+#                Upgrade. This SlackBuild will now by default delete the
+#                remainders of a previous compile in /tmp/tmp-$PRGNAM/.
+# 0.4.9-1:       * 31/may/2006 by Eric Hameleers <alien@slackware.com>
+#                Upgrade. This time, build the wpa_gui and man pages too.
+#                Also, made support for madwifi/hermes/broadcom drivers
+#                configurable using three *_INCLUDES variables.
+# 0.4.9-2:       * 20/sep/2006 by Eric Hameleers <alien@slackware.com>
+#                Changed the SlackBuild for Slackware 11.0 compatibility
+# 0.5.7-1:       29/Jan/2007 by Eric Hameleers <alien@slackware.com>
+#                * Update, remove GPL license from the script.
+# 0.5.8-1:       29/Jan/2007 by Eric Hameleers <alien@slackware.com>
+#                * Update
+# 0.5.9-1:       15/feb/2008 by Eric Hameleers <alien@slackware.com>
+#                * Update. Enable DBUS support.
+# 
+# Run 'sh wpa_supplicant.SlackBuild --cleanup' to build a Slackware package.
+# The package (.tgz) plus descriptive .txt file are created in /tmp .
+# Install using 'installpkg'. 
 #
 # -----------------------------------------------------------------------------
 
+# Set initial variables:
+
+SNAPSHOT=""   # set to "yes" if you're building from CVS
+SRCNAM=hostap
 PRGNAM=wpa_supplicant
-VERSION=${VERSION:-0.5.7}
+VERSION=${VERSION:-0.5.9}
 ARCH=${ARCH:-x86_64}
 BUILD=${BUILD:-1}
 DISTRO=${DISTRO:-slamd64}
@@ -32,14 +102,7 @@ else
 	PKGARCH=${ARCH}_${DISTRO}
 fi
 
-CWD=`pwd`
-
-# Place to build (TMP) package (PKG) and output (OUTPUT) the program:
-TMP=${TMP:-/tmp/build}
-PKG=$TMP/package-$PRGNAM
-OUTPUT=${OUTPUT:-/tmp}
-
-DOCS="ChangeLog COPYING README* examples wpa_supplicant.conf.sample"
+DOCS="ChangeLog COPYING README* *.txt examples wpa_supplicant.conf.sample"
 
 # Support for some of the wireless drivers needs the header files of those
 # drivers.
@@ -51,11 +114,47 @@ MADWIFI_INCLUDES="/usr/include/madwifi"
 HERMES_INCLUDES=""
 BROADCOM_INCLUDES=""
 
+# Where do we look for sources?
+CWD=`pwd`
+SRCDIR=`dirname $0`
+[ "${SRCDIR:0:1}" == "." ] && SRCDIR=${CWD}/${SRCDIR}
+
+# Place to build (TMP) package (PKG) and output (OUTPUT) the program:
+TMP=${TMP:-/tmp/build}
+PKG=$TMP/package-$PRGNAM
+OUTPUT=${OUTPUT:-/tmp}
+
+if [ -z $SNAPSHOT ]; then   # build a stable release
+  SOURCE="$SRCDIR/${PRGNAM}-${VERSION}.tar.gz"
+  SRCURL="http://hostap.epitest.fi/releases/${PRGNAM}-${VERSION}.tar.gz"
+else
+  SOURCE=""
+  SRCURL=""
+fi
+
+##
+## --- with a little luck, you won't have to edit below this point --- ##
+##
+
+# Exit the script on errors:
+set -e
+trap 'echo "$0 FAILED at line $LINENO!" | tee $OUTPUT/error-${PRGNAM}.log' ERR
+# Catch unitialized variables:
+set -u
+P1=${1:-1}
+
+# Slackware 11 and up need other option (gcc > 3.3.x)
+if [ `gcc -dumpversion | tr -d  '.' |cut -c 1-2` -gt 33 ]; then
+  MOPT=tune
+else
+  MOPT=cpu
+fi
+
 case "$ARCH" in
-  i386)      SLKCFLAGS="-O2 -march=i386 -mtune=i686"
+  i386)      SLKCFLAGS="-O2 -march=i386 -m${MOPT}=i686"
              SLKLDFLAGS=""; LIBDIRSUFFIX=""
              ;;
-  i486)      SLKCFLAGS="-O2 -march=i486 -mtune=i686"
+  i486)      SLKCFLAGS="-O2 -march=i486 -m${MOPT}=i686"
              SLKLDFLAGS=""; LIBDIRSUFFIX=""
              ;;
   s390)      SLKCFLAGS="-O2"
@@ -72,93 +171,136 @@ case "$ARCH" in
              ;;
 esac
 
-if [ ! -d $TMP/tmp-$PRGNAM ]; then
-  mkdir -p $TMP/tmp-$PRGNAM # location to build the source
-else
-  rm -rf $TMP/tmp-$PRGNAM/*
+# Create working directories:
+mkdir -p $TMP/tmp-$PRGNAM # location to build the source
+rm -rf $TMP/tmp-$PRGNAM/* # By default we remove the remnants of previous build
+mkdir -p $PKG     # place for the package to be built
+rm -rf $PKG/*     # We always erase old package's contents:
+mkdir -p $OUTPUT  # place for the package to be saved
+
+# Source file availability:
+if [ -z $SNAPSHOT ]; then   # download stable release
+  if ! [ -f ${SOURCE} ]; then
+    if ! [ "x${SRCURL}" == "x" ]; then
+      # Check if the $SRCDIR is writable at all - if not, download to $OUTPUT
+      [ -w "$SRCDIR" ] || SOURCE="$OUTPUT/`basename $SOURCE`"
+      echo "Source '`basename ${SOURCE}`' not available yet..."
+      echo "Will download file to `dirname $SOURCE`"
+      wget -nv --connect-timeout=20 -O "${SOURCE}" "${SRCURL}" || true
+      if [ $? -ne 0 ]; then
+        echo "Downloading '`basename ${SOURCE}`' failed... aborting the build."
+        mv -f "${SOURCE}" "${SOURCE}".FAIL
+        exit 1
+      fi
+    else
+      echo "File '`basename ${SOURCE}`' not available... aborting the build."
+      exit 1
+    fi
+  fi
 fi
 
-if [ ! -d $PKG ]; then
-  mkdir -p $PKG  # place for the package to be built
-else
-  rm -rf $PKG/*  # erase content of previous package creation
+if [ "$P1" == "--download" ]; then
+  echo "Download complete."
+  exit 0
 fi
 
-if [ ! -d $OUTPUT ]; then
-  mkdir -p $OUTPUT  # place for the package to be saved
-fi
-
+# Package building process starts here:
 echo "++"
 echo "|| $PRGNAM-$VERSION"
 echo "++"
 
 cd $TMP/tmp-$PRGNAM
 
-if ! [ -f $CWD/${PRGNAM}-${VERSION}.defconfig ]; then
+if ! [ -f $SRCDIR/${PRGNAM}-${VERSION}.defconfig ]; then
   echo "Could not find ${PRGNAM}-${VERSION}.defconfig!"
-  echo "You need to create that file using ${PRGNAM}-${VERSION}/defconfig as example."
+  echo "You need to create that file using ${SRCNAM}-${VERSION}/${PRGNAM}/defconfig as example."
   exit 1
 fi
 
-tar xjvf $CWD/${PRGNAM}-${VERSION}.tar.bz2
-cd ${PRGNAM}-${VERSION}
+echo "Extracting the source archive(s) for $PRGNAM..."
+if [ -z "$SNAPSHOT" ]; then
+  tar -xzvf ${SOURCE}
+  cd ${PRGNAM}-${VERSION}
+else
+  tar -xzvf $SRCDIR/${SRCNAM}-${VERSION}.tar.gz
+  cd ${SRCNAM}-${VERSION}/${PRGNAM}
+  sed -i -e \
+    "s/^#define VERSION_STR \"\(.*\)\"/#define VERSION_STR \"\1_$VERSION\"/" \
+    version.h
+fi
 
-# Create the configuration file for wpa_supplicant:
-cat $CWD/${PRGNAM}-${VERSION}.defconfig > .config
+# Create the configuration file for building wpa_supplicant:
+cat $SRCDIR/${PRGNAM}-${VERSION}.defconfig > .config
 if [ ! -z $MADWIFI_INCLUDES -a -d $MADWIFI_INCLUDES ]; then
-  echo "Adding madwifi driver (Atheros) support"
+  echo "Adding madwifi driver (Atheros) support" | tee -a $OUTPUT/configure-${PRGNAM}.log
   cat <<-EOT >> .config
 	CONFIG_DRIVER_MADWIFI=y
 	CFLAGS += -I${MADWIFI_INCLUDES}
 	EOT
 fi
 if [ ! -z $HERMES_INCLUDES -a -d $HERMES_INCLUDES ]; then
-  echo "Adding hermes driver (Agere) support"
+  echo "Adding hermes driver (Agere) support" | tee -a $OUTPUT/configure-${PRGNAM}.log
   cat <<-EOT >> .config
 	CONFIG_DRIVER_HERMES=y
 	CFLAGS += -I${HERMES_INCLUDES}
 	EOT
 fi
 if [ ! -z $BROADCOM_INCLUDES -a -d $BROADCOM_INCLUDES ]; then
-  echo "Adding broadcom driver support"
+  echo "Adding broadcom driver support" | tee -a $OUTPUT/configure-${PRGNAM}.log
   cat <<-EOT >> .config
 	CONFIG_DRIVER_BROADCOM=y
 	CFLAGS += -I${BROADCOM_INCLUDES}
 	EOT
 fi
-
 chown -R root:root .
 chmod -R u+w,go+r-w,a-s .
 
+# Build the binaries:
 echo Building ...
-
-make
+make 2>&1 | tee $OUTPUT/make-${PRGNAM}.log
 # Build the GUI client
-make wpa_gui
+make wpa_gui 2>&1 | tee -a $OUTPUT/make-${PRGNAM}.log
 # Make man pages if needed
 pushd doc/docbook
 if ! ls *.? >/dev/null 2>&1 ; then
-  make man
+  make man 2>&1 | tee -a $OUTPUT/make-${PRGNAM}.log
 fi
 popd
 
-# Do not build the developer docs
-#PATH=".:$PATH" make docs
+# Do not build the developer docs:
+#PATH=".:$PATH" make docs 2>&1 | tee -a $OUTPUT/make-${PRGNAM}.log
 
-# This goes in the doc directory later on:
+# This goes into the doc directory later on:
 cp wpa_supplicant.conf wpa_supplicant.conf.sample
 
-# Install binaries
-mkdir -p $PKG/usr/sbin
-cp wpa_supplicant wpa_passphrase wpa_cli wpa_gui/wpa_gui $PKG/usr/sbin/
+# Install binaries:
+mkdir -p $PKG/usr/sbin $PKG/usr/bin
+cp wpa_supplicant wpa_passphrase wpa_cli $PKG/usr/sbin/
+cp wpa_gui/wpa_gui $PKG/usr/bin/
 
-# Install man pages
+# Install dbus configuration file:
+mkdir -p $PKG/etc/dbus-1/system.d/
+cp dbus-wpa_supplicant.conf $PKG/etc/dbus-1/system.d/dbus-wpa_supplicant.conf.new
+
+# Install a .desktop file for wpa_gui:
+mkdir -p $PKG/usr/share/applications
+cat <<EOT > $PKG/usr/share/applications/wpa_gui.desktop
+[Desktop Entry]
+Name=wpa_gui
+Comment[en]=Wpa_supplicant management
+Exec=kdesu wpa_gui
+Icon=network-config
+Type=Application
+Categories=Qt;Network;
+EOT
+
+# Install man pages:
 for m in 5 8; do
   mkdir -p $PKG/usr/man/man${m}
   cp doc/docbook/*.${m} $PKG/usr/man/man${m}/
 done
 
-# Install configuration file
+# Install a default configuration file:
 mkdir -p $PKG/etc
 cat <<-_EOT_ > $PKG/etc/wpa_supplicant.conf.new
 	# See /usr/doc/${PRGNAM}-${VERSION}/wpa_supplicant.conf.sample
@@ -186,15 +328,13 @@ cat <<-_EOT_ > $PKG/etc/wpa_supplicant.conf.new
 	
 	# Plaintext connection (no WPA, no IEEE 802.1X),
 	# nice for hotel/airport types of WiFi network.
-	# You'll need a recent version of wireless-tools for this!
 	network={
-	  ssid="any"
 	  key_mgmt=NONE
-	  priority=2
+	  priority=0
 	}
 	_EOT_
 
-# 'doinst.sh' script:
+# Create the 'doinst.sh' script:
 mkdir -p $PKG/install 2>/dev/null
 cat <<EOINS > $PKG/install/doinst.sh
 # Handle the incoming configuration files:
@@ -213,32 +353,44 @@ config() {
   done
 }
 config etc/wpa_supplicant.conf.new
+config etc/dbus-1/system.d/dbus-wpa_supplicant.conf.new
 
 EOINS
 
+# Add the documentation:
 mkdir -p $PKG/usr/doc/$PRGNAM-$VERSION
-cp -a $DOCS $PKG/usr/doc/$PRGNAM-$VERSION
+cp -a $DOCS $PKG/usr/doc/$PRGNAM-$VERSION || true
+cp -a $SRCDIR/README.slackware $PKG/usr/doc/${PRGNAM}-${VERSION}/ || true
 chmod -R a-w $PKG/usr/doc/$PRGNAM-$VERSION/*
+chown -R root:root $PKG/usr/doc/$PRGNAM-$VERSION/*
 
 # This should only be read/write by root:
 chmod 600 $PKG/etc/wpa_supplicant.conf.new
 
+# Compress the man page(s):
 find $PKG/usr/man -type f -name "*.?" -exec gzip -9f {} \;
 
-pushd $PKG
-find . | xargs file | grep "executable" | grep ELF | cut -f 1 -d : | xargs strip --strip-unneeded 2> /dev/null
-find . | xargs file | grep "shared object" | grep ELF | cut -f 1 -d : | xargs strip --strip-unneeded 2> /dev/null
-popd
+# Strip binaries:
+( cd $PKG
+  find . | xargs file | grep "executable" | grep ELF | cut -f 1 -d : | xargs strip --strip-unneeded 2> /dev/null
+  find . | xargs file | grep "shared object" | grep ELF | cut -f 1 -d : | xargs strip --strip-unneeded 2> /dev/null
+)
 
-chmod -R o-w $PKG
+# Add a package description:
+mkdir -p $PKG/install
+cat $SRCDIR/slack-desc > $PKG/install/slack-desc
+if [ -f $SRCDIR/doinst.sh ]; then
+  cat $SRCDIR/doinst.sh >> $PKG/install/doinst.sh
+fi
 
-cat $CWD/slack-desc > $PKG/install/slack-desc
-
+# Build the package:
 cd $PKG
-makepkg --linkadd y --chown n $OUTPUT/${PRGNAM}-${VERSION}-${PKGARCH}-${BUILD}.tgz
+makepkg --linkadd y --chown n $OUTPUT/${PRGNAM}-${VERSION}-${PKGARCH}-${BUILD}.tgz 2>&1 | tee $OUTPUT/makepkg-${PRGNAM}.log
+(cd $OUTPUT && md5sum ${PRGNAM}-${VERSION}-${PKGARCH}-${BUILD}.tgz > ${PRGNAM}-${VERSION}-${ARCH}-${BUILD}.tgz.md5)
+cat $PKG/install/slack-desc | grep "^${PRGNAM}" > $OUTPUT/${PRGNAM}-${VERSION}-${ARCH}-${BUILD}.txt
 
 # Clean up the extra stuff:
-if [ "$1" = "--cleanup" ]; then
+if [ "$P1" = "--cleanup" ]; then
   rm -rf $TMP/tmp-$PRGNAM
   rm -rf $PKG
 fi
