@@ -2,9 +2,9 @@
 # Set initial variables:
 
 PKGNAM=etc
-VERSION=11.1
+VERSION=12.1
 ARCH=noarch
-BUILD=4
+BUILD=1
 
 . /etc/pkghelpers
 pkghelpers_env
