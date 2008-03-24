@@ -2,7 +2,7 @@
 # Set initial variables:
 PKGNAM=iptraf
 VERSION=${VERSION:-3.0.0}
-BUILD=${BUILD:-1}
+BUILD=${BUILD:-2}
 
 . /etc/pkghelpers
 pkghelpers_env
@@ -13,20 +13,9 @@ rm -rf iptraf-$VERSION
 tar xzvf $CWD/iptraf-$VERSION.tar.gz
 cd iptraf-$VERSION
 
-chown -R root:root .
-find . -perm 666 -exec chmod 644 {} \;
-find . -perm 664 -exec chmod 644 {} \;
-find . -perm 600 -exec chmod 644 {} \;
-find . -perm 444 -exec chmod 644 {} \;
-find . -perm 400 -exec chmod 644 {} \;
-find . -perm 440 -exec chmod 644 {} \;
-find . -perm 777 -exec chmod 755 {} \;
-find . -perm 775 -exec chmod 755 {} \;
-find . -perm 511 -exec chmod 755 {} \;
-find . -perm 711 -exec chmod 755 {} \;
-find . -perm 555 -exec chmod 755 {} \;
+pkghelpers_permissions
 
-zcat $CWD/iptraf_3.0.0-3.diff.gz | patch -p1 || exit 1
+zcat $CWD/iptraf_3.0.0-6.diff.gz | patch -p1 || exit 1
 zcat $CWD/iptraf.paths.diff.gz | patch -p1 || exit 1
 cd src
 make -j10 || exit 1
