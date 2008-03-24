@@ -1,0 +1,118 @@
+#!/bin/sh
+# Copyright 2006, 2007  Patrick J. Volkerding, Sebeka, MN, USA
+# All rights reserved.
+#
+# Redistribution and use of this script, with or without modification, is
+# permitted provided that the following conditions are met:
+#
+# 1. Redistributions of this script must retain the above copyright
+#    notice, this list of conditions and the following disclaimer.
+#
+#  THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR IMPLIED
+#  WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+#  MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.  IN NO
+#  EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+#  SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+#  PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+#  OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+#  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+#  OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+#  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+PKGNAM=qt32
+VERSION=${VERSION:-3.3.8b}
+BUILD=${BUILD:-1}
+QTPLATFORM=linux-g++
+
+. /etc/pkghelpers
+pkghelpers_env
+export MULTILIB=false
+
+rm -rf $PKG
+mkdir -p $PKG
+
+cd $TMP
+rm -rf qt-x11-free-${VERSION}
+tar xjvf $CWD/qt-x11-free-$VERSION.tar.bz2 || exit 1
+cd qt-x11-free-$VERSION
+sed -i 's#/X11R6##g' mkspecs/*/qmake.conf
+
+#zcat $CWD/qt.x86.cflags.diff.gz | patch -p1 || exit 1
+
+zcat $CWD/qt-x11.diff.gz | patch -p1 || exit 1
+zcat $CWD/qt.mysql.h.diff.gz | patch -p1 || exit 1
+
+# Make sure ownerships and permissions are sane:
+pkghelpers_permissions
+
+
+# And here's what we are currently using.  The "yes" agrees to the GPL, so don't run this script if you
+# don't agree.  :-)
+(
+	. /etc/profile.d/32dev.sh
+	echo "yes" | linux32 ./configure \
+	 -prefix /usr/lib/qt-${VERSION} \
+	 -platform $QTPLATFORM \
+	 -release \
+	 -system-zlib \
+	 -system-libpng \
+	 -qt-imgfmt-png \
+	 -system-libmng \
+	 -qt-imgfmt-mng \
+	 -system-libjpeg \
+	 -qt-imgfmt-jpeg \
+	 -qt-gif \
+	 -thread \
+	 -stl \
+	 -no-g++-exceptions \
+	 -xft \
+	 -plugin-sql-mysql \
+	 -plugin-style-cde \
+	 -plugin-style-compact \
+	 -qt-style-motif \
+	 -plugin-style-motifplus \
+	 -plugin-style-platinum \
+	 -plugin-style-sgi \
+	 -plugin-style-windows \
+	 -enable-opengl
+	
+	# We're using '-i' to work around a bug where the build tries to strip html files.
+	# Build the important stuff:
+	export LD_LIBRARY_PATH=$TMP/qt-x11-free-3.3.8/lib
+	make -j10 -i symlinks sub-src sub-tools || exit 1
+	make install INSTALL_ROOT=$PKG || exit 1
+)
+
+# The infamous qt -> qt-${VERSION} link that lets us cheat on the QTDIR ;-)
+( cd $PKG/usr/lib ; ln -sf qt-${VERSION} qt)
+
+# Remove the last vestiges of the build in /tmp:
+rm -f $PKG/usr/lib/qt-3.3.8/mkspecs/linux-g++/linux-g++
+
+# Put this back as shipped:
+( cd $PKG/usr/lib/qt
+  zcat $CWD/qt.x86.cflags.diff.gz | patch -p1 -R )
+
+# Put a ton of links to more "normal" places.  I'd just use a prefix of /usr, but it
+# creates a ton of new (and ambiguously named) /usr directories...
+
+mkdir -p $PKG/usr/bin/32
+( cd $PKG/usr/bin/32
+  for file in assistant designer linguist lrelease lupdate moc qm2ts qmake qtconfig uic ; do
+    ln -sf /usr/lib/qt/bin/$file .
+  done
+)
+
+mkdir -p $PKG/usr/lib/pkgconfig
+( cd $PKG/usr/lib/pkgconfig
+  ln -sf /usr/lib/qt-${VERSION}/lib/pkgconfig/qt-mt.pc .
+)
+
+
+cd $PKG
+mkdir install
+zcat $CWD/doinst.sh.gz > install/doinst.sh
+cat $CWD/slack-desc > install/slack-desc
+pkghelpers_fixup
+pkghelpers_makepkg
+
