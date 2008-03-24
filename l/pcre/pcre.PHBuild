@@ -22,7 +22,7 @@ CFLAGS="$SLKCFLAGS" \
   --libdir=/usr/lib$LIBSUFFIX \
   --mandir=/usr/man
 
-make -j12 || exit 1
+make -j5 || exit 1
 make install DESTDIR=$PKG || exit 1
 
 chmod 755 $PKG/usr/lib$LIBSUFFIX/libpcre.so.* $PKG/usr/lib$LIBSUFFIX/libpcreposix.so.*
