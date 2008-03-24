@@ -7,13 +7,30 @@ mkdir -p $PKG/usr
 
 VERSION=${VERSION:-1.1.8}
 ARCH=${ARCH:-x86_64}
-BUILD=${BUILD:-1}
+BUILD=${BUILD:-2}
+DISTRO=${DISTRO:-slamd64}
+
+if [ $DISTRO = slackware ]; then
+	PKGARCH=$ARCH
+else
+	PKGARCH=${ARCH}_${DISTRO}
+fi
+
+if [ $DISTRO = slamd64 ]; then
+	LIBSUFFIX=64
+else
+	LIBSUFFIX=
+fi
 
 NUMJOBS=${NUMJOBS:-5}
 
 cd $TMP
-tar xjvf $CWD/seamonkey-${VERSION}.source.tar.bz2
-cd mozilla
+tar xjvf $CWD/seamonkey-${VERSION}.source.tar.bz2 || exit 1
+cd mozilla || exit 1
+
+# Add /usr/lib64/mozilla/plugins to MOZ_PLUGINS_PATH:
+zcat $CWD/seamonkey.moz_plugin_path.diff.gz | patch -p1 --verbose --backup --suffix=.orig || exit 1
+rm -f xpfe/bootstrap/mozilla.in.orig
 
 # Make sure the perms/ownerships are sane:
 chown -R root:root .
@@ -29,9 +46,15 @@ find . -perm 511 -exec chmod 755 {} \;
 find . -perm 711 -exec chmod 755 {} \;
 find . -perm 555 -exec chmod 755 {} \;
 
-# Add /usr/lib64/mozilla/plugins to MOZ_PLUGINS_PATH:
-zcat $CWD/seamonkey.moz_plugin_path.diff.gz | patch -p1 --verbose --backup --suffix=.orig || exit 1
-rm -f xpfe/bootstrap/mozilla.in.orig
+# Fix a long standing bug that's prevented staying current on GTK+.
+# Thanks to the BLFS folks.  :-)
+cat >> layout/build/Makefile.in << EOF
+
+ifdef MOZ_ENABLE_CANVAS
+EXTRA_DSO_LDOPTS += \$(XLDFLAGS) -lX11 -lXrender
+endif
+
+EOF
 
 chown -R root:root .
 zcat $CWD/visibility-mozconfig.gz > .mozconfig
@@ -40,14 +63,14 @@ BUILD_OFFICIAL=1 MOZILLA_OFFICIAL=1 \
 	--libdir=/usr/lib64 \
   --enable-optimize=-O2 \
   --disable-debug \
-  --with-default-mozilla-five-home=/usr/lib64/seamonkey-${VERSION} \
+  --with-default-mozilla-five-home=/usr/lib$LIBSUFFIX/seamonkey-${VERSION} \
   --enable-strip \
   --disable-tests \
   --enable-svg \
+  --enable-system-cairo \
   --enable-canvas \
   --disable-short-wchar \
   --enable-nspr-autoconf \
-  --disable-calendar \
   --enable-extensions=default,irc \
   --enable-crypto \
   --disable-xprint \
@@ -69,15 +92,36 @@ mkdir -p $PKG/usr/include/seamonkey-${VERSION}/nss
 find security/nss/lib -name "*.h" -type f -exec cp -a {} $PKG/usr/include/seamonkey-${VERSION}/nss \;
 chown -R root:root $PKG/usr/include/seamonkey-${VERSION}/nss
 chmod 644 $PKG/usr/include/seamonkey-${VERSION}/nss/*
+# Create a more generic include files symlink:
+( cd $PKG/usr/include
+  if [ ! -e seamonkey ]; then
+    ln -sf seamonkey-${VERSION} seamonkey
+  fi
+)
 
 # Link some libraries into /usr/lib64.  Unless this is done, some things (like gaim's
 # plugin for MSN) will be unable to load them, even if they linked with them
 # successfully.
-( cd $PKG/usr/lib64 && ( for somelib in libmozjs.so libnspr4.so libnss3.so libplc4.so libplds4.so libsmime3.so libsoftokn3.so libssl3.so ; do
+( cd $PKG/usr/lib$LIBSUFFIX && ( for somelib in libmozjs.so libnspr4.so libnss3.so libplc4.so libplds4.so libsmime3.so libsoftokn3.so libssl3.so ; do
     # Link to it:
     ln -sf seamonkey-${VERSION}/$somelib .
   done )
 )
+
+# A Better Way to handle the problem below is simply to add /usr/lib/seamonkey
+# to /etc/ld.so.conf.  After all, the various Mozilla offshoots all set an
+# LD_LIBRARY_PATH to make sure *they* use the right libraries anyway, and as
+# far as I know seamonkey has the only set of Mozilla development libraries
+# right now.  Plus, doing it this way doesn't stomp all over efforts by people
+# who would like to use mozilla-nss.
+
+## Link some libraries into /usr/lib$LIBSUFFIX.  Unless this is done, some things (like gxine)
+## will be unable to load them, even if they linked with them successfully.
+#( cd $PKG/usr/lib$LIBSUFFIX && ( for somelib in libmozjs.so libnspr4.so libnss3.so libplc4.so libplds4.so libsmime3.so libsoftokn3.so libssl3.so ; do
+#    # Link to it:
+#    ln -sf seamonkey-${VERSION}/$somelib .
+#  done )
+#)
 
 # Compress and if needed symlink the man pages:
 if [ -d $PKG/usr/man ]; then
@@ -94,23 +138,17 @@ if [ -d $PKG/usr/man ]; then
   )
 fi
 
+# Strip files:
 ( cd $PKG
-  find . | xargs file | grep ELF | cut -f 1 -d : | xargs strip --strip-unneeded
+  find . | xargs file | grep "executable" | grep ELF | cut -f 1 -d : | xargs strip --strip-unneeded 2> /dev/null
+  find . | xargs file | grep "shared object" | grep ELF | cut -f 1 -d : | xargs strip --strip-unneeded 2> /dev/null
 )
 
 # This remains the standard plugin directory for all browsers.
-mkdir -p $PKG/usr/lib64/mozilla/plugins
-mkdir -p $PKG/usr/share/applications
-cp -a $CWD/*.desktop $PKG/usr/share/applications
-chown -R root:root $PKG/usr/share/applications
-chmod 644 $PKG/usr/share/applications/*
-mkdir -p $PKG/usr/share/pixmaps
-cp -a $CWD/*.png $PKG/usr/share/pixmaps
-chown -R root:root $PKG/usr/share/pixmaps
-chmod 644 $PKG/usr/share/pixmaps/*
+mkdir -p $PKG/usr/lib$LIBSUFFIX/mozilla/plugins
 
 # Some software won't compile without this symlink:
-( cd $PKG/usr/lib64
+( cd $PKG/usr/lib$LIBSUFFIX
   if [ ! -e seamonkey ]; then
     ln -sf seamonkey-${VERSION} seamonkey
   fi
@@ -134,5 +172,5 @@ cat $CWD/slack-desc > $PKG/install/slack-desc
 zcat $CWD/doinst.sh.gz > $PKG/install/doinst.sh
 
 cd $TMP/package-seamonkey
-makepkg -l y -c n ../seamonkey-$VERSION-${ARCH}_slamd64-$BUILD.tgz
+makepkg -l y -c n ../seamonkey-$VERSION-${PKGARCH}-$BUILD.tgz
 
