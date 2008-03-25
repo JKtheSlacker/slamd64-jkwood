@@ -16,7 +16,7 @@ BUILD=${BUILD:-5}
 
 # Install Slackware scripts and config files from $CWD/scripts/:
 mkdir -p $PKG/etc/rc.d
-for file in rc.{4,6,K,M,S} rc.local rc.scanluns rc.sysvinit ; do
+for file in rc.{4,6,K,M,S} rc.local rc.sysvinit ; do
   cp -a $CWD/scripts/$file $PKG/etc/rc.d/${file}.new
   chmod 755 $PKG/etc/rc.d/${file}.new
   chown root:root $PKG/etc/rc.d/${file}.new
