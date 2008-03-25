@@ -17,7 +17,7 @@ CFLAGS="$SLKCFLAGS" \
  ./configure \
  	--libdir=/usr/lib$LIBSUFFIX \
   --build=$ARCH-$DISTRO-linux
-make -j10 || exit 1
+make -j5 || exit 1
 make install DESTDIR=$PKG
 
 # TODO

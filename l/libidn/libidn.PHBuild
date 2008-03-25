@@ -17,11 +17,11 @@ pkghelpers_permissions
 CFLAGS="$SLKCFLAGS" \
 ./configure \
   --prefix=/usr \
-	--libdir=/usr/lib$LIBSUFFIX \
+  --libdir=/usr/lib$LIBSUFFIX \
   --mandir=/usr/man \
   --infodir=/usr/info \
   --build=$ARCH-$DISTRO-linux
-make -j12 || exit 1
+make -j5 || exit 1
 make install DESTDIR=$PKG || exit 1
 
 mkdir -p $PKG/usr/doc/libidn-$VERSION

@@ -16,12 +16,12 @@ pkghelpers_permissions
 CFLAGS="$SLKCFLAGS" \
  ./configure \
   --prefix=/usr \
-	--libdir=/usr/lib64 \
+  --libdir=/usr/lib64 \
   --mandir=/usr/man \
   --sysconfdir=/etc \
   --disable-static \
   --build=$ARCH-$DISTRO-linux
-make -j10 || exit 1
+make -j5 || exit 1
 make install DESTDIR=$PKG
 
 mkdir -p $PKG/usr/doc/alsa-oss-$VERSION
