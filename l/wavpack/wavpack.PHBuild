@@ -47,14 +47,14 @@ pkghelpers_permissions
 CFLAGS="$SLKCFLAGS" \
 ./configure \
   --prefix=/usr \
-  	--libdir=/usr/lib$LIBSUFFIX \
+  --libdir=/usr/lib$LIBSUFFIX \
   --sysconfdir=/etc \
   --localstatedir=/var \
   --enable-static=no \
   --build=$ARCH-$DISTRO-linux \
   || exit 1
 
-make -j3 || exit 1
+make -j5 || exit 1
 make install-strip DESTDIR=$PKG || exit 1
 
 mkdir -p $PKG/usr/doc/$PRGNAM-$VERSION
