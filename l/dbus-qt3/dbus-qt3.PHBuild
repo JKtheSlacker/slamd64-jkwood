@@ -17,7 +17,7 @@
 # Source obtained from the Gentoo repository
 # http://ftp.osuosl.org/pub/gentoo/distfiles/dbus-qt3-0.70.tar.bz2
 
-PRGNAM=dbus-qt3
+PKGNAM=dbus-qt3
 VERSION=0.70
 BUILD=${BUILD:-2}
 
@@ -27,9 +27,9 @@ pkghelpers_env
 rm -rf $PKG
 mkdir -p $TMP $PKG
 cd $TMP
-rm -rf $PRGNAM-$VERSION
-tar -xvjf $CWD/$PRGNAM-$VERSION.tar.bz2
-cd $PRGNAM-$VERSION
+rm -rf $PKGNAM-$VERSION
+tar -xvjf $CWD/$PKGNAM-$VERSION.tar.bz2
+cd $PKGNAM-$VERSION
 pkghelpers_permissions
 
 CFLAGS="$SLKCFLAGS" \
@@ -43,9 +43,9 @@ CFLAGS="$SLKCFLAGS" \
 make -j9 || exit 1
 make install DESTDIR=$PKG
 
-mkdir -p $PKG/usr/doc/$PRGNAM-$VERSION
+mkdir -p $PKG/usr/doc/$PKGNAM-$VERSION
 cp -a AUTHORS COPYING INSTALL NEWS README \
-	$PKG/usr/doc/$PRGNAM-$VERSION
+	$PKG/usr/doc/$PKGNAM-$VERSION
 
 mkdir -p $PKG/install
 cat $CWD/slack-desc > $PKG/install/slack-desc
