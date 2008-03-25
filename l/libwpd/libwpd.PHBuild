@@ -20,7 +20,7 @@ CXXFLAGS="$SLKCFLAGS" \
   --prefix=/usr \
 	--libdir=/usr/lib$LIBSUFFIX \
   $ARCH-$DISTRO-linux
-make -j112
+make -j5
 make install DESTDIR=$PKG
 mkdir -p $PKG/usr/doc/libwpd-$VERSION
 cp -a \

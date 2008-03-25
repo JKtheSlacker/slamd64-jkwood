@@ -20,7 +20,7 @@ CFLAGS="$SLKCFLAGS" \
   --enable-mpbsd \
   --enable-mpfr \
   --build=$ARCH-$DISTRO-linux-gnu
-make -j12 || exit 1
+make -j5 || exit 1
 make install DESTDIR=$PKG
 mkdir -p $PKG/usr/doc/gmp-$VERSION
 cp -a \

@@ -16,12 +16,12 @@ pkghelpers_permissions
 CFLAGS="$SLKCFLAGS" \
 ./configure \
   --prefix=/usr \
-	--libdir=/usr/lib$LIBSUFFIX \
+  --libdir=/usr/lib$LIBSUFFIX \
   --enable-static=no \
   --sysconfdir=/etc \
   --localstatedir=/var/lib \
   --build=$ARCH-$DISTRO-linux
-make -j12 || exit 1
+make -j5 || exit 1
 make install DESTDIR=$PKG
 mkdir -p $PKG/usr/doc/libIDL-$VERSION
 cp -a \
