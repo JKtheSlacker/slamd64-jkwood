@@ -30,14 +30,14 @@ CFLAGS="$SLKCFLAGS" \
 CXXFLAGS="$SLKCFLAGS" \
 ./configure \
   --prefix=/usr \
-	--libdir=/usr/lib$LIBSUFFIX \
+  --libdir=/usr/lib$LIBSUFFIX \
   --sysconfdir=/etc \
   --with-xinerama \
   --disable-debug \
   --program-prefix="" \
   --program-suffix="" \
   --build=$ARCH-$DISTRO-linux
-make -j10 || exit 1
+make -j5 || exit 1
 make install DESTDIR=$PKG
 mkdir -p $PKG/usr/doc/arts-$VERSION
 cp -a \

@@ -61,7 +61,7 @@ CFLAGS="$SLKCFLAGS" \
 #  --enable-hotplugging 
 
 # Build and install:
-make -j10 || exit 1
+make -j5 || exit 1
 make install DESTDIR=$PKG || exit 1
 
 # Add udev rules:
