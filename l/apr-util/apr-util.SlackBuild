@@ -6,7 +6,7 @@ if [ "$TMP" = "" ]; then
 fi
 PKG=$TMP/package-apr-util
 
-VERSION=1.2.8
+VERSION=1.2.12
 ARCH=${ARCH:-x86_64}
 BUILD=${BUILD:-1}
 DISTRO=${DISTRO:-slamd64}
@@ -74,7 +74,7 @@ find . -perm 555 -exec chmod 755 {} \;
 CFLAGS="$SLKCFLAGS" \
 ./configure \
   --prefix=/usr \
-	--libdir=/usr/lib$LIBSUFFIX \
+  --libdir=/usr/lib$LIBSUFFIX \
   --with-apr=/usr \
   --with-dbm=db44 \
   --with-berkeley-db \
