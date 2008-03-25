@@ -35,8 +35,6 @@ rm -rf ${PKGNAM}-${VERSION}
 tar xjvf $CWD/${PKGNAM}-$VERSION.tar.bz2 || exit 1
 cd ${PKGNAM}-$VERSION
 
-zcat $CWD/net-snmp.initscript.diff.gz | patch -p1 --verbose --backup --suffix=.orig || exit 1
-
 # Make sure ownerships and permissions are sane:
 pkghelpers_permissions
 
@@ -44,7 +42,7 @@ pkghelpers_permissions
 CFLAGS="$SLKCFLAGS" \
 ./configure \
   --prefix=/usr \
-	--libdir=/usr/lib$LIBSUFFIX \
+  --libdir=/usr/lib$LIBSUFFIX \
   --sysconfdir=/etc/snmp \
   --mandir=/usr/man \
   --enable-ipv6 \
@@ -63,7 +61,7 @@ CFLAGS="$SLKCFLAGS" \
   --build=$ARCH-$DISTRO-linux
 
 # Build and install:
-make -j10 INSTALLDIRS=vendor || exit 1
+make -j5 INSTALLDIRS=vendor || exit 1
 make install INSTALLDIRS=vendor DESTDIR=$PKG || exit 1
 
 # Evidently --mandir=/usr/man doesn't catch everything...
