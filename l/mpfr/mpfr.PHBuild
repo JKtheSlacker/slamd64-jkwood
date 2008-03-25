@@ -30,12 +30,12 @@ done
 CFLAGS="$SLKCFLAGS" \
 ./configure \
   --prefix=/usr \
-	--libdir=/usr/lib$LIBSUFFIX \
+  --libdir=/usr/lib$LIBSUFFIX \
   --infodir=/usr/info \
   --enable-static=yes \
   --enable-shared=yes \
   $ARCH-$DISTRO-linux
-make -j12 || exit 1
+make -j5 || exit 1
 make install DESTDIR=$PKG
 # Hardly a savings doing this...
 #strip -g $PKG/usr/lib/*.a

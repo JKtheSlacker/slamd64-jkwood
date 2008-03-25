@@ -21,12 +21,12 @@ done
 CFLAGS="$SLKCFLAGS" \
 ./configure \
   --prefix=/usr \
-	--libdir=/usr/lib64 \
+  --libdir=/usr/lib64 \
   --infodir=/usr/info \
   --with-curses \
   --enable-multibyte \
   --build=$ARCH-$DISTRO-linux-gnu
-make -j10 static shared || exit 1
+make -j5 static shared || exit 1
 make install DESTDIR=$PKG
 rm $PKG/usr/info/dir
 chmod 755 $PKG/usr/lib64/lib*.so.*

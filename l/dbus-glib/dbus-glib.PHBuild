@@ -40,7 +40,7 @@ CFLAGS="$SLKCFLAGS" \
 CXXFLAGS="$SLKCFLAGS" \
 ./configure \
   --prefix=/usr \
-	--libdir=/usr/lib$LIBSUFFIX \
+  --libdir=/usr/lib$LIBSUFFIX \
   --sysconfdir=/etc \
   --localstatedir=/var \
   --program-prefix="" \
@@ -50,7 +50,7 @@ CXXFLAGS="$SLKCFLAGS" \
   --build=$ARCH-$DISTRO-linux \
   --host=$ARCH-$DISTRO-linux
 
-make -j12 || exit 1
+make -j5 || exit 1
 make install DESTDIR=$PKG
 
 mkdir -p $PKG/usr/doc/$PKGNAM-$VERSION

@@ -18,16 +18,16 @@ pkghelpers_permissions
 CFLAGS="$SLKCFLAGS" \
   ./configure \
   --prefix=/usr \
-	--libdir=/usr/lib$LIBSUFFIX \
+  --libdir=/usr/lib$LIBSUFFIX \
   --mandir=/usr/man \
   --sysconfdir=/etc \
   --includedir=/usr/include \
   --disable-static \
   --build=$ARCH-$DISTRO-linux
 
-make -j12 || exit 1
+make -j5 || exit 1
 make install DESTDIR=$PKG
-make -j12 elf || exit 1
+make -j5 elf || exit 1
 make install-elf DESTDIR=$PKG
 
 chmod 755 $PKG/usr/lib$LIBSUFFIX/libslang.so.$VERSION

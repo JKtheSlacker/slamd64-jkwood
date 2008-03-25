@@ -16,10 +16,10 @@ pkghelpers_permissions
 CFLAGS=$SLKCFLAGS \
 ./configure \
   --prefix=/usr \
-	--libdir=/usr/lib$LIBSUFFIX \
-	--mandir=/usr/man \
+  --libdir=/usr/lib$LIBSUFFIX \
+  --mandir=/usr/man \
   --enable-static=no
-make -j 12 || exit 1
+make -j5 || exit 1
 make install DESTDIR=$PKG || exit 1
 mkdir -p $PKG/usr/doc/lcms-$VERSION
 cp -a \
