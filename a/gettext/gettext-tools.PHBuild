@@ -17,13 +17,13 @@ CFLAGS="$SLKCFLAGS" \
 CXXFLAGS="$SLKCFLAGS" \
 ./configure \
   --prefix=/usr \
-	--libdir=/usr/lib$LIBSUFFIX \
+  --libdir=/usr/lib$LIBSUFFIX \
   --disable-static \
   --infodir=/usr/info \
   --mandir=/usr/man \
   --docdir=/usr/doc/gettext-tools-$VERSION \
   --build=$ARCH-$DISTRO-linux
-make -j12 || exit 1
+make -j5 || exit 1
 cd gettext-tools
 make install DESTDIR=$PKG
 

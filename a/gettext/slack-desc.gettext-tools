@@ -6,7 +6,7 @@
 # customary to leave one space after the ':'.
 
              |-----handy-ruler------------------------------------------------------|
-gettext-tools: gettext-tools
+gettext-tools: gettext-tools (internationalization framework tools)
 gettext-tools:
 gettext-tools: The GNU gettext-tools package is useful for authors and maintainers of
 gettext-tools: internationalized software, or for anyone compiling programs that
