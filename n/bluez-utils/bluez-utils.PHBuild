@@ -18,44 +18,14 @@
 # Rewritten for Slackware 2007-05  <pjv>
 
 NAME=bluez-utils
-# Get the current and temporary directories
-CWD=$(pwd)
-if [ "$TMP" = "" ]; then
-  TMP=/tmp
-fi
-if [ ! -d $TMP ]
-then
-  mkdir -p $TMP
-fi
-PKG=$TMP/package-$NAME
-
+PKGNAM=$NAME
 
 # Some useful variables about the package
-VERSION=${VERSION:-3.9}
-ARCH=${ARCH:-x86_64}
-BUILD=${BUILD:-2}
-VERSION=3.9
-DISTRO=${DISTRO:-slamd64}
+VERSION=${VERSION:-3.26}
+BUILD=${BUILD:-1}
 
-if [ $DISTRO = slackware ]; then
-	PKGARCH=$ARCH
-else
-	PKGARCH=${ARCH}_${DISTRO}
-fi
-
-if [ $DISTRO = slamd64 ]; then
-	LIBSUFFIX=${LIBSUFFIX:-64}
-fi
-
-if [ "$ARCH" = "i386" ]; then
-  SLKCFLAGS="-O2 -march=i386 -mcpu=i686"
-elif [ "$ARCH" = "i486" ]; then
-  SLKCFLAGS="-O2 -march=i486 -mtune=i686"
-elif [ "$ARCH" = "s390" ]; then
-  SLKCFLAGS="-O2"
-elif [ "$ARCH" = "x86_64" ]; then
-  SLKCFLAGS="-O2 -fPIC"
-fi
+. /etc/pkghelpers
+pkghelpers_env
 
 rm -rf $PKG
 mkdir -p $PKG
@@ -67,23 +37,12 @@ rm -rf $NAME-$VERSION
 tar xjvf $CWD/${NAME}-${VERSION}.tar.bz2 || exit 1
 cd $NAME-$VERSION
 
-chown -R root:root .
-find . -perm 666 -exec chmod 644 {} \;
-find . -perm 664 -exec chmod 644 {} \;
-find . -perm 600 -exec chmod 644 {} \;
-find . -perm 444 -exec chmod 644 {} \;
-find . -perm 400 -exec chmod 644 {} \;
-find . -perm 440 -exec chmod 644 {} \;
-find . -perm 777 -exec chmod 755 {} \;
-find . -perm 775 -exec chmod 755 {} \;
-find . -perm 511 -exec chmod 755 {} \;
-find . -perm 711 -exec chmod 755 {} \;
-find . -perm 555 -exec chmod 755 {} \;
+pkghelpers_permissions
 
 CFLAGS="$SLKCFLAGS" \
 CXXFLAGS="$SLKCFLAGS" \
 ./configure --prefix=/usr \
---libdir=/usr/lib64 \
+--libdir=/usr/lib$LIBSUFFIX \
 --sysconfdir=/etc \
 --mandir=/usr/man \
 --localstatedir=/var \
@@ -101,12 +60,17 @@ rmdir $PKG/usr/libexec
 mkdir -p $PKG/etc/udev/rules.d
 mv $PKG/etc/udev/bluetooth.rules $PKG/etc/udev/rules.d/60-bluetooth.rules
 
+if grep -q ATTR $PKG/etc/udev/rules.d/60-bluetooth.rules ; then
+  # Use fixed rules file for now:
+  cat $CWD/60-bluetooth.rules > $PKG/etc/udev/rules.d/60-bluetooth.rules
+fi
+
 if [ ! -e $PKG/etc/bluetooth/transfer.service ]; then
   cat transfer/transfer.service > $PKG/etc/bluetooth/transfer.service
 fi
-if [ ! -e $PKG/usr/lib$LIBSUFFIX/bluetooth/bluetoothd-service-transfer ]; then
-  cat transfer/bluetoothd-service-transfer > $PKG/usr/lib$LIBSUFFIX/bluetooth/bluetoothd-service-transfer
-  chmod 755 $PKG/usr/lib$LIBSUFFIX/bluetooth/bluetoothd-service-transfer
+if [ ! -e $PKG/usr/lib/bluetooth/bluetoothd-service-transfer -a -e transfer/bluetoothd-service-transfer ]; then
+  cat transfer/bluetoothd-service-transfer > $PKG/usr/lib/bluetooth/bluetoothd-service-transfer
+  chmod 755 $PKG/usr/lib/bluetooth/bluetoothd-service-transfer
 fi
 
 # Install Debian's add-passkey program:
@@ -148,30 +112,11 @@ rm -rf $PKG/etc/{init.d,default}
   done
 )
 
-# Compress and if needed symlink the man pages:
-if [ -d $PKG/usr/man ]; then
-  ( cd $PKG/usr/man
-    for manpagedir in $(find . -type d -name "man*") ; do
-      ( cd $manpagedir
-        for eachpage in $( find . -type l -maxdepth 1) ; do
-          ln -s $( readlink $eachpage ).gz $eachpage.gz
-          rm $eachpage
-        done
-        gzip -9 *.?
-      )
-    done
-  )
-fi
-
-( cd $PKG
-  find . | xargs file | grep "executable" | grep ELF | cut -f 1 -d : | xargs strip --strip-unneeded 2> /dev/null
-  find . | xargs file | grep "shared object" | grep ELF | cut -f 1 -d : | xargs strip --strip-unneeded 2> /dev/null
-)
-
 mkdir -p $PKG/install
 cat $CWD/slack-desc > $PKG/install/slack-desc
 zcat $CWD/doinst.sh.gz > $PKG/install/doinst.sh
 
 cd $PKG
-makepkg -l y -c n $TMP/$NAME-$VERSION-$PKGARCH-$BUILD.tgz
+pkghelpers_fixup
+pkghelpers_makepkg
 

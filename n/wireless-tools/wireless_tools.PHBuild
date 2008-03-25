@@ -1,7 +1,7 @@
 #!/bin/sh
 PKGNAM=wireless-tools
-VERSION=28
-BUILD=3
+VERSION=29
+BUILD=1
 
 . /etc/pkghelpers
 pkghelpers_env
@@ -15,7 +15,7 @@ tar xzvf $CWD/wireless_tools.$VERSION.tar.gz
 cd wireless_tools.$VERSION
 zcat $CWD/wireless_tools.nowhine.diff.gz | patch -p1 --verbose --suffix=.orig --backup || exit 1
 zcat $CWD/wireless_tools.static.diff.gz | patch -p1 --verbose --suffix=.orig --backup || exit 1
-chown -R root:root .
+pkghelpers_permissions
 make || exit 1
 mkdir -p $PKG/sbin
 cp -a ifrename iwconfig iwevent iwgetid iwlist iwpriv iwspy $PKG/sbin
@@ -46,10 +46,10 @@ chmod 644 $PKG/usr/doc/wireless-tools-$VERSION/*
 
 # Add init scripts from Eric Hameleers:
 mkdir -p $PKG/etc/rc.d
-zcat $CWD/rc.wireless.gz > $PKG/etc/rc.d/rc.wireless
-chmod 755 $PKG/etc/rc.d/rc.wireless
+cat $CWD/scripts/rc.wireless > $PKG/etc/rc.d/rc.wireless.new
+chmod 755 $PKG/etc/rc.d/rc.wireless.new
 # This might contain a secret key, so we'll use chmod 600:
-zcat $CWD/rc.wireless.conf.gz > $PKG/etc/rc.d/rc.wireless.conf.new
+cat $CWD/scripts/rc.wireless.conf > $PKG/etc/rc.d/rc.wireless.conf.new
 chmod 600 $PKG/etc/rc.d/rc.wireless.conf.new
 
 mkdir $PKG/install

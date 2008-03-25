@@ -1,0 +1,19 @@
+# HOW TO EDIT THIS FILE:
+# The "handy ruler" below makes it easier to edit a package description.  Line
+# up the first '|' above the ':' following the base package name, and the '|'
+# on the right side marks the last column you can put a character in.  You must
+# make exactly 11 lines for the formatting to be correct.  It's also
+# customary to leave one space after the ':'.
+
+                  |-----handy-ruler------------------------------------------------------|
+iwlwifi-4965-ucode: iwlwifi-4965-ucode (Intel 4965 wireless microcode)
+iwlwifi-4965-ucode:
+iwlwifi-4965-ucode: The file iwlwifi-4965-1.ucode provided in this package is required to
+iwlwifi-4965-ucode: be present on your system in order for the Intel PRO/Wireless
+iwlwifi-4965-ucode: 4965ABG/BG Network Connection Adapter driver for Linux (iwlwifi-4965)
+iwlwifi-4965-ucode: to be able to operate on your system.
+iwlwifi-4965-ucode:
+iwlwifi-4965-ucode: Visit Intel's Linux wireless website at this address:
+iwlwifi-4965-ucode:   http://intellinuxwireless.org/
+iwlwifi-4965-ucode:
+iwlwifi-4965-ucode:

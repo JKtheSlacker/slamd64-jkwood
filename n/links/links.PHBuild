@@ -4,7 +4,7 @@
 
 # Package version number:
 PKGNAM=links
-VERSION=2.1pre28
+VERSION=2.1pre31
 BUILD=${BUILD:-1}
 
 . /etc/pkghelpers
@@ -17,7 +17,7 @@ cd $TMP
 rm -rf links-$VERSION
 tar xjvf $CWD/links-$VERSION.tar.bz2
 cd links-$VERSION
-chown -R root:root .
+pkghelpers_permissions
 # We are configuring this without X as there are MANY browser choices for
 # X already.  If you need a browser for X, either use something else or
 # recompile.  :-)
@@ -31,7 +31,7 @@ CFLAGS="$SLKCFLAGS" \
   --without-x \
   --without-sdl \
   $ARCH-$DISTRO-linux
-make -j12 || exit
+make -j4 || exit
 mkdir -p $PKG/usr/bin
 cat links > $PKG/usr/bin/links
 chmod 755 $PKG/usr/bin/links
