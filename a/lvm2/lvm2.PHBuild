@@ -19,12 +19,12 @@ pkghelpers_permissions
 
 CFLAGS="$SLKCFLAGS" \
 ./configure \
-	--libdir=/lib$LIBSUFFIX \
+  --libdir=/lib$LIBSUFFIX \
   --enable-static_link \
   --mandir=/usr/man \
   --with-lvm1=internal
 
-make -j3 || exit 1
+make -j5 || exit 1
 make install DESTDIR=$PKG || exit 1
 mv $PKG/etc/lvm/lvm.conf $PKG/etc/lvm/lvm.conf.new
 

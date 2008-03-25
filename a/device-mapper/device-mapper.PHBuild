@@ -26,7 +26,7 @@ CFLAGS="$SLKCFLAGS" \
   --mandir=/usr/man \
   --build=$ARCH-$DISTRO-linux
 
-make -j10 || exit 1
+make -j5 || exit 1
 make install DESTDIR=$PKG || exit 1
 
 mkdir -p $PKG/etc/udev/rules.d
