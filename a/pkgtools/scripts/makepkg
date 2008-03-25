@@ -1,5 +1,5 @@
 #!/bin/sh
-# Copyright 1994, 1998  Patrick Volkerding, Moorhead, Minnesota USA 
+# Copyright 1994, 1998, 2008  Patrick Volkerding, Moorhead, Minnesota USA 
 # Copyright 2003  Slackware Linux, Inc.  Concord, CA USA
 # All rights reserved.
 #
@@ -213,13 +213,32 @@ echo
 echo "Creating tar file $TAR_NAME.tar..."
 echo
 $TAR cvf $TAR_NAME.tar .
+
 # Warn of zero-length files:
 find . -type f -size 0c | while read file ; do
-  echo "WARNING: zero length file $file"
+  echo "WARNING:  zero length file $(echo $file | cut -b3-)"
 done
-find . -type f -name '*.gz' -size 20c | while read file ; do
-  echo "WARNING: possible empty gzipped file $file"
+
+# Warn of corrupt or empty gzip files:
+find . -type f -name '*.gz' | while read file ; do
+  if ! gzip -t $file 1> /dev/null 2> /dev/null ; then
+    echo "WARNING:  gzip test failed on $(echo $file | cut -b3-)"
+  else
+    if [ "$(gzip -l $file | tail -n 1 | tr -s ' ' | cut -f 3 -d ' ')" -eq 0 ]; then
+      echo "WARNING:  $(echo $file | cut -b3-) is an empty gzipped file"
+    fi
+  fi
 done
+
+# Some more handy warnings:
+if [ -d usr/share/man ]; then
+  echo "WARNING:  /usr/share/man (with possibly not gzipped man pages) detected"
+fi
+
+if find . | grep site_perl 1> /dev/null ; then
+  echo "WARNING:  site_perl directory detected (this is fine for a local package build)"
+fi
+
 echo
 echo "Gzipping $TAR_NAME.tar..."
 gzip -9 $TAR_NAME.tar

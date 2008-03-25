@@ -97,6 +97,9 @@ if [ -x /etc/rc.d/rc.inet2 ]; then
   . /etc/rc.d/rc.inet2
 fi
 
+# Mount any additional filesystem types that haven't already been mounted:
+mount -a -v 2> /dev/null | grep -v "already mounted"
+
 # Start the Network Time Protocol daemon:
 if [ -x /etc/rc.d/rc.ntpd ]; then
   sh /etc/rc.d/rc.ntpd start
@@ -139,6 +142,12 @@ fi
 # Start Bluetooth:
 if [ -x /etc/rc.d/rc.bluetooth ]; then
   sh /etc/rc.d/rc.bluetooth start
+fi
+
+# SCIM and other GTK+ input methods like this file kept updated:
+if [ -x /usr/bin/gtk-query-immodules-2.0 ]; then
+  echo "Updating gtk.immodules:  gtk-query-immodules-2.0 > /etc/gtk-2.0/gtk.immodules"
+  /usr/bin/gtk-query-immodules-2.0 > /etc/gtk-2.0/gtk.immodules 2> /dev/null
 fi
 
 # Start dnsmasq, a simple DHCP/DNS server:

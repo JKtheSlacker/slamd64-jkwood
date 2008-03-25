@@ -1,6 +1,7 @@
 #!/bin/sh
 # Copyright 1994, 1998, 2000  Patrick Volkerding, Concord, CA, USA 
 # Copyright 2001, 2003  Slackware Linux, Inc., Concord, CA, USA
+# Copyright 2007  Patrick Volkerding, Sebeka, MN, USA 
 # All rights reserved.
 #
 # Redistribution and use of this script, with or without modification, is
@@ -19,6 +20,16 @@
 #  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
 #  OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 #  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+#
+# Fri Dec 21 17:21:35 CST 2007
+# Added a patch from Johnny Morano to work around package removal issues
+# caused by packages that do not comply with FHS combined with a grep
+# regex error in installpkg.  Any package with a single-letter top-
+# level directory could not be removed.
+#
+# Shortened some of the top-line dialog output to avoid overflowing the
+# textbox (needed as some of the packages, especially in X, have very
+# long base package names now).  <pjv>
 #
 # Sun Nov 26 12:38:25 CST 1995
 # Added patch from Glenn Moloney <glenn@physics.unimelb.edu.au> to allow
@@ -259,13 +270,13 @@ for package in $* ; do
     PRIORITY="SKP"
   fi
   if [ "$PRIORITY" = "ADD" ]; then
-    PMSG="[required]"
+    PMSG="[ADD]"
   elif [ "$PRIORITY" = "REC" ]; then
-    PMSG="[recommended]"
+    PMSG="[REC]"
   elif [ "$PRIORITY" = "OPT" ]; then
-    PMSG="[optional]"
+    PMSG="[OPT]"
   elif [ "$PRIORITY" = "SKP" ]; then
-    PMSG="[skip]"
+    PMSG="[SKP]"
   else
     PMSG=""
   fi
@@ -358,11 +369,11 @@ EOF
       cat $DESCRIPTION | grep "^$shortname:" | uniq
     fi
   elif [ "$MODE" = "infobox" -a ! "$PRIORITY" = "SKP" ]; then # install non-SKP infobox package
-    dialog --title "Installing package ==>$shortname<== $PMSG" --infobox "`cat $TMP/tmpmsg$$`" 0 0
+    dialog --title "Installing package $shortname $PMSG" --infobox "`cat $TMP/tmpmsg$$`" 0 0
   elif [ "$MODE" = "menu" -a "$PRIORITY" = "ADD" -a ! "$ALWAYSASK" = "yes" ]; then # ADD overrides menu mode unless -ask was used
-    dialog --title "Installing package ==>$shortname<== $PMSG" --infobox "`cat $TMP/tmpmsg$$`" 0 0
+    dialog --title "Installing package $shortname $PMSG" --infobox "`cat $TMP/tmpmsg$$`" 0 0
   elif [ "$MODE" = "menu" -a "$USERPRIORITY" = "ADD" ]; then # install no matter what $PRIORITY
-    dialog --title "Installing package ==>$shortname<== $PMSG" --infobox "`cat $TMP/tmpmsg$$`" 0 0
+    dialog --title "Installing package $shortname $PMSG" --infobox "`cat $TMP/tmpmsg$$`" 0 0
   elif [ "$MODE" = "menu" -a "$PRIORITY" = "SKP" -a ! "$ALWAYSASK" = "yes" ]; then # SKP overrides menu mode unless -ask used
     rm -f $TMP/tmpmsg$$
     continue # next package
@@ -370,7 +381,7 @@ EOF
     rm -f $TMP/tmpmsg$$
     continue
   else # we must need a full menu:
-    dialog --title "Package Name: ==>$shortname<== $PMSG" --menu "`cat $TMP/tmpmsg$$`" 0 0 3 \
+    dialog --title "Package Name: $shortname $PMSG" --menu "`cat $TMP/tmpmsg$$`" 0 0 3 \
     "Yes" "Install package $shortname" \
     "No" "Do not install package $shortname" \
     "Quit" "Abort software installation completely" 2> $TMP/reply$$
@@ -417,7 +428,7 @@ EOF
   fi
   echo "FILE LIST:" >> $ADM_DIR/packages/$shortname
   ( cd $ROOT/ ; $TAR -xzlUpvf - ) < $package >> $TMP/$shortname 2> /dev/null
-  if [ "`cat $TMP/$shortname | grep '^./' | wc -l | tr -d ' '`" = "1" ]; then
+  if [ "`cat $TMP/$shortname | grep '^\./' | wc -l | tr -d ' '`" = "1" ]; then
     # Good.  We have a package that meets the Slackware spec.
     cat $TMP/$shortname >> $ADM_DIR/packages/$shortname
   else

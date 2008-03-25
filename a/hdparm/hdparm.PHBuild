@@ -1,6 +1,6 @@
 #!/bin/sh
 PKGNAM=hdparm
-VERSION=${VERSION:-7.6}
+VERSION=${VERSION:-7.7}
 BUILD=${BUILD:-1}
 
 . /etc/pkghelpers
@@ -13,7 +13,7 @@ cd $TMP
 rm -rf hdparm-$VERSION
 tar xjvf $CWD/hdparm-$VERSION.tar.bz2
 cd hdparm-$VERSION
-chown -R root:root .
+pkghelpers_permissions
 make
 strip hdparm
 mkdir -p $PKG/usr/sbin

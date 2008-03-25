@@ -1,6 +1,6 @@
 #!/bin/sh
 PKGNAM=gettext
-VERSION=0.16.1
+VERSION=0.17
 BUILD=${BUILD:-1}
 
 . /etc/pkghelpers
@@ -12,17 +12,7 @@ cd $TMP
 rm -rf gettext-$VERSION
 tar xjvf $CWD/gettext-$VERSION.tar.bz2 || exit 1
 cd gettext-$VERSION
-chown -R root:root .
-find . -perm 664 -exec chmod 644 {} \;
-find . -perm 600 -exec chmod 644 {} \;
-find . -perm 444 -exec chmod 644 {} \;
-find . -perm 400 -exec chmod 644 {} \;
-find . -perm 440 -exec chmod 644 {} \;
-find . -perm 777 -exec chmod 755 {} \;
-find . -perm 775 -exec chmod 755 {} \;
-find . -perm 511 -exec chmod 755 {} \;
-find . -perm 711 -exec chmod 755 {} \;
-find . -perm 555 -exec chmod 755 {} \;
+pkghelpers_permissions
 cd gettext-runtime
 CFLAGS="$SLKCFLAGS" \
 CXXFLAGS="$SLKCFLAGS" \
@@ -30,15 +20,13 @@ CXXFLAGS="$SLKCFLAGS" \
   --prefix=/usr \
 	--libdir=/usr/lib$LIBSUFFIX \
   --infodir=/usr/info \
+  --mandir=/usr/man \
+  --docdir=/usr/doc/gettext-$VERSION \
   --disable-static \
   --build=$ARCH-$DISTRO-linux
 
 make -j12 || exit 1
 make install DESTDIR=$PKG
-( cd $PKG/usr/share
-  mv man ..
-  mv doc ..
-)
 ( cd $PKG/usr/doc
   mkdir gettext-$VERSION
   mv gettext/csharpdoc gettext/javadoc1 gettext/javadoc2 libasprintf gettext-$VERSION

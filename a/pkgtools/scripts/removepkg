@@ -1,6 +1,21 @@
 #!/bin/sh
 # Slackware remove package script
 #
+# Revision 1.9 Wed Oct 31 14:04:28 CDT 2007 volkerding
+# - Fix problem removing packages with a large number of fields.
+#   Thanks to Niki Kovacs for noticing this, and to Piter Punk
+#   for the patch.
+# - Use LC_ALL=C locale, which is much faster with "sort".
+#   Thanks to Tsomi.
+# - Don't try to remove any package that starts with '-'.  This
+#   is not a proper package name (usually a typo), and results
+#   in the package database being broken.  Thanks to Jef Oliver.
+# - Patched cat_except() to allow the last Slackware package on
+#   a partition to be removed (using ROOT=, of course)
+#   Thanks to Selkfoster for the patch, and to everyone else who
+#   proposed solutions before.  This issue really wasn't given
+#   the highest priority before, but I figured while I'm in here...
+#
 # Revision 1.8 Thu Nov 22 14:00:13 PST 2001 volkerding Rel $
 # - Move $TMP underneath $ROOT
 # - Understand the idea of a base package name, so that packages
@@ -70,6 +85,9 @@
 #  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
+# This makes "sort" run much faster:
+export LC_ALL=C
+
 # Make sure there's a proper temp directory:
 TMP=$ROOT/var/log/setup/tmp
 # If the $TMP directory doesn't exist, create it:
@@ -81,8 +99,21 @@ fi
 ADM_DIR=$ROOT/var/log
 PRES_DIR=$TMP/preserved_packages
 
+# This simple cat_except() should be used on the installer,
+# since the busybox "find" can't handle the complex find
+# syntax:
+#cat_except() {
+# ( cd "$1" && cat `ls * | sed "/^$2\$/d"` )
+#}
+
+# This version of cat_except() allows the last package to be
+# removed when ROOT= is used:
 cat_except() {
- ( cd "$1" && cat `ls * | sed "/^$2\$/d"` )
+  ( cd "$1" && \
+    if [ $(find . -type f -maxdepth 1 | wc -l) -ne 1 ]; then
+      cat $(find . -type f -maxdepth 1 | grep -v "$2")
+    fi
+  )
 }
 
 extract_links() {
@@ -209,6 +240,12 @@ delete_cats() {
 
 package_name() {
   STRING=`basename $1 .tgz`
+  # If we don't do this, commands run later will take the '-' to be an option
+  # and will destroy the package database.  Packages should not contain spaces
+  # in them.  Normally this type of problem results from a command line typo.
+  if [ "$(echo $STRING | cut -b 1)" = "-" ]; then
+    STRING="malformed-package-name-detected"
+  fi
   # Check for old style package name with one segment:
   if [ "`echo $STRING | cut -f 1 -d -`" = "`echo $STRING | cut -f 2 -d -`" ]; then
     echo $STRING
@@ -253,11 +290,19 @@ remove_packages() {
   if [ ! -e $ADM_DIR/packages/$PKGNAME ]; then
    SHORT="`package_name $PKGNAME`"
    for long_package in $ADM_DIR/packages/${PKGNAME}* ; do
-    if [ "`package_name $PKGNAME`" = "`package_name $long_package`" ]; then
+    if [ "$SHORT" = "`package_name $long_package`" ]; then
      PKGNAME="`basename $long_package`"
     fi
    done
   fi
+
+  if [ ! -e $ADM_DIR/packages/$PKGNAME ]; then
+    long_package=$(ls -1 $ADM_DIR/packages/${PKGNAME}* | grep -m 1 "${PKGNAME}-[^-]*-[^-]*-[^-]*$")
+    if [ -e "$long_package" ]; then
+      PKGNAME=$(basename $long_package)
+    fi
+  fi
+
   if [ -r $ADM_DIR/packages/$PKGNAME ]; then
    if [ ! "$WARN" = true ]; then
     echo "Removing package $ADM_DIR/packages/$PKGNAME..."

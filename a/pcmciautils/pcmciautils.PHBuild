@@ -1,7 +1,31 @@
 #!/bin/sh
+
+# Slackware build script for pcmciautils
+
+# Copyright 2008  Patrick J. Volkerding, Sebeka, MN, USA
+# All rights reserved.
+#
+# Redistribution and use of this script, with or without modification, is
+# permitted provided that the following conditions are met:
+#
+# 1. Redistributions of this script must retain the above copyright
+#    notice, this list of conditions and the following disclaimer.
+#
+#  THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR IMPLIED
+#  WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+#  MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.  IN NO
+#  EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+#  SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+#  PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+#  OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+#  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+#  OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+#  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+
 PKGNAM=pcmciautils
-VERSION=014
-BUILD=3
+VERSION=${VERSION:-014}
+BUILD=${BUILD:-4}
 
 . /etc/pkghelpers
 pkghelpers_env
@@ -13,18 +37,7 @@ rm -rf pcmciautils-$VERSION
 tar xvjf $CWD/pcmciautils-$VERSION.tar.bz2
 cd pcmciautils-$VERSION
 
-chown -R root.root .
-find . -perm 666 -exec chmod 644 {} \;
-find . -perm 664 -exec chmod 644 {} \;
-find . -perm 600 -exec chmod 644 {} \;
-find . -perm 444 -exec chmod 644 {} \;
-find . -perm 400 -exec chmod 644 {} \;
-find . -perm 440 -exec chmod 644 {} \;
-find . -perm 777 -exec chmod 755 {} \;
-find . -perm 775 -exec chmod 755 {} \;
-find . -perm 511 -exec chmod 755 {} \;
-find . -perm 711 -exec chmod 755 {} \;
-find . -perm 555 -exec chmod 755 {} \;
+pkghelpers_permissions
 
 make || exit 1
 make install DESTDIR=$PKG
@@ -36,15 +49,19 @@ make install DESTDIR=$PKG
 )
 
 rm -rf $PKG/etc/*
-mkdir -p $PKG/etc/pcmcia $PKG/etc/rc.d
+mkdir -p $PKG/etc/pcmcia $PKG/etc/rc.d $PKG/etc/udev/rules.d
 
-cp -a $CWD/rc.pcmcia $PKG/etc/rc.d/rc.pcmcia.new
+cp -a $CWD/config/rc.pcmcia $PKG/etc/rc.d/rc.pcmcia.new
 chown root:root $PKG/etc/rc.d/rc.pcmcia.new
-chmod 755 $PKG/etc/rc.d/rc.pcmcia.new
+chmod 0755 $PKG/etc/rc.d/rc.pcmcia.new
 
-cp -a $CWD/config.opts $PKG/etc/pcmcia/config.opts.new
+cp -a $CWD/config/config.opts $PKG/etc/pcmcia/config.opts.new
 chown root:root $PKG/etc/pcmcia/config.opts.new
-chmod 644 $PKG/etc/pcmcia/config.opts.new
+chmod 0644 $PKG/etc/pcmcia/config.opts.new
+
+cp -a $CWD/config/60-pcmcia.rules $PKG/etc/udev/rules.d/60-pcmcia.rules.new
+chown root:root $PKG/etc/udev/rules.d/60-pcmcia.rules.new
+chmod 0644 $PKG/etc/udev/rules.d/60-pcmcia.rules.new
 
 mv $PKG/usr/share/man $PKG/usr
 rmdir $PKG/usr/share

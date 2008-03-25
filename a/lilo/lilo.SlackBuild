@@ -3,7 +3,7 @@ CWD=`pwd`
 TMP=${TMP:-/tmp}
 PKG=$TMP/package-lilo
 
-VERSION=${VERSION:-22.7.1}
+VERSION=${VERSION:-22.8}
 ARCH=${ARCH:-x86_64}
 BUILD=${BUILD:-1}
 
@@ -11,11 +11,14 @@ rm -rf $PKG
 mkdir -p $PKG
 cd $TMP
 rm -rf lilo-$VERSION
-tar xzvf $CWD/lilo-$VERSION.src.tar.gz
+tar xzvf $CWD/lilo-$VERSION.src.tar.gz || exit 1
 cd lilo-$VERSION
 chown -R root:root .
-make
+make || exit 1
 make install ROOT=$PKG
+# Add a Slackware logo boot menu (sorry, couldn't resist):
+cp -a $CWD/slamd64.bmp $PKG/boot
+chmod 644 $PKG/boot/slamd64.bmp
 # We don't need to add this empty directory:
 rmdir $PKG/etc
 # Add Slackware's 'liloconfig' utility:
@@ -38,6 +41,8 @@ fi
 if [ -r $CWD/lilo-$VERSION.announce.txt ]; then
   cp -a $CWD/lilo-$VERSION.announce.txt $PKG/usr/doc/lilo-$VERSION
 fi
+mv $PKG/usr/share/man $PKG/usr
+rmdir $PKG/usr/share
 gzip -9 $PKG/usr/man/man?/*.?
 mkdir -p $PKG/install
 cat $CWD/slack-desc > $PKG/install/slack-desc
