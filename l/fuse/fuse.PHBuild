@@ -58,7 +58,7 @@ CXXFLAGS="$SLKCFLAGS" \
   --disable-kernel-module \
   --build=${ARCH}-$DISTRO-linux
 
-make -j3
+make -j5 || exit 1
 make install DESTDIR=$PKG
 
 # Move the start|stop script of fuse to the right place.
