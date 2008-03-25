@@ -28,7 +28,7 @@ CFLAGS="$SLKCFLAGS" \
   --build=$ARCH-$DISTRO-linux \
   --host=$ARCH-$DISTRO-linux
 
-make -j10 || exit 1
+make -j5 || exit 1
 make install DESTDIR=$PKG
 
 mkdir -p $PKG/usr/doc/librsvg-$VERSION

@@ -46,14 +46,14 @@ find . -perm 640 -exec chmod 644 {} \;
 CFLAGS="$SLKCFLAGS" \
 ./configure \
   --prefix=/usr \
-	--libdir=/usr/lib$LIBSUFFIX \
+  --libdir=/usr/lib$LIBSUFFIX \
   --enable-shared \
   --disable-static \
   --with-ssl=openssl \
   $ARCH-$DISTRO-linux
 
 # Build and install:
-make -j12 || exit 1
+make -j15 || exit 1
 make install DESTDIR=$PKG || exit 1
 
 # Relocate docs:

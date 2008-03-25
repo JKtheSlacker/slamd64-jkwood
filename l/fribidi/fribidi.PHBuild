@@ -17,7 +17,7 @@ CFLAGS="$SLKCFLAGS" \
 	--prefix=/usr \
 	--libdir=/usr/lib$LIBSUFFIX \
   --with-pic
-make -j12 || exit 1
+make -j5 || exit 1
 make install DESTDIR=$PKG
 strip -g $PKG/usr/lib$LIBSUFFIX/libfribidi.a
 mkdir -p $PKG/usr/doc/fribidi-$VERSION
