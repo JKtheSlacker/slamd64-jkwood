@@ -22,13 +22,13 @@ pkghelpers_permissions
 CFLAGS="$SLKCFLAGS" \
 ./configure \
   --prefix= \
-	--libdir=/lib$LIBSUFFIX \
+  --libdir=/lib$LIBSUFFIX \
   --datadir=/usr/share \
   --enable-elf-shlibs \
   --enable-dynamic-e2fsck \
   --disable-uuidd \
   --build=$ARCH-$DISTRO-linux
-make -j6 || exit 1
+make -j5 || exit 1
 make install DESTDIR=$PKG
 make install-libs DESTDIR=$PKG
 # Fix up package:
