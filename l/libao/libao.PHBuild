@@ -16,9 +16,9 @@ pkghelpers_permissions
 #zcat $CWD/libao.use_new_alsa_api.diff.gz | patch -p1 --verbose
 ./configure \
   --prefix=/usr \
-	--libdir=/usr/lib$LIBSUFFIX \
+  --libdir=/usr/lib$LIBSUFFIX \
   $ARCH-$DISTRO-linux
-make -j12 || exit 1
+make -j5 || exit 1
 make install DESTDIR=$PKG
 mv $PKG/usr/share/man $PKG/usr
 mv $PKG/usr/share/doc $PKG/usr

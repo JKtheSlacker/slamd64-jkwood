@@ -17,11 +17,11 @@ CFLAGS="-O2 -fPIC" \
 CXXFLAGS="-O2 -fPIC" \
 ./configure \
   --prefix=/usr \
-	--libdir=/usr/lib$LIBSUFFIX \
+  --libdir=/usr/lib$LIBSUFFIX \
   --program-prefix="" \
   --program-suffix="" \
   --build=$ARCH-$DISTRO-linux
-make -j6
+make -j5
 make install DESTDIR=$PKG
 mkdir -p $PKG/usr/doc/taglib-$VERSION
 cp -a \

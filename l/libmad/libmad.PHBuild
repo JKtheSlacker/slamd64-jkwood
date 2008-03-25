@@ -43,7 +43,7 @@ pkghelpers_permissions
 CFLAGS="$SLKCFLAGS" \
 ./configure \
   --prefix=/usr \
-	--libdir=/usr/lib$LIBSUFFIX \
+  --libdir=/usr/lib$LIBSUFFIX \
   --sysconfdir=/etc \
   --mandir=/usr/man \
   --disable-static \
@@ -53,7 +53,7 @@ CFLAGS="$SLKCFLAGS" \
   --build=$ARCH-$DISTRO-linux
 
 # Build and install:
-make -j6 || exit 1
+make -j5 || exit 1
 make install DESTDIR=$PKG || exit 1
 
 # This is what happens when every distro makes up its own standards
