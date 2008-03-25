@@ -50,7 +50,7 @@ CFLAGS="$SLKCFLAGS" \
   $ARCH-$DISTRO-linux
 
 # Build and install:
-make -j9 || exit 1
+make -j5 || exit 1
 make install DESTDIR=$PKG || exit 1
 
 # Keep the old traditional looknfeel :-)

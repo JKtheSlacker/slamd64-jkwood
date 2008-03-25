@@ -38,7 +38,7 @@ CFLAGS= \
   --prefix=/ \
   --enable-zlib \
   --build=$ARCH-$DISTRO-linux
-make -j9 || exit 1
+make -j5 || exit 1
 mkdir -p $PKG/sbin
 cat depmod > $PKG/sbin/depmod
 cat generate-modprobe.conf > $PKG/sbin/generate-modprobe.conf

@@ -40,7 +40,7 @@ cd cups-$VERSION
 # enforce clue
 sed -i 's#$exec_prefix/lib/cups#$libdir/cups#g' configure
 ./configure \
-	--libdir=/usr/lib$LIBSUFFIX \
+  --libdir=/usr/lib$LIBSUFFIX \
   --enable-ssl \
   --enable-openssl=yes \
   --enable-gnutls=no \

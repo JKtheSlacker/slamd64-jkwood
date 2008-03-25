@@ -19,7 +19,7 @@ CFLAGS="$SLKCFLAGS" \
   --prefix=/usr \
   --disable-dependency-tracking \
   $ARCH-$DISTRO-linux
-make -j12
+make -j5 || exit 1
 mkdir -p $PKG/sbin
 cat fsck/jfs_fsck > $PKG/sbin/jfs_fsck
 ( cd $PKG/sbin ; ln -sf jfs_fsck fsck.jfs )
