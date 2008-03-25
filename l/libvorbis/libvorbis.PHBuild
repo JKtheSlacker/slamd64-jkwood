@@ -15,9 +15,9 @@ cd libvorbis-$VERSION
 pkghelpers_permissions
 ./configure \
   --prefix=/usr \
-	--libdir=/usr/lib$LIBSUFFIX \
+  --libdir=/usr/lib$LIBSUFFIX \
   --build=$ARCH-$DISTRO-linux
-make -j12 || exit 1
+make -j5 || exit 1
 make install DESTDIR=$PKG
 mv $PKG/usr/share/doc $PKG/usr
 cp -a \

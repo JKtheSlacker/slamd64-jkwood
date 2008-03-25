@@ -54,14 +54,14 @@ find . -perm 555 -exec chmod 755 {} \;
 CFLAGS="$SLKCFLAGS" \
 ./configure \
   --prefix=/usr \
-	--libdir=/usr/lib$LIBSUFFIX \
+  --libdir=/usr/lib$LIBSUFFIX \
   --disable-static \
   --enable-eject-command \
   --enable-unmount-command \
   $ARCH-$DISTRO-linux
 
 # Build and install:
-make -j12 || exit 1
+make -j5 || exit 1
 make install DESTDIR=$PKG || exit 1
 
 # Hey ./configure, I wasn't joking:
