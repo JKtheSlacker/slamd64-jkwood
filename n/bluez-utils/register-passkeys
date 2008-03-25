@@ -2,7 +2,7 @@
 # register every passkey found in $PASSKEYS_DIR
 
 PASSKEYS_DIR="/etc/bluetooth/passkeys/"
-PASSKEY_AGENT="/usr/lib64/bluetooth/add-passkey"
+PASSKEY_AGENT="/usr/lib/bluetooth/add-passkey"
 
 cd $PASSKEYS_DIR
 
