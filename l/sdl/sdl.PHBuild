@@ -30,12 +30,12 @@ pkghelpers_permissions
 CFLAGS="$SLKCFLAGS" \
 ./configure \
   --prefix=/usr \
-	--libdir=/usr/lib$LIBSUFFIX \
+  --libdir=/usr/lib$LIBSUFFIX \
   --mandir=/usr/man \
   --enable-shared=yes \
   --enable-static=no \
   --disable-x11-shared
-make -j12 || exit 1
+make -j5 || exit 1
 # Spam /, for mixer/image later on:
 make install
 # install to package:
@@ -57,7 +57,7 @@ pkghelpers_permissions
 CFLAGS="$SLKCFLAGS" \
 ./configure \
   --prefix=/usr \
-	--libdir=/usr/lib$LIBSUFFIX \
+  --libdir=/usr/lib$LIBSUFFIX \
   --mandir=/usr/man \
   --enable-shared=yes \
   --enable-static=no \
@@ -65,7 +65,7 @@ CFLAGS="$SLKCFLAGS" \
   --enable-png-shared=no \
   --enable-tif-shared=no
 
-make -j12 || exit 1
+make -j5 || exit 1
 make install DESTDIR=$PKG
 mkdir -p $PKG/usr/doc/SDL_image-$IMAGE
 cp -a \
@@ -82,17 +82,17 @@ cd SDL_mixer-$MIXER
 zcat $CWD/SDL_mixer-1.2.8.usrlocal.diff.gz | patch -p1 --verbose || exit 1
 
 if [ $LIBSUFFIX != "" ]; then
-  sed s%/usr/lib/timidity%/usr/lib/$LIBSUFFIX/timidity% timidity/config.h
+  sed s%/usr/lib/timidity%/usr/lib$LIBSUFFIX/timidity% timidity/config.h
 fi
 
 pkghelpers_permissions
 CFLAGS="$SLKCFLAGS" \
 ./configure \
   --prefix=/usr \
-	--libdir=/usr/lib$LIBSUFFIX \
+  --libdir=/usr/lib$LIBSUFFIX \
   --enable-shared=yes \
   --enable-static=no
-make -j12 || exit 1
+make -j5 || exit 1
 make install DESTDIR=$PKG
 mkdir -p $PKG/usr/doc/SDL_mixer-$MIXER
 cp -a \
@@ -108,11 +108,11 @@ pkghelpers_permissions
 CFLAGS="$SLKCFLAGS" \
 ./configure \
   --prefix=/usr \
-	--libdir=/usr/lib$LIBSUFFIX \
+  --libdir=/usr/lib$LIBSUFFIX \
   --mandir=/usr/man \
   --enable-shared=yes \
   --enable-static=no
-make -j12 || exit 1
+make -j5 || exit 1
 make install DESTDIR=$PKG
 mkdir -p $PKG/usr/doc/SDL_net-$NET
 cp -a \
@@ -128,11 +128,11 @@ pkghelpers_permissions
 CFLAGS="$SLKCFLAGS" \
 ./configure \
   --prefix=/usr \
-	--libdir=/usr/lib$LIBSUFFIX \
+  --libdir=/usr/lib$LIBSUFFIX \
   --mandir=/usr/man \
   --enable-shared=yes \
   --enable-static=no
-make -j12 || exit 1
+make -j5 || exit 1
 make install DESTDIR=$PKG
 mkdir -p $PKG/usr/doc/SDL_ttf-$TTF
 cp -a \
