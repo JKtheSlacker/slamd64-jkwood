@@ -1,6 +1,6 @@
 #!/bin/sh
 PKGNAM=hdparm
-VERSION=${VERSION:-7.7}
+VERSION=${VERSION:-8.6}
 BUILD=${BUILD:-1}
 
 . /etc/pkghelpers
@@ -14,11 +14,13 @@ rm -rf hdparm-$VERSION
 tar xjvf $CWD/hdparm-$VERSION.tar.bz2
 cd hdparm-$VERSION
 pkghelpers_permissions
-make
+make -j5 || exit 1
 strip hdparm
-mkdir -p $PKG/usr/sbin
-cat hdparm > $PKG/usr/sbin/hdparm
-chmod 755 $PKG/usr/sbin/hdparm
+mkdir -p $PKG/sbin $PKG/usr/sbin
+install -oroot -groot -m755 hdparm $PKG/sbin/hdparm
+( cd $PKG/usr/sbin
+  ln -sf ../../sbin/hdparm .
+)
 mkdir -p $PKG/usr/man/man8
 cat hdparm.8 | gzip -9c > $PKG/usr/man/man8/hdparm.8.gz
 mkdir -p $PKG/usr/doc/hdparm-$VERSION
@@ -27,6 +29,8 @@ cp -a \
   $PKG/usr/doc/hdparm-$VERSION
 mkdir -p $PKG/install
 cat $CWD/slack-desc > $PKG/install/slack-desc
+# I'm also not sure why I'm putting a binary in the docs, but...
+rm -f $PKG/usr/doc/hdparm-$VERSION/contrib/fix_standby.c
 
 # Build the package:
 cd $PKG
