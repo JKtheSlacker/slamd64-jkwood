@@ -1,6 +1,6 @@
 #!/bin/sh
 PKGNAM=libart_lgpl
-VERSION=2.3.19
+VERSION=2.3.20
 BUILD=${BUILD:-1}
 
 . /etc/pkghelpers
@@ -17,7 +17,7 @@ cd libart_lgpl-$VERSION
 pkghelpers_permissions
 CFLAGS="$SLKCFLAGS" \
 ./configure --prefix=/usr --libdir=/usr/lib$LIBSUFFIX
-make -j12 || exit 1
+make -j5 || exit 1
 make install DESTDIR=$PKG
 mkdir -p $PKG/usr/doc/libart_lgpl-$VERSION
 cp -a \
