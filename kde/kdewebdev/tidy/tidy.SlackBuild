@@ -22,7 +22,7 @@
 # This file is an example, so feel free to fix it if it gets out of date.  :-)
 
 PKGNAM=tidy
-VERSION=${VERSION:-20070523T1414}
+VERSION=20080219T0523
 ARCH=${ARCH:-x86_64}
 BUILD=${BUILD:-1}
 
