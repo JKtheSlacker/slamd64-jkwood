@@ -24,7 +24,7 @@ pkghelpers_permissions
 CFLAGS="$SLKCFLAGS" \
 ./configure \
   --prefix=/usr \
-	--libdir=/usr/lib$LIBSUFFIX \
+  --libdir=/usr/lib$LIBSUFFIX \
   --sysconfdir=/etc \
   --enable-javascript \
   --enable-graphics \
