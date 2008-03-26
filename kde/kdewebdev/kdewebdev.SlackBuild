@@ -25,8 +25,13 @@ if [ -d /usr/lib$LIBSUFFIX/qt ]; then
 fi
 cd $TMP
 echo "Building kdewebdev-$VERSION.tar.bz2..."
-tar xjvf $CWD/kdewebdev-$VERSION.tar.bz2 || exit 1
+tar xjvf $CWD/../src/kdewebdev-$VERSION.tar.bz2 || exit 1
 cd kdewebdev-$VERSION || exit 1
+
+if [ -r $CWD/apply-patches.sh ]; then
+  . $CWD/apply-patches.sh
+fi
+
 chown -R root:root .
 CFLAGS=$CPUOPT \
 CXXFLAGS=$CPUOPT \

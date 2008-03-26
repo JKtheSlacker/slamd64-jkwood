@@ -22,8 +22,13 @@ if [ -d /usr/lib$LIBSUFFIX/qt ]; then
 fi
 cd $TMP
 echo "Building kdebase-$VERSION.tar.bz2..."
-tar xjvf $CWD/kdebase-$VERSION.tar.bz2 || exit 1
+tar xjvf $CWD/../src/kdebase-$VERSION.tar.bz2 || exit 1
 cd kdebase-$VERSION || exit 1
+
+if [ -r $CWD/apply-patches.sh ]; then
+  . $CWD/apply-patches.sh
+fi
+
 chown -R root:root .
 CFLAGS=$CPUOPT \
 CXXFLAGS=$CPUOPT \
@@ -90,6 +95,7 @@ $PKG/usr/bin/genkdmconf --no-old --no-old-scripts --no-backup --in $PKG/usr/shar
 cat $PKG/usr/share/config/kdm/kdmrc | perl -pi -e 's|AllowRootLogin=false|AllowRootLogin=true|' > $PKG/usr/share/config/kdm/kdmrc.new
 rm -f $PKG/usr/share/config/kdm/kdmrc
 cp -a $PKG/usr/share/config/kdm/Xsession $PKG/usr/share/config/kdm/Xsession.orig
+sed -i s%/usr/lib/%/usr/lib$LIBSUFFIX/% $PKG/usr/share/config/kdm/Xsession.orig
 cat $CWD/config/Xsession > $PKG/usr/share/config/kdm/Xsession
 mv $PKG/usr/share/config/kdm/backgroundrc $PKG/usr/share/config/kdm/backgroundrc.new
 

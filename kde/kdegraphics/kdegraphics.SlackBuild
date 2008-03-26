@@ -22,10 +22,12 @@ if [ -d /usr/lib$LIBSUFFIX/qt ]; then
 fi
 cd $TMP
 echo "Building kdegraphics-$VERSION.tar.bz2..."
-tar xjvf $CWD/kdegraphics-$VERSION.tar.bz2 || exit 1
+tar xjvf $CWD/../src/kdegraphics-$VERSION.tar.bz2 || exit 1
 cd kdegraphics-$VERSION || exit 1
 
-cat $CWD/post-3.5.8-kdegraphics-kpdf.diff | patch -p0 --verbose || exit 1
+if [ -r $CWD/apply-patches.sh ]; then
+  . $CWD/apply-patches.sh
+fi
 
 chown -R root:root .
 CFLAGS=$CPUOPT \

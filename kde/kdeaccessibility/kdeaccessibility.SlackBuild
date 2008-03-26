@@ -22,8 +22,13 @@ if [ -d /usr/lib$LIBSUFFIX/qt ]; then
 fi
 cd $TMP
 echo "Building kdeaccessibility-$VERSION.tar.bz2..."
-tar xjvf $CWD/kdeaccessibility-$VERSION.tar.bz2 || exit 1
+tar xjvf $CWD/../src/kdeaccessibility-$VERSION.tar.bz2 || exit 1
 cd kdeaccessibility-$VERSION || exit 1
+
+if [ -r $CWD/apply-patches.sh ]; then
+  . $CWD/apply-patches.sh
+fi
+
 chown -R root:root .
 CFLAGS=$CPUOPT \
 CXXFLAGS=$CPUOPT \
