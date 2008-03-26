@@ -39,13 +39,13 @@ CFLAGS="$SLKCFLAGS" \
 CXXFLAGS="$SLKCFLAGS" \
 ./configure \
   --prefix=/usr \
-	--libdir=/usr/lib$LIBSUFFIX \
+  --libdir=/usr/lib$LIBSUFFIX \
   --sysconfdir=/etc \
   --infodir=/usr/info \
   --build=$ARCH-$DISTRO-linux \
   --host=$ARCH-$DISTRO-linux
 
-make -j6 || exit 1
+make -j5 || exit 1
 make install DESTDIR=$PKG
 
 mkdir -p $PKG/usr/doc/$PRGNAM-$VERSION

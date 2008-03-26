@@ -17,7 +17,7 @@ pkghelpers_permissions
 
 zcat $CWD/dnsmasq.leasedir.diff.gz | patch -p1 --verbose --backup --suffix=.orig || exit 1
 
-make -j10 all-i18n PREFIX=/usr MANDIR=/usr/man || exit 1
+make -j5 all-i18n PREFIX=/usr MANDIR=/usr/man || exit 1
 make install-i18n PREFIX=/usr DESTDIR=$PKG MANDIR=/usr/man || exit 1
 chmod 755 $PKG/usr/sbin/dnsmasq
 
