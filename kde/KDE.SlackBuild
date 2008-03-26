@@ -32,96 +32,117 @@ fi
 #  ./arts.SlackBuild
 #  installpkg /tmp/arts-*.tgz
 #)
+mkdir -p /tmp/timestamps # Just out of curiosity
+
+touch /tmp/timestamps/00_start
 
 ( cd kdelibs
   ./kdelibs.SlackBuild
   installpkg /tmp/kdelibs-*.tgz
 )
+touch /tmp/timestamps/01_kdelibs
 
 ( cd kdebindings
   ./kdebindings.SlackBuild
   installpkg /tmp/kdebindings-*.tgz
 )
+touch /tmp/timestamps/02_kdebindings
 
 ( cd kdebase
   ./kdebase.SlackBuild
   installpkg /tmp/kdebase-*.tgz
 )
+touch /tmp/timestamps/03_kdebase
 
 ( cd kdeaccessibility
   ./kdeaccessibility.SlackBuild
   installpkg /tmp/kdeaccessibility-*.tgz
 )
+touch /tmp/timestamps/04_kdeaccessibility
 
 ( cd kdeutils
   ./kdeutils.SlackBuild
   installpkg /tmp/kdeutils-*.tgz
 )
+touch /tmp/timestamps/05_kdeutils
 
 ( cd kdemultimedia
   ./kdemultimedia.SlackBuild
   installpkg /tmp/kdemultimedia-*.tgz
 )
+touch /tmp/timestamps/06_kdemultimedia
 
 ( cd kdenetwork
   ./kdenetwork.SlackBuild
   installpkg /tmp/kdenetwork-*.tgz
 )
+touch /tmp/timestamps/07_kdenetwork
 
 ( cd kdeadmin
   ./kdeadmin.SlackBuild
   installpkg /tmp/kdeadmin-*.tgz
 )
+touch /tmp/timestamps/08_kdeadmin
 
 ( cd kdeartwork
   ./kdeartwork.SlackBuild
   installpkg /tmp/kdeartwork-*.tgz
 )
+touch /tmp/timestamps/09_kdeartwork
 
 ( cd kdegames
   ./kdegames.SlackBuild
   installpkg /tmp/kdegames-*.tgz
 )
+touch /tmp/timestamps/10_kdegames
 
 ( cd kdetoys
   ./kdetoys.SlackBuild
   installpkg /tmp/kdetoys-*.tgz
 )
+touch /tmp/timestamps/11_kdetoys
 
 ( cd kdeedu
   ./kdeedu.SlackBuild
   installpkg /tmp/kdeedu-*.tgz
 )
+touch /tmp/timestamps/12_kdeedu
 
 ( cd kdegraphics
   ./kdegraphics.SlackBuild
   installpkg /tmp/kdegraphics-*.tgz
 )
+touch /tmp/timestamps/13_kdegraphics
 
 ( cd kdesdk
   ./kdesdk.SlackBuild
   installpkg /tmp/kdesdk-*.tgz
 )
+touch /tmp/timestamps/14_kdesdk
 
 ( cd kdevelop
   ./kdevelop.SlackBuild
   installpkg /tmp/kdevelop-*.tgz
 )
+touch /tmp/timestamps/15_kdevelop
 
 ( cd kdeaddons
   ./kdeaddons.SlackBuild
   installpkg /tmp/kdeaddons-*.tgz
 )
+touch /tmp/timestamps/16_kdeaddons
 
 ( cd kdewebdev
   ./kdewebdev.SlackBuild
   installpkg /tmp/kdewebdev-*.tgz
 )
+touch /tmp/timestamps/17_kdewebdev
 
 ( cd kdepim
   ./kdepim.SlackBuild
   installpkg /tmp/kdepim-*.tgz
 )
+touch /tmp/timestamps/18_kdepim
 
 
 # Usually the optional packages are manually built:

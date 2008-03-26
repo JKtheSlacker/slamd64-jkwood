@@ -57,5 +57,5 @@ fi
 
 # Number of jobs to compile at once:
 if [ -z "$NUMJOBS" ]; then
-  export NUMJOBS=-j10
+  export NUMJOBS=-j5
 fi
