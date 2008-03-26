@@ -19,13 +19,13 @@ pkghelpers_permissions
 CFLAGS=-O2 \
 ./configure \
   --prefix=/usr \
-	--libdir=/usr/lib$LIBSUFFIX \
+  --libdir=/usr/lib$LIBSUFFIX \
   --build=$ARCH-$DISTRO-linux
 
 make -j5 || exit 1
 
 make prefix=$PKG/usr install
-zcat $CWD/nmapfe.desktop.gz > $PKG/usr/share/applications/nmapfe.desktop
+zcat $CWD/zenmap.desktop.gz > $PKG/usr/share/applications/zenmap.desktop
 mkdir -p $PKG/usr/share/pixmaps
 cat $CWD/nmap.png > $PKG/usr/share/pixmaps/nmap.png
 strip $PKG/usr/bin/*
