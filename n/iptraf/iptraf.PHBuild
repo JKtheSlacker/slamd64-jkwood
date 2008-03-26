@@ -18,7 +18,7 @@ pkghelpers_permissions
 zcat $CWD/iptraf_3.0.0-6.diff.gz | patch -p1 || exit 1
 zcat $CWD/iptraf.paths.diff.gz | patch -p1 || exit 1
 cd src
-make -j10 || exit 1
+make -j5 || exit 1
 mkdir -p $PKG/usr/sbin
 cp iptraf rawtime rvnamed $PKG/usr/sbin
 chmod 755 $PKG/usr/sbin/*

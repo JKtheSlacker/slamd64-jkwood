@@ -6,7 +6,7 @@
 # customary to leave one space after the ':'.
 
       |-----handy-ruler------------------------------------------------------|
-iptraf: iptraf
+iptraf: iptraf (console-based network monitoring program)
 iptraf:
 iptraf: IPTraf is a console-based network monitoring program for Linux that
 iptraf: displays information about IP traffic such as:
