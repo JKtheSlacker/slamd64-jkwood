@@ -4,7 +4,7 @@
 . /etc/pkghelpers
 
 PKGNAM=parted
-VERSION=${VERSION:-1.8.7}
+VERSION=${VERSION:-1.8.8}
 BUILD=${BUILD:-1}
 
 pkghelpers_env
@@ -33,6 +33,7 @@ find . -perm 511 -exec chmod 755 {} \;
 find . -perm 711 -exec chmod 755 {} \;
 find . -perm 555 -exec chmod 755 {} \;
 
+SLKCFLAGS="-O2 -fPIC -fgnu89-inline"
 CFLAGS=$SLKCFLAGS \
 ./configure \
   --prefix=/usr \
