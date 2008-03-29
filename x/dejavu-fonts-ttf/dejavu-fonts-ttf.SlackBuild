@@ -3,7 +3,7 @@ CWD=$(pwd)
 TMP=${TMP:-/tmp}
 PKG=$TMP/package-dejavu-fonts-ttf
 
-VERSION=2.22
+VERSION=2.24
 ARCH=noarch
 BUILD=1
 DISTRO=slamd64
