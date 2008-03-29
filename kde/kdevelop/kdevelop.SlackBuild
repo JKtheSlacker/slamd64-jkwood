@@ -22,7 +22,7 @@ if [ -d /usr/lib$LIBSUFFIX/qt ]; then
 fi
 cd $TMP
 echo "Building kdevelop-$VERSION.tar.bz2..."
-tar xjvf $CWD/kdevelop-$VERSION.tar.bz2 || exit 1
+tar xjvf $CWD/../src/kdevelop-$VERSION.tar.bz2 || exit 1
 cd kdevelop-$VERSION || exit 1
 chown -R root:root .
 
