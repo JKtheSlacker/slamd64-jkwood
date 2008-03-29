@@ -1,0 +1,46 @@
+#!/bin/sh
+# Set initial variables:
+PKGNAM=seejpeg
+VERSION=1.10
+BUILD=1
+
+. /etc/pkghelpers
+pkghelpers_env
+
+if [ ! -d $TMP ]; then
+  mkdir -p $TMP # location to build the source
+fi
+if [ ! -d $PKG ]; then
+  mkdir -p $PKG # place for the package to be built
+fi
+
+# Explode the package framework:
+cd $PKG
+explodepkg $CWD/_seejpeg.tar.gz
+
+echo "+==============+"
+echo "| seejpeg-$VERSION |"
+echo "+==============+"
+cd $TMP
+tar xzvf $CWD/seejpeg-$VERSION.tgz
+cd seejpeg-$VERSION
+zcat $CWD/seejpeg-$VERSION.diff.gz | patch -p1
+rm -rf jpeglib
+tar xzvf $CWD/libjpeg-6a.tar.gz
+( cd libjpeg-6a ; ./configure ; make )
+ln -sf libjpeg-6a jpeglib
+make seejpeg
+strip seejpeg
+cat seejpeg > $PKG/usr/bin/seejpeg
+cat seejpeg.1 | gzip -9c > $PKG/usr/man/man1/seejpeg.1.gz
+mkdir -p $PKG/usr/doc/seejpeg-$VERSION
+cp -a CHANGELOG README $PKG/usr/doc/seejpeg-$VERSION
+chown root:root $PKG/usr/doc/seejpeg-$VERSION/*
+chmod 644 $PKG/usr/doc/seejpeg-$VERSION/*
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+
+# Build the package:
+cd $PKG
+pkghelpers_fixup
+pkghelpers_makepkg
