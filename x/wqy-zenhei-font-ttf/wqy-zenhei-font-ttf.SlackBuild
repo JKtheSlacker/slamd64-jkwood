@@ -1,0 +1,161 @@
+#!/bin/sh
+# $Id: wqy-zenhei-font-ttf.SlackBuild,v 1.4 2008/02/19 22:20:02 root Exp root $
+# Copyright (c) 2008 Eric Hameleers <alien@slackware.com>
+# All rights reserved.
+#
+#   Permission to use, copy, modify, and distribute this software for
+#   any purpose with or without fee is hereby granted, provided that
+#   the above copyright notice and this permission notice appear in all
+#   copies.
+#
+#   THIS SOFTWARE IS PROVIDED ``AS IS'' AND ANY EXPRESSED OR IMPLIED
+#   WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+#   MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+#   IN NO EVENT SHALL THE AUTHORS AND COPYRIGHT HOLDERS AND THEIR
+#   CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+#   SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+#   LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF
+#   USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+#   ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+#   OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT
+#   OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+#   SUCH DAMAGE.
+# -----------------------------------------------------------------------------
+#
+# Slackware SlackBuild script 
+# ===========================
+# By:         Eric Hameleers <alien@slackware.com>
+# For:        wqy-zenhei-font-ttf
+# Descr:      Wen Quan Yi Zen Hei CJK Font
+# URL:        http://wqy.sourceforge.net/en/
+# Needs:      
+# Changelog:  
+# 0.2.15-1:   05/Feb/2008 by Eric Hameleers <alien@slackware.com>
+#             * Initial build.
+# 0.2.15-2:   10/Feb/2008 by Eric Hameleers <alien@slackware.com>
+#             * Rename to wqy-zenhei-font-ttf
+# 0.4.23-1:   19/Feb/2008 by Eric Hameleers <alien@slackware.com>
+#             * New release of the font.
+# 
+# Run 'sh wqy-zenhei-font-ttf.SlackBuild --cleanup' to build a Slackware package
+# The package (.tgz) plus descriptive .txt file are created in /tmp .
+# Install using 'installpkg'. 
+#
+# -----------------------------------------------------------------------------
+
+# Set initial variables:
+
+PRGNAM=wqy-zenhei-font-ttf
+SRCNAM=wqy-zenhei
+VERSION=${VERSION:-0.4.23}
+SUB=${SUB:-1}
+ARCH=noarch
+BUILD=${BUILD:-1}
+
+DOCS="AUTHORS COPYING ChangeLog INSTALL README"
+
+# Where do we look for sources?
+CWD=$(pwd)
+SRCDIR=$(dirname $0)
+[ "${SRCDIR:0:1}" == "." ] && SRCDIR=${CWD}/${SRCDIR}
+
+# Place to build (TMP) package (PKG) and output (OUTPUT) the program:
+TMP=${TMP:-/tmp/build}
+PKG=$TMP/package-$PRGNAM
+OUTPUT=${OUTPUT:-/tmp}
+
+SOURCE="$SRCDIR/${SRCNAM}-${VERSION}-${SUB}.tar.gz"
+
+##
+## --- with a little luck, you won't have to edit below this point --- ##
+##
+
+# Exit the script on errors:
+set -e
+trap 'echo "$0 FAILED at line ${LINENO}" | tee $OUTPUT/error-${PRGNAM}.log' ERR
+# Catch unitialized variables:
+set -u
+P1=${1:-1}
+
+# Create working directories:
+mkdir -p $OUTPUT          # place for the package to be saved
+mkdir -p $TMP/tmp-$PRGNAM # location to build the source
+mkdir -p $PKG             # place for the package to be built
+rm -rf $PKG/*             # always erase old package's contents
+if [ "$P1" != "--oldbuild" ]; then
+  # Use the "--oldbuild" parameter to keep old build files and continue;
+  # By default we remove the remnants of previous build and continue.
+  rm -rf $TMP/tmp-$PRGNAM/*
+fi
+
+# --- PACKAGE BUILDING ---
+
+echo "++"
+echo "|| $PRGNAM-$VERSION"
+echo "++"
+
+# Font directory location depends on the X build prefix:
+# Determine what X we're running (the modular X returns the prefix
+# in the next command, while older versions stay silent):
+XPREF=`pkg-config --variable=prefix x11` || true
+if [ "$XPREF" == "" ]; then
+  XPREF='/usr/X11R6'
+  FONTDIR="$XPREF/lib/X11/fonts/TTF"
+else
+  FONTDIR="/usr/share/fonts/TTF"
+fi
+mkdir -p $PKG$FONTDIR
+
+cd $TMP/tmp-$PRGNAM
+echo "Extracting the source archive(s) for $PRGNAM..."
+if $(file ${SOURCE} | grep -q ": bzip2"); then
+  tar -xjvf ${SOURCE}
+elif $(file ${SOURCE} | grep -q ": gzip"); then
+  tar -xzvf ${SOURCE}
+fi
+mv ${SRCNAM} ${PRGNAM}-${VERSION}
+cd ${PRGNAM}-${VERSION}
+chown -R root:root .
+chmod -R u+w,go+r-w,a-s .
+
+# Install font:
+cp *.ttf $PKG$FONTDIR/
+
+# Add the fontconfig file and symlink.
+mkdir -p $PKG/etc/fonts/conf.{d,avail}
+cp 44-wqy-zenhei.conf $PKG/etc/fonts/conf.avail/
+( cd $PKG/etc/fonts/conf.d && \
+  ln -sf ../conf.avail/44-wqy-zenhei.conf
+)
+
+# Post-install script:
+mkdir -p $PKG/install
+cat <<-EOT > $PKG/install/doinst.sh
+# There's no need to chroot and do this during initial
+# install, since there is a post-install script that
+# does the same thing, saving time.
+# Update X font indexes and the font cache:
+if [ -x /usr/bin/mkfontdir ]; then
+  /usr/bin/mkfontscale $FONTDIR
+  /usr/bin/mkfontdir $FONTDIR
+fi
+if [ -x /usr/bin/fc-cache ]; then
+  /usr/bin/fc-cache $FONTDIR
+fi
+EOT
+
+# Add documentation:
+mkdir -p $PKG/usr/doc/$PRGNAM-$VERSION
+cp -a $DOCS $PKG/usr/doc/$PRGNAM-$VERSION || true
+find $PKG/usr/doc -type f -exec chmod 644 {} \;
+
+# Add a package description:
+mkdir -p $PKG/install
+cat $SRCDIR/slack-desc > $PKG/install/slack-desc
+if [ -f $SRCDIR/doinst.sh ]; then
+  cat $SRCDIR/doinst.sh >> $PKG/install/doinst.sh
+fi
+
+# Build the package:
+cd $PKG
+makepkg --linkadd y --chown n $OUTPUT/${PRGNAM}-${VERSION}-${ARCH}_slamd64-${BUILD}.tgz 2>&1 | tee $OUTPUT/makepkg-${PRGNAM}.log

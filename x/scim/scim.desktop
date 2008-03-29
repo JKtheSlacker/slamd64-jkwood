@@ -1,0 +1,19 @@
+[Desktop Entry]
+Comment=
+Comment[zh_CN]=
+Encoding=UTF-8
+Exec=scim -d
+GenericName=
+GenericName[zh_CN]=
+Icon=/usr/share/pixmaps/scim-setup.png
+MimeType=
+Name=
+Name[zh_CN]=
+Path=
+StartupNotify=true
+Terminal=false
+TerminalOptions=
+Type=Application
+X-DCOP-ServiceType=
+X-KDE-SubstituteUID=false
+X-KDE-Username=
