@@ -35,7 +35,7 @@ TARGET32=${TARGET32:-i486} # only needed on multilib
 
 DISTRO=${DISTRO:-slamd64}
 
-BUILD=${BUILD:-5}
+BUILD=${BUILD:-6}
 
 # Automatically work out our libdir
 if [ $DISTRO = slamd64 ]; then
@@ -91,6 +91,8 @@ apply_patches() {
   zcat $CWD/glibc.ru_RU.CP1251.diff.gz | patch -p1 --verbose || exit 1
   # Fix missing MAX macro in getcwd.c:
   zcat $CWD/glibc.getcwd.max.macro.diff.gz | patch -p1 --verbose || exit 1
+  # Slamd64 - Disable check for forced unwind (Patch from eglibc)
+  zcat $CWD/glibc.pthread-disable-forced-unwind-check.diff.gz | patch -p1 --verbose || exit 1
   # Update the timezone information.
   ( cd timezone
     tar xzf $CWD/tzdata2008a.tar.gz || exit 1
@@ -197,9 +199,11 @@ build_glibc() {
 	  --prefix=/usr \
 		--libdir=/usr/lib${LIBSUFFIX} \
 	  --enable-kernel=2.6.16 \
-	  --enable-profile \
 	  --with-headers=${KERNEL_HEADERS} \
 	  --enable-add-ons=libidn,nptl \
+	  --enable-profile \
+	  --infodir=/usr/info \
+	  --mandir=/usr/man \
 	  --with-tls \
 	  --with-__thread \
 	  --without-cvs \
