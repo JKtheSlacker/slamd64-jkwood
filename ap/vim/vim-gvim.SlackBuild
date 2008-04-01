@@ -10,7 +10,22 @@ VIMVER=7.1
 DIRVER=71
 PYVER=2.5
 ARCH=${ARCH:-x86_64}
-BUILD=2
+BUILD=1
+DISTRO=${DISTRO:-slamd64}
+
+if [ $DISTRO = slackware ]; then
+	PKGARCH=$ARCH
+else
+	PKGARCH=${ARCH}_${DISTRO}
+fi
+
+if [ $DISTRO = slamd64 ]; then
+	LIBSUFFIX=64
+	SLKLDFLAGS="-L/usr/lib64"
+else
+	LIBSUFFIX=
+	SLKLDFLAGS=
+fi
 
 PKG=$TMP/package-vim-gvim
 rm -rf $PKG
@@ -28,8 +43,8 @@ fi
 
 cd $TMP
 rm -rf vim$DIRVER
-tar xjvf $CWD/vim-$VIMVER.tar.bz2
-tar xjvf $CWD/vim-$VIMVER-lang.tar.bz2
+tar xjvf $CWD/vim-$VIMVER.tar.bz2 || exit 1
+tar xjvf $CWD/vim-$VIMVER-lang.tar.bz2 || exit 1
 
 config_vim() {
 CFLAGS="-O2 -fPIC" \
@@ -37,14 +52,14 @@ CFLAGS="-O2 -fPIC" \
   $* \
   --prefix=/usr \
   --enable-pythoninterp \
-  --with-python-config-dir=/usr/lib64/python$PYVER/config \
+  --with-python-config-dir=/usr/lib$LIBSUFFIX/python$PYVER/config \
   --enable-perlinterp \
   --disable-tclinterp \
   --enable-multibyte \
   --enable-cscope \
   --with-features=huge \
   --with-compiledby="<mail@fredemmott.co.uk>" \
-  $ARCH-slamd64-linux
+  --build=$ARCH-slamd64-linux
 
   # I had been adding this, but got 100% complaints and 0% kudos:
   #  --enable-rubyinterp
@@ -55,9 +70,11 @@ cd $TMP/vim$DIRVER
 chown -R root:root .
 for file in $CWD/patches/* ; do
   ( zcat $file 2> /dev/null | patch -p0 --verbose --batch )
-done
+  done
+zcat $CWD/sh.vim.diff.gz | patch -p0 --verbose || exit 1
+
 config_vim --with-x --enable-gui=gtk2
-make -j 10
+make -j2 || exit 1
 make install DESTDIR=$PKG
 
 # Fix manpage symlinks:
@@ -88,12 +105,6 @@ fi
 ( cd $PKG/usr/bin ; ln -sf vim eview )
 ( cd $PKG/usr/bin ; rm -rf evim )
 ( cd $PKG/usr/bin ; ln -sf vim evim )
-
-mkdir -p $PKG/usr/doc/vim-$VIMVER.$PATCHLEVEL
-cp -a README.txt $PKG/usr/doc/vim-$VIMVER.$PATCHLEVEL
-find $PKG/usr/doc/vim-$VIMVER.$PATCHLEVEL -type f | xargs chmod 644
-( cd $PKG/usr/doc/vim-$VIMVER.$PATCHLEVEL ; rm -rf doc )
-( cd $PKG/usr/doc/vim-$VIMVER.$PATCHLEVEL ; ln -sf /usr/share/vim/vim$DIRVER doc )
 
 mkdir -p $PKG/install
 cat $CWD/slack-desc.vim-gvim > $PKG/install/slack-desc
@@ -158,5 +169,5 @@ cp -a $CWD/gvim.png $PKG/usr/share/pixmaps
 find $PKG -type d -exec rmdir -p {} \; 2> /dev/null
 
 cd $PKG
-makepkg -l y -c n $TMP/vim-gvim-$VIMVER.$PATCHLEVEL-${ARCH}_slamd64-$BUILD.tgz
+makepkg -l y -c n $TMP/vim-gvim-$VIMVER.$PATCHLEVEL-$PKGARCH-$BUILD.tgz
 

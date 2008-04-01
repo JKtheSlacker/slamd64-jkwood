@@ -6,12 +6,27 @@ if [ "$TMP" = "" ]; then
 fi
 
 VIMVER=7.1
-CTAGSVER=5.6
+CTAGSVER=5.7
 # This is the directory in the VIM source archive to cd into.
 DIRVER=71
 PYVER=2.5
 ARCH=${ARCH:-x86_64}
-BUILD=2
+BUILD=1
+DISTRO=${DISTRO:-slamd64}
+
+if [ $DISTRO = slackware ]; then
+	PKGARCH=$ARCH
+else
+	PKGARCH=${ARCH}_${DISTRO}
+fi
+
+if [ $DISTRO = slamd64 ]; then
+	LIBSUFFIX=64
+	SLKLDFLAGS="-L/usr/lib64"
+else
+	LIBSUFFIX=
+	SLKLDFLAGS=
+fi
 
 PKG=$TMP/package-vim
 rm -rf $PKG
@@ -31,14 +46,14 @@ fi
 # but now we have to bundle it in
 cd $TMP
 rm -rf ctags-$CTAGSVER
-tar xzvf $CWD/ctags-$CTAGSVER.tar.gz
+tar xzvf $CWD/ctags-$CTAGSVER.tar.gz || exit 1
 cd ctags-$CTAGSVER
 chown -R root:root .
 CFLAGS="-O2 -fPIC" \
 ./configure \
   --prefix=/usr \
-  $ARCH-slamd64-linux
-make -j 10
+  --build=$ARCH-$DISTRO-linux
+make -j2 || exit 1
 mkdir -p $PKG/usr/bin
 cat ctags > $PKG/usr/bin/ctags
 chmod 755 $PKG/usr/bin/ctags
@@ -52,8 +67,8 @@ chmod 644 $PKG/usr/doc/ctags-$CTAGSVER/*
 
 cd $TMP
 rm -rf vim$DIRVER
-tar xjvf $CWD/vim-$VIMVER.tar.bz2
-tar xjvf $CWD/vim-$VIMVER-lang.tar.bz2
+tar xjvf $CWD/vim-$VIMVER.tar.bz2 || exit 1
+tar xjvf $CWD/vim-$VIMVER-lang.tar.bz2 || exit 1
 
 config_vim() {
 CFLAGS=-O2 \
@@ -61,14 +76,14 @@ CFLAGS=-O2 \
   $* \
   --prefix=/usr \
   --enable-pythoninterp \
-  --with-python-config-dir=/usr/lib64/python$PYVER/config \
+  --with-python-config-dir=/usr/lib$LIBSUFFIX/python$PYVER/config \
   --enable-perlinterp \
   --disable-tclinterp \
   --enable-multibyte \
   --enable-cscope \
   --with-features=huge \
   --with-compiledby="<mail@fredemmott.co.uk>" \
-  $ARCH-slamd64-linux
+  --build=$ARCH-slamd64-linux
 
   # I had been adding this, but got 100% complaints and 0% kudos:
   #  --enable-rubyinterp
@@ -78,10 +93,11 @@ cd $TMP/vim$DIRVER
 chown -R root:root .
 for file in $CWD/patches/* ; do
   ( zcat $file 2> /dev/null | patch -p0 --verbose --batch )
-done
+  done
+zcat $CWD/sh.vim.diff.gz | patch -p0 --verbose || exit 1
 
 config_vim --without-x --disable-gui
-make
+make -j2 || exit 1
 make install DESTDIR=$PKG
 
 cp -a runtime/vimrc_example.vim runtime/vimrc.new
@@ -152,4 +168,4 @@ zcat $CWD/doinst.sh.gz >> $PKG/install/doinst.sh
 )
 
 cd $PKG
-makepkg -l y -c n $TMP/vim-$VIMVER.$PATCHLEVEL-${ARCH}_slamd64-$BUILD.tgz
+makepkg -l y -c n $TMP/vim-$VIMVER.$PATCHLEVEL-$PKGARCH-$BUILD.tgz
