@@ -6,11 +6,11 @@ rm -rf $PKG
 mkdir -p $PKG/usr
 
 # Version on the tarball
-VERSION=1.1.11
+VERSION=1.1.11.1
 # Version used in the source directory to cd into
-DIRVER=1.1.11
+DIRVER=1.1.11.1
 # Version used for the Slackware package
-PKGVER=1.1.11
+PKGVER=1.1.11.1
 
 # I would use "-march=i486 -mtune=i686" here as usual, but with XINE it's all or nothing.
 # I'd rather have it work well for the i686/Athlon crowd than suck for everyone.
@@ -40,14 +40,13 @@ find . -perm 777 -exec chmod 755 {} \;
 XINE_BUILD=$TARGET \
 ./configure \
   --prefix=/usr \
-	--libdir=/usr/lib$LIBSUFFIX \
-  --with-arts \
+  --libdir=/usr/lib$LIBSUFFIX \
   --mandir=/usr/man \
-	--with-real-codecs-path=/usr/lib$LIBSUFFIX/codecs
-  --with-w32-path=/usr/lib$LIBSUFFIX/codecs
-make -j10 || exit 1
+  --with-xv-path=/usr/lib$LIBSUFFIX \
+  --with-w32-path=/usr/lib/codecs
+make -j4 || exit 1
 make install DESTDIR=$PKG
-mkdir -p $PKG/usr/lib$LIBSUFFIX/codecs
+mkdir -p $PKG/usr/lib/codecs
 ( cd $PKG
   find . | xargs file | grep ELF | cut -f 1 -d : | xargs strip --strip-unneeded
 )
