@@ -1,3 +1,15 @@
+Thu Feb 28 17:47:21 CST 2008 <pjv>
+  Upgraded these source files:
+  asciidoc-8.2.5.tar.gz
+  docbook-utils-0.6.14-13.fc9.src.rpm
+  docbook-xsl-1.73.2.tar.bz2
+  docbook-xsl-doc-1.73.2.tar.bz2
+  gtk-doc-1.9.tar.bz2
+  libsgmls-perl_1.03ii-32.diff.gz
+  linuxdoc-tools_0.9.21-0.11.tar.gz
+  sgml-common-0.6.3-23.fc9.src.rpm
+  xmlto-0.0.20.tar.bz2
+
 Sat May  5 13:38:46 BST 2007
  Stuart Winter <mozes@slackware.com>
  linuxdoc-tools-0.9.21, build 4
