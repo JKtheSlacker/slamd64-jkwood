@@ -4,6 +4,7 @@
 # $2 = slamd64 initrd
 
 BBVER=1.4.2
+CWD=$(pwd)
 
 if [ $(whoami) != "root" ]; then
 	echo "You must be root to run this script."
@@ -45,11 +46,12 @@ done
 depmod -ae -b $PWD
 
 echo "# Replacing busybox and dropbear"
-install -oroot -groot -m755 /tmp/busybox-$BBVER/_install/bin/busybox bin/busybox
-install -oroot -groot -m755 /tmp/pkg-dropbear/bin/dropbearmulti bin/dropbearmulti
+cat /tmp/busybox-$BBVER/_install/bin/busybox > bin/busybox
+cat /tmp/pkg-dropbear/bin/dropbearmulti > bin/dropbearmulti
 
 echo "# Replacing 32-bit binaries with 64-bit binaries"
 for file in $(find -type f | xargs file | grep "ELF 32" | cut -f1 -d: ); do
+	rm $file
 	sfile=$(basename $file .bin)
 	if echo $file | grep -q '\.so'; then
 		# Got a library
@@ -84,6 +86,9 @@ for dir in lib usr/lib; do
 		ldconfig -n .
 	)
 done
+
+echo "# Installing SeTPKG"
+cat $CWD/SeTPKG > usr/lib/setup/SeTPKG
 
 echo "# Creating new compressed initrd image"
 find . | cpio -o -H newc | gzip -9c > $2
