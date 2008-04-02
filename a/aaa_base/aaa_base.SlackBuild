@@ -6,7 +6,7 @@ if [ "$TMP" = "" ]; then
 fi
 PKG=$TMP/package-aaa_base
 
-VERSION=12.0.0
+VERSION=12.1.0
 ARCH=noarch_slamd64
 BUILD=1
 
