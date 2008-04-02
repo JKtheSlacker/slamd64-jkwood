@@ -1,0 +1,237 @@
+#!/bin/sh
+
+# Copyright 2008  Patrick J. Volkerding, Sebeka, MN, USA
+# Copyright 2008  Frederick Emmott
+# All rights reserved.
+#
+# Redistribution and use of this script, with or without modification, is
+# permitted provided that the following conditions are met:
+#
+# 1. Redistributions of this script must retain the above copyright
+#    notice, this list of conditions and the following disclaimer.
+#
+#  THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR IMPLIED
+#  WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+#  MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.  IN NO
+#  EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+#  SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+#  PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+#  OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+#  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+#  OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+#  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+# Slackware build script for util-linux-ng
+
+PKGNAM=util-linux-ng
+VERSION=${VERSION:-2.13.1}
+BUILD=${BUILD:-1}
+
+. /etc/pkghelpers
+pkghelpers_env
+
+ADJTIMEXVERS=1.23
+SETSERIALVERS=2.17
+ZIPTOOLVERS=1.4.0
+
+rm -rf $PKG
+mkdir -p $TMP $PKG
+cd $TMP || exit 1
+rm -rf util-linux-ng-$VERSION
+tar xvf $CWD/util-linux-ng-$VERSION.tar.bz2 || exit 1
+cd util-linux-ng-$VERSION || exit 1
+pkghelpers_permissions
+
+# Disabled login and init stuff from being built, as this is provided by 
+# shadow and sysvinit
+#
+# /sbin/elvtune is not built, as configure says it only works with 2.2 and 
+#   2.4 kernels
+
+# This block is handled near the bottom of the script in symlink creation
+# /bin/setterm -- now located in /usr/bin/setterm (might want to move and 
+#   symlink ?)
+# /bin/getopt -- same as setterm
+# /usr/bin/readprofile -- now in /usr/sbin (might cause problems for some
+#   scripts ?)
+# /usr/bin/tunelp -- same as readprofile
+
+# /usr/bin/clear -- not provided (part of ncurses package)
+# /usr/bin/tput -- not provided (part of ncurses package)
+# /usr/bin/setfdprm -- not provided (part of floppy package)
+
+# You'll have to rebuild nfs-utils and kill these lines in the build
+# script, as the mount code in util-linux-ng doesn't include the nfs
+# helpers (and thus nfs mounts fail)
+#  # Remove things that seem like bad ideas, and hope it all still works:
+#  rm -f $PKG/sbin/*mount* $PKG/usr/man/man8/*mount.nfs*
+#  rm -f $PKG/var/lib/nfs/*
+
+# Changing the fdisk -l output (this was done prior to util-linux-ng) broke
+# our installation scripts, so we have changed the name of partition type
+# 83 back to "Linux swap":
+zcat $CWD/util-linux-ng.fdisk-no-solaris.diff.gz | patch -p1 || exit 1
+
+CFLAGS="$SLKCFLAGS" \
+./configure \
+  --prefix=/usr \
+  --libdir=/usr/lib64 \
+  --sysconfdir=/etc \
+  --localstatedir=/var \
+  --mandir=/usr/man \
+  --infodir=/usr/info \
+  --docdir=/usr/doc/util-linux-ng-$VERSION \
+  --enable-arch \
+  --enable-agetty \
+  --disable-init \
+  --enable-kill \
+  --enable-rdev \
+  --disable-last \
+  --enable-mesg \
+  --enable-raw \
+  --enable-rename \
+  --enable-reset \
+  --disable-login-utils \
+  --enable-schedutils \
+  --enable-wall \
+  --enable-write \
+  --enable-use-tty-group \
+  --build=$ARCH-$DISTRO-linux \
+  --host=$ARCH-$DISTRO-linux \
+  || exit 1
+
+make || exit 1
+make install DESTDIR=$PKG
+
+# Install (probably obsolete) rdev manually:
+cat ./sys-utils/rdev > $PKG/sbin/rdev
+chown root:root $PKG/sbin/rdev
+chmod 755 $PKG/sbin/rdev
+#cat ./sys-utils/rdev.8 | gzip -9c > $PKG/usr/man/man8/rdev.8.gz
+
+# Build ziptool
+cd $TMP || exit 1
+rm -rf ziptool-$ZIPTOOLVERS
+tar xvf $CWD/ziptool-$ZIPTOOLVERS.tar.bz2 || exit 1
+cd ziptool-$ZIPTOOLVERS || exit 1
+make || exit 1
+strip ziptool
+cat ziptool > $PKG/sbin/ziptool
+chmod 0755 $PKG/sbin/ziptool
+mkdir -p $PKG/usr/doc/ziptool-$ZIPTOOLVERS
+install -oroot -groot -m644 README $PKG/usr/doc/ziptool-$ZIPTOOLVERS
+chmod 644 $PKG/usr/doc/ziptool-$ZIPTOOLVERS/*
+cat ziptool.1.gz > $PKG/usr/man/man1/ziptool.1.gz
+
+# Build bsdstrings
+cd $TMP || exit 1
+rm -rf bsdstrings
+tar xvf $CWD/bsdstrings.tar.gz || exit 1
+cd bsdstrings || exit 1
+make || exit 1
+strip strings
+cat strings > $PKG/usr/bin/strings
+chmod 0755 $PKG/usr/bin/strings
+cat strings.1 | gzip -9c > $PKG/usr/man/man1/strings.1.gz
+
+# Add just the hostname utilities from net-tools, so that anyone
+# installing just the A series will not have a hostname (null):
+cd $TMP || exit 1
+rm -rf net-tools-1.60
+tar xjvf $CWD/net-tools-1.60.tar.bz2
+cd net-tools-1.60
+zcat $CWD/net-tools.diff.gz | patch -p1 || exit
+zcat $CWD/net-tools_1.60-19.diff.gz | patch -p1 || exit
+make
+make hostname
+strip hostname
+cat hostname > $PKG/bin/hostname
+chmod 755 $PKG/bin/hostname
+chown root:root $PKG/bin/hostname
+( cd $PKG/bin
+  ln -sf hostname dnsdomainname
+  ln -sf hostname nisdomainname
+  ln -sf hostname ypdomainname
+  ln -sf hostname domainname
+)
+cd man/en_US
+for page in hostname.1 dnsdomainname.1 nisdomainname.1 ypdomainname.1 \
+domainname.1 ; do
+  cat $page | gzip -9c > $PKG/usr/man/man1/$page.gz
+done
+
+# Build adjtimex
+cd $TMP || exit 1
+rm -rf adjtimex-$ADJTIMEXVERS
+tar xvf $CWD/adjtimex_${ADJTIMEXVERS}.orig.tar.gz || exit 1
+cd adjtimex-$ADJTIMEXVERS || exit 1
+zcat $CWD/adjtimex_1.23-1.diff.gz | patch -p1 || exit 1
+CFLAGS=-O2 ./configure --prefix=/usr || exit 1
+make || exit 1
+strip adjtimex
+cat adjtimex > $PKG/sbin/adjtimex
+chmod 0755 $PKG/sbin/adjtimex
+cat adjtimex.8 | gzip -9c > $PKG/usr/man/man8/adjtimex.8.gz
+mkdir -p $PKG/usr/doc/adjtimex-$ADJTIMEXVERS
+install -oroot -groot -m644 COPYING COPYRIGHT README README.ru adjtimex.lsm \
+  $PKG/usr/doc/adjtimex-$ADJTIMEXVERS
+
+# Build setserial
+cd $TMP || exit 1
+rm -rf setserial-$SETSERIALVERS
+tar xvf $CWD/setserial-$SETSERIALVERS.tar.gz || exit 1
+cd setserial-$SETSERIALVERS || exit 1
+zcat $CWD/setserial-rc.serial.diff.gz | patch -E -p1 --verbose || exit 1
+./configure --prefix=/usr || exit 1
+make || exit 1
+strip setserial
+cat setserial > $PKG/sbin/setserial
+chmod 0755 $PKG/sbin/setserial
+mkdir -p $PKG/etc/rc.d
+cat rc.serial > $PKG/etc/rc.d/rc.serial.new
+cat serial.conf > $PKG/etc/serial.conf.new
+cat setserial.8 | gzip -9c > $PKG/usr/man/man8/setserial.8.gz
+
+# These have always traditionally been available before /usr
+# might be mounted:
+( cd $PKG/usr/bin
+  mv getopt setterm $PKG/bin
+  cd $PKG/usr/bin
+  ln -s ../../bin/getopt .
+  ln -s ../../bin/setterm .
+)
+
+cd $TMP/util-linux-ng-$VERSION # Go back home :)
+
+# Now let's add some important symlinks :)
+( cd $PKG/sbin
+  ln -s ../bin/mount .
+  ln -s ../bin/umount .
+  ln -s ziptool jaztool
+  ln -s hwclock clock
+  cd $PKG/usr/sbin
+  ln -s ../../sbin/cfdisk .
+  ln -s ../../sbin/ctrlaltdel .
+  ln -s ../../sbin/sfdisk .
+  cd $PKG/usr/bin
+  ln -s ../sbin/readprofile .
+  ln -s ../sbin/tunelp .
+  ln -s ../../bin/more .
+  ln -s ../../sbin/raw .
+  cd $PKG/usr/man/man1
+  ln -s ziptool.1 jaztool.1
+  cd $PKG/usr/man/man8
+  ln -s hwclock.8 clock.8
+)
+
+mkdir -p $PKG/usr/doc/util-linux-ng-$VERSION
+cp ABOUT-NLS AUTHORS COPYING DEPRECATED NEWS README* TODO \
+  $PKG/usr/doc/util-linux-ng-$VERSION
+
+mkdir $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+zcat $CWD/doinst.sh.gz > $PKG/install/doinst.sh
+
+cd $PKG
+pkghelpers_fixup
+pkghelpers_makepkg
