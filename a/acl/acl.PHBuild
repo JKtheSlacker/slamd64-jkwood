@@ -1,7 +1,7 @@
 #!/bin/sh
 PKGNAM=acl
-VERSION=2.2.39-1
-BUILD=2
+VERSION=2.2.47-1
+BUILD=1
 
 . /etc/pkghelpers
 pkghelpers_env
@@ -49,7 +49,7 @@ autoconf
   --mandir=/usr/man \
   --datadir=/usr/share
 
-make -j12 || exit 1
+make -j5 || exit 1
 make install DESTDIR=$PKG
 make install-dev DESTDIR=$PKG
 make install-lib DESTDIR=$PKG
