@@ -1,6 +1,6 @@
 #!/bin/sh
 PKGNAM=xfsprogs
-VERSION=2.8.16-1
+VERSION=2.9.7-1
 BUILD=1
 
 PKGVER=$(echo $VERSION | tr - _)
@@ -45,7 +45,7 @@ autoconf
   --mandir=/usr/man \
   --datadir=/usr/share
 
-make -j12 || exit 1
+make -j5 || exit 1
 make install DIST_ROOT=$PKG
 make install-dev DIST_ROOT=$PKG
 make install-lib DIST_ROOT=$PKG
