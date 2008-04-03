@@ -12,7 +12,7 @@ mkdir -p $PKG
 
 VERSION=${VERSION:-1.2}
 ARCH=${ARCH:-noarch}
-BUILD=${BUILD:-5}
+BUILD=${BUILD:-6}
 
 # Install Slackware scripts and config files from $CWD/scripts/:
 mkdir -p $PKG/etc/rc.d

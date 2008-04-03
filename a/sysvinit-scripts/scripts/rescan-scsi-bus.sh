@@ -386,7 +386,7 @@ dosearch ()
       idlist
     fi
     for id in $idsearch; do
-      if test -z $lunsearch ; then
+      if test -z "$lunsearch" ; then
 	doreportlun
       else
 	for lun in $lunsearch; do
