@@ -30,7 +30,7 @@
 PKGNAM=hal
 VERSION=0.5.10
 PKG_VERSION=0.5.10
-BUILD=${BUILD:-1}
+BUILD=${BUILD:-2}
 
 . /etc/pkghelpers
 pkghelpers_env
@@ -66,6 +66,7 @@ CXXFLAGS="$SLKCFLAGS" \
   --enable-acpi-ibm \
   --enable-acpi-toshiba \
   --enable-sonypic \
+  --enable-umount-helper \
   --build=$ARCH-$DISTRO-linux \
   --host=$ARCH-$DISTRO-linux \
   || exit 1

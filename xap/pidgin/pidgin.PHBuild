@@ -22,7 +22,7 @@
 
 
 PKGNAM=pidgin
-VERSION=${VERSION:-2.4.0}
+VERSION=${VERSION:-2.4.1}
 PIDGINENC=${PIDGINENC:-3.0}
 BUILD=${BUILD:-1}
 
@@ -44,7 +44,7 @@ pkghelpers_permissions
 CFLAGS="$SLKCFLAGS" \
 ./configure \
   --prefix=/usr \
-	--libdir=/usr/lib$LIBSUFFIX \
+  --libdir=/usr/lib$LIBSUFFIX \
   --sysconfdir=/etc \
   --mandir=/usr/man \
   --enable-dot=no \
@@ -84,7 +84,7 @@ find $PKG -type f -name '*.bs' -empty -exec rm -f {} \;
   PURPLE_LIBS="-L${PKG}/usr/lib$LIBSUFFIX" \
   ./configure \
   --prefix=/usr \
-	--libdir=/usr/lib$LIBSUFFIX \
+  --libdir=/usr/lib$LIBSUFFIX \
   --disable-static \
   --with-nss-includes=/usr/include/seamonkey/nss \
   --with-nspr-includes=/usr/include/seamonkey/nspr \

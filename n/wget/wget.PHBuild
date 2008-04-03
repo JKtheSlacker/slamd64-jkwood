@@ -1,6 +1,6 @@
 #!/bin/sh
 PKGNAM=wget
-VERSION=1.11
+VERSION=1.11.1
 BUILD=${BUILD:-1}
 
 . /etc/pkghelpers

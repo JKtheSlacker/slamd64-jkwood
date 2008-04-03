@@ -22,9 +22,9 @@
 
 PKGNAM=bind
 
-VERSION=${VERSION:-9.4.1-P1}
+VERSION=${VERSION:-9.4.2}
 PKGVER=$(echo $VERSION | tr - _)
-BUILD=2
+BUILD=1
 
 . /etc/pkghelpers
 
@@ -67,10 +67,11 @@ find . \
 CFLAGS="$SLKCFLAGS" \
 ./configure \
   --prefix=/usr \
-	--libdir=/usr/lib$LIBSUFFIX \
+  --libdir=/usr/lib$LIBSUFFIX \
   --sysconfdir=/etc \
   --localstatedir=/var \
   --with-libtool \
+  --mandir=/usr/man \
   --enable-shared \
   --disable-static \
   --enable-threads \

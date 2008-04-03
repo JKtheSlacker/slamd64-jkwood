@@ -23,7 +23,7 @@
 PKGNAM=net-tools
 VERSION=${VERSION:-1.60}
 ARCH=${ARCH:-x86_64}
-BUILD=${BUILD:-1}
+BUILD=${BUILD:-2}
 DISTRO=${DISTRO:-slamd64}
 
 if [ $DISTRO = slackware ]; then
@@ -68,7 +68,7 @@ find . -perm 511 -exec chmod 755 {} \;
 find . -perm 711 -exec chmod 755 {} \;
 find . -perm 555 -exec chmod 755 {} \;
 
-zcat $CWD/net-tools_1.60-17.diff.gz | patch -p1 --backup || exit
+zcat $CWD/net-tools_1.60-19.diff.gz | patch -p1 --backup || exit
 zcat $CWD/net-tools.diff.gz | patch -p1 --backup || exit
 
 mkdir -p $PKG/usr/doc/net-tools-1.60

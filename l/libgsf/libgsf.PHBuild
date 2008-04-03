@@ -1,6 +1,6 @@
 #!/bin/sh
 PKGNAM=libgsf
-VERSION=1.14.7
+VERSION=1.14.8
 BUILD=1
 
 . /etc/pkghelpers

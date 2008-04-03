@@ -47,8 +47,8 @@
 
 PRGNAM=wqy-zenhei-font-ttf
 SRCNAM=wqy-zenhei
-VERSION=${VERSION:-0.4.23}
-SUB=${SUB:-1}
+VERSION=${VERSION:-0.5.23}
+SUB=${SUB:-0}
 ARCH=noarch
 BUILD=${BUILD:-1}
 
@@ -64,7 +64,11 @@ TMP=${TMP:-/tmp/build}
 PKG=$TMP/package-$PRGNAM
 OUTPUT=${OUTPUT:-/tmp}
 
-SOURCE="$SRCDIR/${SRCNAM}-${VERSION}-${SUB}.tar.gz"
+if [ "$SUB" = "0" ]; then
+  SOURCE="$SRCDIR/${SRCNAM}-${VERSION}.tar.bz2"
+else
+  SOURCE="$SRCDIR/${SRCNAM}-${VERSION}-${SUB}.tar.bz2"
+fi
 
 ##
 ## --- with a little luck, you won't have to edit below this point --- ##
