@@ -4,7 +4,7 @@
 CWD=`pwd`
 
 ARCH=${ARCH:-x86_64}
-VERSION=${VERSION:-0.9.3.3}
+VERSION=${VERSION:-0.9.4}
 BUILD=1
 DISTRO=${DISTRO:-slamd64}
 
@@ -26,7 +26,7 @@ cd madwifi-$VERSION
 make TARGET=$ARCH-elf TOOLPREFIX= KERNELRELEASE=$KERNEL KERNELPATH=/lib/modules/$KERNEL/build
 make install DESTDIR=$PKG BINDIR=/usr/bin MANDIR=/usr/man KERNELPATH=/lib/modules/$KERNEL/build
 cd tools
-make -j10 KERNELPATH=/lib/modules/$KERNEL/build KERNELRELEASE=$KERNEL KERNELCONF=/lib/modules/$KERNEL/build/.conf
+make -j5 KERNELPATH=/lib/modules/$KERNEL/build KERNELRELEASE=$KERNEL KERNELCONF=/lib/modules/$KERNEL/build/.conf
 mkdir -p $PKG/usr/bin
 make install DESTDIR=$PKG BINDIR=/usr/bin MANDIR=/usr/man KERNELPATH=/lib/modules/$KERNEL/build KERNELRELEASE=$KERNEL
 
