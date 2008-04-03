@@ -1,12 +1,13 @@
 #!/bin/sh
 CWD=`pwd`
 TMP=${TMP:-/tmp}
-PKG=$TMP/package-xlibs32
+PKG=${PKG:-$TMP/package-xlibs32}
 
 VERSION=2.4.2
 export ARCH=${ARCH:-x86_64}
 BUILD=${BUILD:-1}
 DISTRO=${DISTRO:-slamd64}
+NUMJOBS=${NUMJOBS:-10}
 
 if [ "$ARCH" = "i386" ]; then
   SLKCFLAGS="-O2 -march=i386 -mcpu=i686"
@@ -22,12 +23,6 @@ if [ $DISTRO = slackware ]; then
 	PKGARCH=$ARCH
 else
 	PKGARCH=${ARCH}_${DISTRO}
-fi
-
-if [ $DISTRO = slamd64 ]; then
-	LIBSUFFIX=${LIBSUFFIX:-64}
-else
-	LIBSUFFIX=${LIBSUFFIX:-""}
 fi
 
 #rm -rf $PKG
@@ -64,16 +59,18 @@ zcat $CWD/fontconfig.dejavu.diff.gz | patch -p1 --verbose || exit 1
 # index ugly bitmapped fonts):
 zcat $CWD/fontconfig.font.dir.list.diff.gz | patch -p1 --verbose --backup --suffix=.orig || exit 1
 
-CFLAGS="$SLKCFLAGS" \
+LDFLAGS="-L/usr/lib$LIBSUFFIX" \
+CFLAGS="$SLKCFLAGS -m32" \
 ./configure \
   --prefix=$FCPREFIX \
 	--libdir=$FCPREFIX/lib$LIBSUFFIX \
+	--disable-docs \
   --mandir=/usr/man \
   --sysconfdir=/etc \
   --localstatedir=/var
 
 # Uses a currently non-functional sgml tool, thus '-i':
-make -i -j10
+make -i -j$NUMJOBS
 make -i install DESTDIR=$PKG
 
 # This ought to be easily found here, but it's still safer to move it:

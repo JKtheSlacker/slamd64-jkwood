@@ -2,19 +2,16 @@
 CWD=`pwd`
 TMP=${TMP:-/tmp}
 
-VERSION=2.3.4
+VERSION=2.3.5
 ARCH=${ARCH:-x86_64}
 BUILD=${BUILD:-1}
 DISTRO=${DISTRO:-slamd64}
+NUMJOBS=${NUMJOBS:-10}
 
 if [ $DISTRO = slackware ]; then
 	PKGARCH=$ARCH
 else
 	PKGARCH=${ARCH}_${DISTRO}
-fi
-
-if [ $DISTRO = slamd64 ]; then
-	LIBSUFFIX=${LIBSUFFIX:-64}
 fi
 
 if [ "$ARCH" = "i386" ]; then
@@ -27,7 +24,7 @@ elif [ "$ARCH" = "x86_64" ]; then
   SLKCFLAGS="-O2 -fPIC"
 fi
 
-PKG=$TMP/package-xlibs32
+PKG=${PKG:-$TMP/package-xlibs32}
 #rm -rf $PKG
 mkdir -p $PKG
 
@@ -68,19 +65,9 @@ zcat $CWD/freetype.illadvisederror.diff.gz | patch -p1 --verbose || exit 1
 #zcat $CWD/freetype.subpixel.rendering.diff.gz | patch -p1 --verbose || exit 1
 
 chown -R root:root .
-CFLAGS="$SLKCFLAGS" make setup CFG="--prefix=/usr --libdir=/usr/lib$LIBSUFFIX $ARCH-$DISTRO-linux"
-make -j10 || exit 1
+CC="gcc -m32" CFLAGS="$SLKCFLAGS -m32" make setup CFG="--prefix=/usr --libdir=/usr/lib$LIBSUFFIX $ARCH-$DISTRO-linux"
+make -j$NUMJOBS || exit 1
 make install DESTDIR=$PKG
-
-# This shouldn't be needed (apps should pick up -I/usr/include/freetype2 from
-# `freetype-config --cflags` while compiling), but it's so often reported as a bug that
-# I'll give in to the point.  Now that Freetype1 is pretty much gone having this link
-# shouldn't hurt anything.  Try not to rely on it, though.
-mkdir -p $PKG/usr/include
-( cd $PKG/usr/include
-  rm -rf freetype
-  ln -sf freetype2/freetype .
-)
 
 # Can't imagine a lot of use for this:
 rm -f $PKG/usr/lib$LIBSUFFIX/*.a
@@ -89,18 +76,4 @@ rm -f $PKG/usr/lib$LIBSUFFIX/*.a
   find . | xargs file | grep "executable" | grep ELF | cut -f 1 -d : | xargs strip --strip-unneeded 2> /dev/null
   find . | xargs file | grep "shared object" | grep ELF | cut -f 1 -d : | xargs strip --strip-unneeded 2> /dev/null
 )
-
-mkdir -p $PKG/usr/doc/freetype-$VERSION
-cp -a \
-  docs \
-  README \
-  $PKG/usr/doc/freetype-$VERSION
-# too much
-rm -rf $PKG/usr/doc/freetype-$VERSION/docs/reference
-
-#mkdir $PKG/install
-#cat $CWD/slack-desc > $PKG/install/slack-desc
-
-#cd $PKG
-#makepkg -l y -c n $TMP/freetype-$VERSION-$PKGARCH-$BUILD.tgz
 

@@ -1,0 +1,118 @@
+#!/bin/sh
+# Copyright 2008  Carlos Corbacho
+# All rights reserved.
+#
+# Redistribution and use of this script, with or without modification, is
+# permitted provided that the following conditions are met:
+#
+# 1. Redistributions of this script must retain the above copyright
+#    notice, this list of conditions and the following disclaimer.
+#
+#  THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR IMPLIED
+#  WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+#  MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.  IN NO
+#  EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+#  SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+#  PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+#  OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+#  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+#  OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+#  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+# Set initial variables:
+PKGNAM=xlibs32
+VERSION=${VERSION:-7.3}
+ARCH=${ARCH:-x86_64}
+BUILD=${BUILD:-1}
+DISTRO=${DISTRO:-slamd64}
+NUMJOBS=${NUMJOBS:-3}
+
+if [ $DISTRO = slackware ]; then
+	PKGARCH=$ARCH
+else
+	PKGARCH=${ARCH}_${DISTRO}
+fi
+
+CWD=$(pwd)
+if [ "$TMP" = "" ]; then
+  TMP=/tmp
+fi
+PKG=$TMP/package-${PKGNAM}
+rm -rf $PKG
+mkdir -p $PKG
+
+mkdir -p $TMP/$PKGNAM-$VERSION
+
+# Directory containing X library source tarballs
+SRCDIR=$CWD/src
+
+# Directory for the binaries we want to keep
+mkdir -p $PKG/usr/bin/32
+
+for PACKAGE in `cat modularize`
+do
+  if [ -f $CWD/$PACKAGE/${PACKAGE}32.SlackBuild ]; then
+    ( cd $CWD/$PACKAGE
+      TMP=$TMP PKG=$PKG NUMJOBS=$NUMJOBS . ${PACKAGE}32.SlackBuild
+    )
+  else
+    ( cd $TMP/$PKGNAM-$VERSION
+      SRCVER=$(ls $SRCDIR/*.tar.* | grep ${PACKAGE}- | cut -f 2 -d '-' | sed 's#\.tar\..\+##')
+      tar xfv $SRCDIR/$PACKAGE-${SRCVER}.tar.* || exit 1
+      cd $PACKAGE-$SRCVER
+
+      if [ -f $CWD/configure/$PACKAGE ]; then
+        CONFIGURE=$CWD/configure/$PACKAGE
+      else
+        CONFIGURE=$CWD/configure/configure
+      fi
+
+      CC="gcc -m32" . $CONFIGURE
+      make -j$NUMJOBS || exit 1
+      make install DESTDIR=$PKG || exit 1
+    )
+  fi
+
+  if [ -f $PKG/usr/bin/xft-config ]; then
+    mv $PKG/usr/bin/xft-config $PKG/usr/bin/32
+  fi
+
+  rm $PKG/usr/bin/*
+  rm -rf $PKG/usr/lib/X11
+  rm -rf $PKG/usr/share
+  rm -rf $PKG/usr/doc
+  rm -rf $PKG/usr/include
+  rm -rf $PKG/usr/man
+  rm -rf $PKG/var
+
+  # We need to spam the root partition for the dependencies
+  ( cd $PKG
+    makepkg -l y -c n ../${PKGNAM}_temp-$VERSION-$PKGARCH-$BUILD.tgz
+    removepkg ${PKGNAM}_temp-$VERSION-$PKGARCH-$BUILD
+    installpkg ../${PKGNAM}_temp-$VERSION-$PKGARCH-$BUILD.tgz
+  )
+done
+
+# Clean up the worst of the spam
+removepkg ${PKGNAM}_temp-$VERSION-$PKGARCH-$BUILD
+
+# Strip binaries:
+( cd $PKG
+  find . | xargs file | grep "executable" | grep ELF | cut -f 1 -d : | xargs strip --strip-unneeded 2> /dev/null
+  find . | xargs file | grep "shared object" | grep ELF | cut -f 1 -d : | xargs strip --strip-unneeded 2> /dev/null
+)
+( cd $PKG
+  find . -name perllocal.pod | xargs rm -f
+)
+
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+
+cd $PKG
+makepkg -l y -c n ../$PKGNAM-$VERSION-$PKGARCH-$BUILD$TAG.tgz
+
+# Clean up the extra stuff:
+if [ "$1" = "--cleanup" ]; then
+  rm -rf $TMP/$PKGNAM-$VERSION
+  rm -rf $PKG
+fi

@@ -21,10 +21,11 @@
 
 
 PKGNAM=libdrm
-VERSION=${VERSION:-2.3.0}
+VERSION=2.3.0
 ARCH=${ARCH:-x86_64}
 BUILD=${BUILD:-1}
 DISTRO=${DISTRO:-slamd64}
+NUMJOBS=${NUMJOBS:-6}
 
 if [ $DISTRO = slackware ]; then
 	PKGARCH=$ARCH
@@ -32,17 +33,11 @@ else
 	PKGARCH=${ARCH}_${DISTRO}
 fi
 
-if [ $DISTRO = slamd64 ]; then
-	LIBSUFFIX=${LIBSUFFIX:-64}
-else
-	LIBSUFFIX=${LIBSUFFIX:-}
-fi
-
 CWD=$(pwd)
 if [ "$TMP" = "" ]; then
   TMP=/tmp
 fi
-PKG=$TMP/package-xlibs32
+PKG=${PKG:-$TMP/package-xlibs32}
 #rm -rf $PKG
 mkdir -p $PKG
 
@@ -76,14 +71,14 @@ find . -perm 711 -exec chmod 755 {} \;
 find . -perm 555 -exec chmod 755 {} \;
 
 # Configure:
-CFLAGS="$SLKCFLAGS" \
+CFLAGS="$SLKCFLAGS -m32" \
 ./configure \
   --prefix=/usr \
 	--libdir=/usr/lib$LIBSUFFIX \
   $ARCH-$DISTRO-linux
 
 # Build and install:
-make -j6 || exit 1
+make -j$NUMJOBS || exit 1
 make install DESTDIR=$PKG || exit 1
 
 # Strip binaries:
@@ -91,39 +86,3 @@ make install DESTDIR=$PKG || exit 1
   find . | xargs file | grep "executable" | grep ELF | cut -f 1 -d : | xargs strip --strip-unneeded 2> /dev/null
   find . | xargs file | grep "shared object" | grep ELF | cut -f 1 -d : | xargs strip --strip-unneeded 2> /dev/null
 )
-
-# Compress and link manpages, if any:
-#if [ -d $PKG/usr/man ]; then
-#  ( cd $PKG/usr/man
-#    for manpagedir in $(find . -type d -name "man*") ; do
-#      ( cd $manpagedir
-#        for eachpage in $( find . -type l -maxdepth 1) ; do
-#          ln -s $( readlink $eachpage ).gz $eachpage.gz
-#          rm $eachpage
-#        done
-#        gzip -9 *.?
-#      )
-#    done
-#  )
-#fi
-
-# Compress info files, if any:
-#if [ -d $PKG/usr/info ]; then
-#  ( cd $PKG/usr/info
-#    rm -f dir
-#    gzip -9 *
-#  )
-#fi
-
-# Add a documentation directory:
-#mkdir -p $PKG/usr/doc/${PKGNAM}-$VERSION
-#cp -a \
-#  AUTHORS CHANGES COPYING LICENSE README \
-#  $PKG/usr/doc/${PKGNAM}-$VERSION
-
-#mkdir -p $PKG/install
-#cat $CWD/slack-desc > $PKG/install/slack-desc
-
-#cd $TMP/package-${PKGNAM}
-#makepkg -l y -c n ../${PKGNAM}-$VERSION-$PKGARCH-$BUILD.tgz
-

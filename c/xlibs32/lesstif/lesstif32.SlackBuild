@@ -21,10 +21,11 @@
 
 
 PKGNAM=lesstif
-VERSION=${VERSION:-0.95.0}
+VERSION=0.95.0
 ARCH=${ARCH:-x86_64}
 BUILD=${BUILD:-3}
 DISTRO=${DISTRO:-slamd64}
+NUMJOBS=${NUMJOBS:-10}
 
 if [ $DISTRO = slackware ]; then
 	PKGARCH=$ARCH
@@ -32,19 +33,12 @@ else
 	PKGARCH=${ARCH}_${DISTRO}
 fi
 
-if [ $DISTRO = slamd64 ]; then
-	LIBSUFFIX=${LIBSUFFIX:-64}
-else
-	LIBSUFFIX=${LIBSUFFIX:-}
-fi
-
-
 CWD=$(pwd)
 if [ "$TMP" = "" ]; then
   TMP=/tmp
 fi
-PKG=$TMP/package-devel32
-rm -rf $PKG
+PKG=${PKG:-$TMP/package-xlibs32}
+#rm -rf $PKG
 mkdir -p $PKG
 
 if [ "$ARCH" = "i386" ]; then
@@ -80,7 +74,7 @@ find . -perm 555 -exec chmod 755 {} \;
 unset CPP # Somewhere lesstif's configure gets a "CC=$CPP"
 unset CXXCPP
 LDFLAGS="-L/usr/lib$LIBSUFFIX" \
-CFLAGS="$SLKCFLAGS" \
+CFLAGS="$SLKCFLAGS -m32" \
 ./configure \
   --prefix=/usr \
 	--libdir=/usr/lib$LIBSUFFIX \
@@ -95,7 +89,7 @@ CFLAGS="$SLKCFLAGS" \
   --build=$ARCH-$DISTRO-linux
 
 # Build and install:
-make libdir=/usr/lib$LIBSUFFIX -j10 || exit 1
+make libdir=/usr/lib$LIBSUFFIX -j$NUMJOBS || exit 1
 make install libdir=/usr/lib$LIBSUFFIX DESTDIR=$PKG || exit 1
 
 # Strip binaries:
@@ -118,21 +112,5 @@ rmdir $PKG/usr/lib$LIBSUFFIX/LessTif
 rmdir $PKG/usr/LessTif
 ( cd $PKG/usr/lib$LIBSUFFIX/X11 ; ln -sf ../../../etc/X11/mwm . )
 
-# Compress and link manpages, if any:
-if [ -d $PKG/usr/man ]; then
-  ( cd $PKG/usr/man
-    for manpagedir in $(find . -type d -name "man*") ; do
-      ( cd $manpagedir
-        for eachpage in $( find . -type l -maxdepth 1) ; do
-          ln -s $( readlink $eachpage ).gz $eachpage.gz
-          rm $eachpage
-        done
-        gzip -9 *.*
-      )
-    done
-  )
-fi
-
-zcat $CWD/doinst.sh.gz | sed "s#lib/#lib$LIBSUFFIX/#g" > $PKG/doinst.sh
+zcat $CWD/doinst.sh.gz | sed "s#lib/#lib$LIBSUFFIX/#g" >> $PKG/doinst.sh
 (cd $PKG; sh doinst.sh; rm doinst.sh)
-
