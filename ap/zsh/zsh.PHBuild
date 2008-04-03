@@ -2,7 +2,7 @@
 # Set initial variables:
 
 PKGNAM=zsh
-VERSION=4.3.2
+VERSION=4.3.6
 BUILD=1
 
 . /etc/pkghelpers
@@ -24,6 +24,8 @@ CFLAGS="$SLKCFLAGS" \
 	$ARCH-$DISTRO-linux
 make || exit 1 # -j == breakage
 make install DESTDIR=$PKG
+mv $PKG/usr/share/man $PKG/usr/man
+rmdir $PKG/usr/share
 mv $PKG/usr/bin $PKG
 ( cd $PKG/bin ; ln -sf zsh zsh-$VERSION )
 mkdir -p $PKG/etc
