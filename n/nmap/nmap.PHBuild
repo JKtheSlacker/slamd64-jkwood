@@ -1,7 +1,7 @@
 #!/bin/sh
 PKGNAM=nmap
 VERSION=4.60
-BUILD=${BUILD:-2}
+BUILD=${BUILD:-3}
 
 . /etc/pkghelpers
 pkghelpers_env
@@ -25,11 +25,12 @@ CFLAGS=$SLKCFLAGS \
 
 make -j5 || exit 1
 
+make prefix=$PKG/usr install
+
 # This thing also has its head up its ass with regards to DESTDIR.
 # We will simply kill it.
 rm -f $PKG/usr/bin/uninstall_zenmap
 
-make prefix=$PKG/usr install
 mkdir -p $PKG/usr/share/{applications,pixmaps}
 zcat $CWD/zenmap.desktop.gz > $PKG/usr/share/applications/zenmap.desktop
 cat $CWD/nmap.png > $PKG/usr/share/pixmaps/nmap.png
