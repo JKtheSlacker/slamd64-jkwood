@@ -3,7 +3,7 @@ TMP=${TMP:-/tmp}
 CWD=`pwd`
 PKG=$TMP/package-mdadm
 
-VERSION=2.6.1
+VERSION=2.6.4
 ARCH=${ARCH:-x86_64}
 BUILD=1
 
