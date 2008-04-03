@@ -1,6 +1,6 @@
 #!/bin/sh
 PKGNAM=ndiswrapper
-PKGVER=1.49
+PKGVER=1.52
 BUILD=1
 
 . /etc/pkghelpers
@@ -15,7 +15,7 @@ rm -rf $PKGNAM-$PKGVER
 tar xfv $CWD/$PKGNAM-$PKGVER.tar.*
 
 cd $PKGNAM-$PKGVER
-make
+make || exit 1
 make install DESTDIR=$PKG
 
 cd $PKG
