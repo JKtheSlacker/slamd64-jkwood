@@ -378,7 +378,7 @@ boot = $LILO_TARGET
 
 # Boot BMP Image.
 # Bitmap in BMP format: 640x480x8
-  bitmap = /boot/slack.bmp
+  bitmap = /boot/slamd64.bmp
 # Menu colors (foreground, background, shadow, highlighted
 # foreground, highlighted background, highlighted shadow):
   bmp-colors = 255,0,255,0,255,0
