@@ -103,13 +103,8 @@ mkdir -p $PKG/usr/lib$LIBSUFFIX/X11
 mv $PKG/usr/lib$LIBSUFFIX/LessTif/config $PKG/usr/lib$LIBSUFFIX/X11
 rmdir $PKG/usr/lib$LIBSUFFIX/LessTif
 
-# Fix misplaced items:
-( cd $PKG/usr/LessTif
-  mv * doc
-  mkdir $PKG/usr/doc
-  mv doc $PKG/usr/doc/lesstif-${VERSION}
-)
-rmdir $PKG/usr/LessTif
+rm -rf $PKG/usr/LessTif
+
 ( cd $PKG/usr/lib$LIBSUFFIX/X11 ; ln -sf ../../../etc/X11/mwm . )
 
 zcat $CWD/doinst.sh.gz | sed "s#lib/#lib$LIBSUFFIX/#g" >> $PKG/doinst.sh

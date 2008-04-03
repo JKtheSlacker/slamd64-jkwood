@@ -69,9 +69,12 @@ CFLAGS="$SLKCFLAGS -m32" \
   --sysconfdir=/etc \
   --localstatedir=/var
 
+ echo "Making"
 # Uses a currently non-functional sgml tool, thus '-i':
 make -i -j$NUMJOBS
 make -i install DESTDIR=$PKG
+
+echo "Installed"
 
 # This ought to be easily found here, but it's still safer to move it:
 if [ ! -d $PKG/usr/lib$LIBSUFFIX/pkgconfig ]; then
@@ -79,9 +82,3 @@ if [ ! -d $PKG/usr/lib$LIBSUFFIX/pkgconfig ]; then
   mv ${PKG}${FCPREFIX}/lib$LIBSUFFIX/pkgconfig/* $PKG/usr/lib$LIBSUFFIX/pkgconfig
   rmdir ${PKG}${FCPREFIX}/lib$LIBSUFFIX/pkgconfig
 fi
-
-( cd $PKG
-	rm -rf usr/bin etc
-  find . | xargs file | grep "executable" | grep ELF | cut -f 1 -d : | xargs strip --strip-unneeded 2> /dev/null
-  find . | xargs file | grep "shared object" | grep ELF | cut -f 1 -d : | xargs strip --strip-unneeded 2> /dev/null
-)

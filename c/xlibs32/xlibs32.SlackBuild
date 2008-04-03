@@ -25,7 +25,9 @@ VERSION=${VERSION:-7.3}
 ARCH=${ARCH:-x86_64}
 BUILD=${BUILD:-1}
 DISTRO=${DISTRO:-slamd64}
-NUMJOBS=${NUMJOBS:-3}
+NUMJOBS=${NUMJOBS:-5}
+
+set -e
 
 if [ $DISTRO = slackware ]; then
 	PKGARCH=$ARCH
@@ -53,12 +55,13 @@ for PACKAGE in `cat modularize`
 do
   if [ -f $CWD/$PACKAGE/${PACKAGE}32.SlackBuild ]; then
     ( cd $CWD/$PACKAGE
-      TMP=$TMP PKG=$PKG NUMJOBS=$NUMJOBS . ${PACKAGE}32.SlackBuild
-    )
+      TMP=$TMP PKG=$PKG NUMJOBS=$NUMJOBS . ${PACKAGE}32.SlackBuild || exit 1
+    ) || exit 1
+    echo "Built $PACKAGE"
   else
     ( cd $TMP/$PKGNAM-$VERSION
-      SRCVER=$(ls $SRCDIR/*.tar.* | grep ${PACKAGE}- | cut -f 2 -d '-' | sed 's#\.tar\..\+##')
-      tar xfv $SRCDIR/$PACKAGE-${SRCVER}.tar.* || exit 1
+      SRCVER=$(ls $SRCDIR/${PACKAGE}/*.tar.* | grep ${PACKAGE}- | cut -f 2 -d '-' | sed 's#\.tar\..\+##')
+      tar xfv $SRCDIR/${PACKAGE}/$PACKAGE-${SRCVER}.tar.* || exit 1
       cd $PACKAGE-$SRCVER
 
       if [ -f $CWD/configure/$PACKAGE ]; then
@@ -70,19 +73,30 @@ do
       CC="gcc -m32" . $CONFIGURE
       make -j$NUMJOBS || exit 1
       make install DESTDIR=$PKG || exit 1
-    )
+      echo "Made and installed"
+    ) || exit 1
+    echo "DIdn't exit after $PKG"
   fi
 
   if [ -f $PKG/usr/bin/xft-config ]; then
     mv $PKG/usr/bin/xft-config $PKG/usr/bin/32
   fi
 
-  rm $PKG/usr/bin/*
+  echo /usr/bin
+  if [ -e $PKG/usr/bin ]; then
+  	find $PKG/usr/bin -type f -maxdepth 1 | xargs -r rm
+  fi
+  echo /usr/lib/X11
   rm -rf $PKG/usr/lib/X11
+  echo /usr/share
   rm -rf $PKG/usr/share
+  echo /usr/doc
   rm -rf $PKG/usr/doc
+  echo /usr/include
   rm -rf $PKG/usr/include
+  echo /usr/man
   rm -rf $PKG/usr/man
+  echo /var
   rm -rf $PKG/var
 
   # We need to spam the root partition for the dependencies

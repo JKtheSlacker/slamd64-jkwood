@@ -6,7 +6,7 @@ VERSION=2.3.5
 ARCH=${ARCH:-x86_64}
 BUILD=${BUILD:-1}
 DISTRO=${DISTRO:-slamd64}
-NUMJOBS=${NUMJOBS:-10}
+NUMJOBS=${NUMJOBS:-5}
 
 if [ $DISTRO = slackware ]; then
 	PKGARCH=$ARCH
@@ -76,4 +76,4 @@ rm -f $PKG/usr/lib$LIBSUFFIX/*.a
   find . | xargs file | grep "executable" | grep ELF | cut -f 1 -d : | xargs strip --strip-unneeded 2> /dev/null
   find . | xargs file | grep "shared object" | grep ELF | cut -f 1 -d : | xargs strip --strip-unneeded 2> /dev/null
 )
-
+echo "Done!"
