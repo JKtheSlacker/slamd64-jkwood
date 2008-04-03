@@ -91,7 +91,7 @@
 SNAPSHOT=""   # set to "yes" if you're building from CVS
 SRCNAM=hostap
 PRGNAM=wpa_supplicant
-VERSION=${VERSION:-0.5.9}
+VERSION=${VERSION:-0.5.10}
 ARCH=${ARCH:-x86_64}
 BUILD=${BUILD:-1}
 DISTRO=${DISTRO:-slamd64}
@@ -125,8 +125,8 @@ PKG=$TMP/package-$PRGNAM
 OUTPUT=${OUTPUT:-/tmp}
 
 if [ -z $SNAPSHOT ]; then   # build a stable release
-  SOURCE="$SRCDIR/${PRGNAM}-${VERSION}.tar.gz"
-  SRCURL="http://hostap.epitest.fi/releases/${PRGNAM}-${VERSION}.tar.gz"
+  SOURCE="$SRCDIR/${PRGNAM}-${VERSION}.tar.bz2"
+  SRCURL="http://hostap.epitest.fi/releases/${PRGNAM}-${VERSION}.tar.bz2"
 else
   SOURCE=""
   SRCURL=""
@@ -211,18 +211,18 @@ echo "++"
 
 cd $TMP/tmp-$PRGNAM
 
-if ! [ -f $SRCDIR/${PRGNAM}-${VERSION}.defconfig ]; then
-  echo "Could not find ${PRGNAM}-${VERSION}.defconfig!"
+if ! [ -f $SRCDIR/${PRGNAM}.defconfig ]; then
+  echo "Could not find ${PRGNAM}.defconfig!"
   echo "You need to create that file using ${SRCNAM}-${VERSION}/${PRGNAM}/defconfig as example."
   exit 1
 fi
 
 echo "Extracting the source archive(s) for $PRGNAM..."
 if [ -z "$SNAPSHOT" ]; then
-  tar -xzvf ${SOURCE}
+  tar xvf ${SOURCE}
   cd ${PRGNAM}-${VERSION}
 else
-  tar -xzvf $SRCDIR/${SRCNAM}-${VERSION}.tar.gz
+  tar xvf $SRCDIR/${SRCNAM}-${VERSION}.tar.*
   cd ${SRCNAM}-${VERSION}/${PRGNAM}
   sed -i -e \
     "s/^#define VERSION_STR \"\(.*\)\"/#define VERSION_STR \"\1_$VERSION\"/" \
@@ -230,7 +230,7 @@ else
 fi
 
 # Create the configuration file for building wpa_supplicant:
-cat $SRCDIR/${PRGNAM}-${VERSION}.defconfig > .config
+cat $SRCDIR/${PRGNAM}.defconfig > .config
 if [ ! -z $MADWIFI_INCLUDES -a -d $MADWIFI_INCLUDES ]; then
   echo "Adding madwifi driver (Atheros) support" | tee -a $OUTPUT/configure-${PRGNAM}.log
   cat <<-EOT >> .config
