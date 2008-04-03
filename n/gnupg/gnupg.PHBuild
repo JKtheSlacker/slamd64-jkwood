@@ -1,8 +1,8 @@
 #!/bin/sh
 
 PKGNAM=gnupg
-VERSION=1.4.7
-BUILD=${BUILD:-2}
+VERSION=1.4.9
+BUILD=${BUILD:-1}
 
 . /etc/pkghelpers
 pkghelpers_env
@@ -32,7 +32,7 @@ CFLAGS="$SLKCFLAGS" \
   --infodir=/usr/info \
   --mandir=/usr/man \
   $ARCH-$DISTRO-linux || exit 1
-make -j10 || exit 1
+make -j5 || exit 1
 make install DESTDIR=$PKG || exit 1
 
 rm -f $PKG/usr/info/dir
