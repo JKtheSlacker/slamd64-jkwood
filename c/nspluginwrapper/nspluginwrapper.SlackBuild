@@ -4,7 +4,7 @@
 # as published by the Free Software Foundation, NOT any later
 # version.
 PKGNAM=nspluginwrapper
-VERSION=0.9.91.4
+VERSION=0.9.91.5
 ARCH=$(uname -m)
 BUILD=1
 DISTRO=${DISTRO:-$(cut -f 1 -d ' ' /etc/*-version | tr A-Z a-z)}
