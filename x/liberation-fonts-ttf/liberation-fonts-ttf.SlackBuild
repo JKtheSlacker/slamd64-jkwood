@@ -3,9 +3,9 @@ CWD=$(pwd)
 TMP=${TMP:-/tmp}
 PKG=$TMP/package-liberation-fonts-ttf
 
-VERSION=0.2
+VERSION=1.0
 ARCH=noarch
-BUILD=3
+BUILD=1
 DISTRO=${DISTRO:-slamd64}
 
 if [ $DISTRO = slackware ]; then
@@ -18,8 +18,8 @@ rm -rf $PKG
 mkdir -p $PKG
 cd $TMP
 rm -rf liberation-fonts-ttf-$VERSION
-tar xjvf $CWD/liberation-fonts-ttf-${BUILD}.tar.bz2 || exit 1
-cd liberation-fonts-$VERSION || exit 1
+tar xvf $CWD/liberation-fonts.tar.* || exit 1
+cd liberation-fonts || exit 1
 
 chown -R root:root .
 find . -perm 666 -exec chmod 644 {} \;
@@ -41,6 +41,12 @@ mkdir -p $PKG/usr/doc/liberation-fonts-ttf-$VERSION
 cp -a \
   COPYING License.txt \
   $PKG/usr/doc/liberation-fonts-ttf-$VERSION
+ 
+mkdir -p $PKG/etc/fonts/conf.{d,avail}
+cat $CWD/60-liberation.conf > $PKG/etc/fonts/conf.avail/60-liberation.conf
+( cd $PKG/etc/fonts/conf.d && \
+  ln -sf ../conf.avail/60-liberation.conf
+)
 
 mkdir -p $PKG/install
 cat $CWD/slack-desc > $PKG/install/slack-desc
