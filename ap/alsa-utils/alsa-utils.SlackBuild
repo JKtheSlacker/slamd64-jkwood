@@ -5,7 +5,7 @@ PKG=$TMP/package-alsa-utils
 rm -rf $PKG
 mkdir -p $PKG
 
-VERSION=1.0.14
+VERSION=1.0.15
 ARCH=${ARCH:-x86_64}
 BUILD=1
 DISTRO=${DISTRO:-slamd64}
