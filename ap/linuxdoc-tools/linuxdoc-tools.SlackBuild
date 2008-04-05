@@ -50,6 +50,9 @@ PKG=$TMP/package-${PKGNAM}
 rm -rf $PKG
 mkdir -p $PKG
 
+export LC_ALL=C
+export LANG=C
+
 mkdir -p $PKG/usr/bin
 mkdir -p $PKG/usr/share
 mkdir -p $PKG/usr/man/man1
