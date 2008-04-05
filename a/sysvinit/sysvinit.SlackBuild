@@ -6,7 +6,7 @@ PKG=$TMP/package-sysvinit
 
 VERSION=${VERSION:-2.86}
 ARCH=${ARCH:-x86_64}
-BUILD=${BUILD:-10}
+BUILD=${BUILD:-11}
 DISTRO=${DISTRO:-slamd64}
 
 if [ $DISTRO = slackware ]; then
@@ -32,6 +32,8 @@ cd sysvinit-$VERSION
 chown -R root:root .
 zcat $CWD/sysvinit.diff.gz | patch -p1 -E --verbose --backup --suffix=.orig || exit 1
 zcat $CWD/sysvinit.pidof.rhforkseverything.diff.gz | patch -p1 -E --verbose --backup --suffix=.orig || exit 1
+# Slamd64 - Fix utmp on x86-64 (patch from Fedora)
+zcat $CWD/sysvinit-2.86-timeval.diff.gz | patch -p1 -E --verbose --backup --suffix=.orig || exit 1
 
 cd doc
 mkdir -p $PKG/usr/doc/sysvinit-$VERSION
