@@ -6,7 +6,7 @@
 # customary to leave one space after the ':'.
 
         |-----handy-ruler------------------------------------------------------|
-cdrtools: cdrtools
+cdrtools: cdrtools (CD-R, ISO and related tools)
 cdrtools:
 cdrtools: Tools for mastering and writing compact discs.
 cdrtools:
