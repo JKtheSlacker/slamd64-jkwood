@@ -74,7 +74,7 @@ for file in $CWD/patches/* ; do
 zcat $CWD/sh.vim.diff.gz | patch -p0 --verbose || exit 1
 
 config_vim --with-x --enable-gui=gtk2
-make -j2 || exit 1
+make -j5 || exit 1
 make install DESTDIR=$PKG
 
 # Fix manpage symlinks:

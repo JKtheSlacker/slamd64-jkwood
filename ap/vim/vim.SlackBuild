@@ -53,7 +53,7 @@ CFLAGS="-O2 -fPIC" \
 ./configure \
   --prefix=/usr \
   --build=$ARCH-$DISTRO-linux
-make -j2 || exit 1
+make -j5 || exit 1
 mkdir -p $PKG/usr/bin
 cat ctags > $PKG/usr/bin/ctags
 chmod 755 $PKG/usr/bin/ctags
@@ -97,7 +97,7 @@ for file in $CWD/patches/* ; do
 zcat $CWD/sh.vim.diff.gz | patch -p0 --verbose || exit 1
 
 config_vim --without-x --disable-gui
-make -j2 || exit 1
+make -j5 || exit 1
 make install DESTDIR=$PKG
 
 cp -a runtime/vimrc_example.vim runtime/vimrc.new
