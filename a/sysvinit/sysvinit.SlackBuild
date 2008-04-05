@@ -41,6 +41,7 @@ chmod -R 644 $PKG/usr/doc/sysvinit-$VERSION/*
 chmod 755 $PKG/usr/doc/sysvinit-$VERSION
 
 cd ../src
+# Slamd64 - Workaround a segfault with static init
 sed -i 's/-static//' Makefile
 make clobber
 # LCRYPT=-lcrypt does nothing on non-multilib systems, however
