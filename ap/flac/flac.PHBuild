@@ -1,8 +1,8 @@
 #!/bin/sh
 
 PKGNAM=flac
-VERSION=1.1.2
-BUILD=${BUILD:-3}
+VERSION=1.2.1
+BUILD=${BUILD:-1}
 
 . /etc/pkghelpers
 pkghelpers_env
@@ -12,20 +12,30 @@ mkdir -p $PKG
 
 cd $TMP
 rm -rf flac-$VERSION
-tar xzvf $CWD/flac-$VERSION.tar.gz
+tar xjvf $CWD/flac-$VERSION.tar.bz2
 cd flac-$VERSION
-zcat $CWD/flac-linking.diff.gz | patch -p1 --verbose --backup --suffix=.orig
 zcat $CWD/flac.man.diff.gz | patch -p1 --verbose --backup --suffix=.orig
-zcat $CWD/xmms-plugin.diff.gz | patch -p0 --verbose --backup --suffix=.orig
-chown -R root.root .
-find . -perm 777 | xargs chmod 755
+
+pkghelpers_permissions
+
+# We disable assembly optimizations to ensure compatibility with older
+# hardware, but you're welcome to comment this out and give it a try.
+# I've heard it gives a noticable speedup.
+if [ "$ARCH" != "x86_64" ]; then
+  DISABLE_ASM_OPTIMIZATIONS=""
+else
+  DISABLE_ASM_OPTIMIZATIONS=${DISABLE_ASM_OPTIMIZATIONS:-"--disable-asm-optimizations"}
+fi
+
 CFLAGS="$SLKCFLAGS" \
 CXXFLAGS="$SLKCFLAGS" \
 ./configure \
   --prefix=/usr \
 	--libdir=/usr/lib$LIBSUFFIX \
-  $ARCH-$DISTRO-linux
-make -j10
+  --mandir=/usr/man \
+  $DISABLE_ASM_OPTIMIZATIONS \
+  --build=$ARCH-$DISTRO-linux
+make -j4 || exit 1
 make install DESTDIR=$PKG
 # Adjust docs to traditional Slackware location:
 mv $PKG/usr/share/doc $PKG/usr
@@ -40,7 +50,9 @@ source package.  It is not included in the binary package due
 to size.
 EOF
 # Add a few more docs:
-cp -a AUTHORS COPYING* README $PKG/usr/doc/flac-$VERSION
+cp -a \
+  AUTHORS COPYING* README \
+  $PKG/usr/doc/flac-$VERSION
 mkdir $PKG/install
 cat $CWD/slack-desc > $PKG/install/slack-desc
 

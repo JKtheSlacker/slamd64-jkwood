@@ -6,8 +6,8 @@ if [ "$TMP" = "" ]; then
 fi
 PKG=$TMP/package-cdrtools
 
-VERSION=2.01.01a23
-ZISOFSTOOLS=1.0.7
+VERSION=2.01.01a37
+ZISOFSTOOLS=1.0.8
 ARCH=${ARCH:-x86_64}
 BUILD=${BUILD:-1}
 DISTRO=${DISTRO:-slamd64}
@@ -37,6 +37,21 @@ find . -perm 664 -exec chmod 644 {} \;
 zcat $CWD/cdrtools.ins_base.diff.gz | patch -p1 -E --backup --verbose || exit 1
 make -j4 || exit
 make install
+
+# Remove dupes:
+rm -rf $PKG/usr/share/doc
+rmdir $PKG/usr/share
+
+# I don't know why this couldn't be "/etc/cdrtools" or something, but since
+# getty uses it already I'm not going to argue the point.
+mkdir -p $PKG/etc
+mv $PKG/usr/etc/default $PKG/etc
+rmdir $PKG/usr/etc
+for file in $PKG/etc/default/cdrecord $PKG/etc/default/rscsi ; do
+  chmod 644 ${file}
+  mv ${file} ${file}.new
+done
+
 mkdir -p $PKG/usr/doc/cdrtools-$VERSION
 cp -a AN-* BUILD COMPILE COPYING INSTALL README* $PKG/usr/doc/cdrtools-$VERSION
 chown -R root:root $PKG/usr/doc/cdrtools-$VERSION/*
@@ -74,6 +89,7 @@ rm -r $PKG/usr/sbin
 rm -f $PKG/usr/doc/cdrtools-$VERSION/README.rscsi
 
 mkdir -p $PKG/install
+zcat $CWD/doinst.sh.gz > $PKG/install/doinst.sh
 cat $CWD/slack-desc > $PKG/install/slack-desc
 
 # Add the mkzftree tool for zisofs:
