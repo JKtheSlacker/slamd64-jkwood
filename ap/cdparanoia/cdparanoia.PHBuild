@@ -25,6 +25,7 @@ zcat $CWD/cdparanoia-autoconf.diff.gz | patch -p1 --verbose || exit 1
 pkghelpers_permissions
 
 # Configure:
+cat /usr/share/libtool/config.sub > configure.sub || exit 1
 CFLAGS="$SLKCFLAGS" \
 CXXFLAGS="$SLKCFLAGS" \
 ./configure \
