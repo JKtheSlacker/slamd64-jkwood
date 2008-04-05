@@ -8,7 +8,7 @@ PKG=$TMP/package-nfs-utils
 
 VERSION=1.1.2
 ARCH=${ARCH:-x86_64}
-BUILD=${BUILD:-1}
+BUILD=${BUILD:-2}
 DISTRO=${DISTRO:-slamd64}
 
 if [ $DISTRO = slackware ]; then
@@ -72,12 +72,18 @@ CFLAGS="$SLKCFLAGS" \
   --program-suffix= \
   --build=$ARCH-$DISTRO-linux
 
-make -j10 || exit 1
+make -j5 || exit 1
 make install DESTDIR=$PKG
 
-# Remove things that seem like bad ideas, and hope it all still works:
-rm -f $PKG/sbin/*mount* $PKG/usr/man/man8/*mount.nfs*
-rm -f $PKG/var/lib/nfs/*
+# These might be in use:
+( cd $PKG/var/lib/nfs
+  for config_file in etab rmtab state xtab ; do
+    mv ${config_file} ${config_file}.new
+  done
+)
+
+# No NFSv4 yet, so remove these:
+rm -f $PKG/sbin/*nfs4
 
 # Why were we doing this?
 mkdir $PKG/sbin
