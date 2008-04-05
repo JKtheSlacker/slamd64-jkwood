@@ -31,6 +31,7 @@ CXXFLAGS="$SLKCFLAGS" \
 ./configure \
   --prefix=/usr \
   --libdir=/usr/lib$LIBSUFFIX \
+  --mandir=/usr/man \
   $ARCH-$DISTRO-linux
 
 # Build and install:
