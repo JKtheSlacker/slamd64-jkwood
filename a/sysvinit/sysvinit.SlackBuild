@@ -6,7 +6,7 @@ PKG=$TMP/package-sysvinit
 
 VERSION=${VERSION:-2.86}
 ARCH=${ARCH:-x86_64}
-BUILD=${BUILD:-9}
+BUILD=${BUILD:-10}
 DISTRO=${DISTRO:-slamd64}
 
 if [ $DISTRO = slackware ]; then
@@ -41,6 +41,7 @@ chmod -R 644 $PKG/usr/doc/sysvinit-$VERSION/*
 chmod 755 $PKG/usr/doc/sysvinit-$VERSION
 
 cd ../src
+sed -i 's/-static//' Makefile
 make clobber
 # LCRYPT=-lcrypt does nothing on non-multilib systems, however
 # sysvinit's Makefile's detection of this on multilib is broken
