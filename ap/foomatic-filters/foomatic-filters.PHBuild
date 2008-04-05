@@ -29,11 +29,6 @@ BUILD=${BUILD:-1}
 . /etc/pkghelpers
 pkghelpers_env
 
-CWD=$(pwd)
-if [ "$TMP" = "" ]; then
-  TMP=/tmp
-fi
-PKG=$TMP/package-${PKGNAM}
 rm -rf $PKG
 mkdir -p $PKG
 
@@ -47,12 +42,13 @@ pkghelpers_permissions
 
 # enforce clue - fix from SuSE
 perl -pi -e "s:/usr/lib/(cups|pdq|ppr):/usr/lib$LIBSUFFIX/\1:g" configure
+sed -i 's,^LIBSEARCHPATH=,LIBSEARCHPATH=${prefix}/lib64:${prefix}/usr/lib64:,' configure
 
 # Configure:
 CFLAGS="$SLKCFLAGS" \
 ./configure \
   --prefix=/usr \
-	--libdir=/usr/lib64 \
+  --libdir=/usr/lib64 \
   --sysconfdir=/etc \
   --build=$ARCH-$DISTRO-linux
 
