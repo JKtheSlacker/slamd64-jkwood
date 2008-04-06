@@ -7,3 +7,6 @@ libtermcap
 openssl
 mysql
 libmng
+libgpg-error
+libgcrypt
+gnutls

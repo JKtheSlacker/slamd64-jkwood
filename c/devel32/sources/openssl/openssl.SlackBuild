@@ -1,7 +1,7 @@
 #!/bin/sh
 # Copyright 2000 BSDi, Inc. Concord, CA, USA
 # Copyright 2001, 2002 Slackware Linux, Inc.  Concord, CA, USA
-# Copyright 2005, 2006 Patrick J. Volkerding, Sebeka, MN, USA
+# Copyright 2005, 2006, 2007  Patrick J. Volkerding, Sebeka, MN, USA
 # Copyright 2006, 2007 Frederick P. Emmott <mail@fredemmott.co.uk>
 # All rights reserved.
 #
@@ -27,7 +27,7 @@ CWD=$(pwd)
 TMP=${TMP:-/tmp}
 
 
-VERSION=${VERSION:-0.9.8d}
+VERSION=${VERSION:-0.9.8g}
 ARCH=${ARCH:-x86_64}
 BUILD=${BUILD:-1}
 
@@ -37,42 +37,46 @@ PKG=$TMP/package-devel32
 # So that ls has the right field counts for parsing...
 export LC_ALL=C
 
-# This is used to fix manpage links:
-relink() {
-  ORIGLINE=`/bin/ls -l $1`
-  LINK=`echo $ORIGLINE | cut -f 9 -d ' '`.gz
-  FILE=`echo $ORIGLINE | cut -f 11 -d ' '`.gz
-  rm $1
-  if [ -r $FILE ]; then
-    ln -sf $FILE $LINK
-  fi
-}
-
 cd $TMP
 rm -rf openssl-$VERSION
 tar xjvf $CWD/openssl-$VERSION.tar.bz2
 cd openssl-$VERSION
 # Use .so.0, not .so.0.9.8:
 zcat $CWD/openssl.soname.diff.gz | patch -p1 --backup --verbose --suffix=.orig || exit 1
-# Fix a bug where an uninitialized pointer could be freed:
-zcat $CWD/openssl-0.9.8.fix.uninitialized.pointer.diff.gz | patch -p1 --backup --verbose --suffix=.orig || exit 1
   # Build with -march=i486 -mtune=i686:
   zcat $CWD/openssl.optsx86.diff.gz | patch -p1 --backup --verbose --suffix=.orig || exit 1
 chown -R root:root .
+
 # These are the known patent issues with OpenSSL:
 # name   #         expires
 # MDC-2: 4,908,861 13/03/2007, not included.
 # IDEA:  5,214,703 25/05/2010, not included.
 # RC5:   5,724,428 03/03/2015, not included.
 
-linux32 ./config --prefix=/usr --openssldir=/etc/ssl no-mdc2 no-idea no-rc5 shared
+linux32 \
+./config \
+ --prefix=/usr \
+ --openssldir=/etc/ssl \
+ no-idea \
+ no-rc5 \
+ no-sse2 \
+ shared
+
 make depend || exit 1
+
+# Use -j1 here if you know what's good for you.
 make || exit 1
+
 make install INSTALL_PREFIX=$PKG || exit 1
+
 rm $PKG/usr/bin/openssl*
+mkdir -p $PKG/usr/bin/32
+mv $PKG/usr/bin/* $PKG/usr/bin/32
 rm -rf $PKG/etc/ssl
-strip --strip-unneeded $PKG/usr/lib/lib*.so.*.*.* $PKG/usr/bin/*
-( cd $PKG1/usr/lib ; ldconfig -l * )
+strip --strip-unneeded $PKG/usr/lib/lib*.so.*.*.* $PKG/usr/bin/32/*
+
+( cd $PKG1/usr/lib ; ldconfig -l * 2> /dev/null )
 ( cd $PKG1/usr/lib ; ln -sf libcrypto.so.0 libcrypto.so )
 ( cd $PKG1/usr/lib ; ln -sf libssl.so.0 libssl.so )
+
 cd $PKG

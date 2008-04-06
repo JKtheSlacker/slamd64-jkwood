@@ -1,0 +1,53 @@
+#!/bin/sh
+PKGNAM=gtk+2-32
+VERSION=2.12.9
+BUILD=${BUILD:-1}
+
+. /etc/pkghelpers
+pkghelpers_env
+export MULTILIB=false
+
+SLKCFLAGS="$SLKCFLAGS -m32"
+
+rm -rf $PKG
+mkdir -p $PKG/usr
+cd $TMP
+rm -rf gtk+-$VERSION
+tar xjvf $CWD/gtk+-$VERSION.tar.bz2
+cd gtk+-$VERSION
+
+# There's been this long standing debate about PNG and -lz
+# and this patch is the workaround.  ;-)
+zcat $CWD/gtk.pnglz.diff.gz | patch -p1 --verbose || exit 1
+
+pkghelpers_permissions
+
+LDFLAGS="-L/usr/lib" \
+CFLAGS="$SLKCFLAGS -m32" \
+linux32 ./configure \
+  --prefix=/usr \
+  --sysconfdir=/etc \
+  --mandir=/usr/man \
+  --with-xinput=yes \
+	i686-$DISTRO-linux
+
+make -j4 || exit 1
+make install DESTDIR=$PKG || exit 1
+
+
+# I'm spamming your root partition because /etc/gtk-2.0 won't install to $DESTDIR
+make install || exit 1
+	EXTRAETC=
+mkdir -p $PKG/etc/gtk-2.0$EXTRAETC
+cp -a /etc/gtk-2.0$EXTRAETC/* $PKG/etc/gtk-2.0$EXTRAETC
+
+rm -rf $PKG/usr/{share,include,man}
+mkdir $PKG/usr/bin/32
+mv $PKG/usr/bin/* $PKG/usr/bin/32
+
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+
+cd $PKG
+pkghelpers_fixup
+pkghelpers_makepkg

@@ -4,7 +4,7 @@ TMP=/tmp
 PKG=$TMP/package-devel32
 mkdir -p $PKG/usr
 
-VERSION=1.2.14
+VERSION=1.2.25
 ARCH=${ARCH:-x86_64}
 BUILD=1
 
@@ -40,6 +40,8 @@ make prefix=/usr LIBPATH=/usr/lib
 make install prefix=/usr LIBPATH=/usr/lib DESTDIR=$PKG
 
 rm -rf $PKG/usr/man
+mkdir -p $PKG/usr/bin/32
+mv $PKG/usr/bin/* $PKG/usr/bin/32
 
 # This symlink is needed to keep old applications running:
 # I guess the real lib used the major number 3, then 0 for

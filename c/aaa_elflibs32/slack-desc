@@ -1,0 +1,12 @@
+aaa_elflibs32: aaa_elflibs32 (shared libraries needed by many 32-bit programs)
+aaa_elflibs32:
+aaa_elflibs32: This is a collection of shared libraries needed to run Linux programs.
+aaa_elflibs32: ELF (Executable and Linking Format) is the standard Linux binary
+aaa_elflibs32: format.  These libraries are gathered from other Slackware packages
+aaa_elflibs32: and are intended to give a fairly complete initial set of libraries.
+aaa_elflibs32: This package should be not upgraded or reinstalled (it could copy
+aaa_elflibs32: over newer library versions).
+aaa_elflibs32:
+aaa_elflibs32: This package contains 32-bit binaries.
+aaa_elflibs32:
+

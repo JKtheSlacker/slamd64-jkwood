@@ -1,0 +1,47 @@
+#!/bin/sh
+
+PKGNAM=glib2-32
+VERSION=2.14.6
+BUILD=1
+
+. /etc/pkghelpers
+pkghelpers_env
+export MULTILIB=false
+
+SLKCFLAGS="$SLKCFLAGS -m32"
+
+rm -rf $PKG
+mkdir -p $PKG/usr
+cd $TMP
+rm -rf glib-$VERSION
+tar xjvf $CWD/glib-$VERSION.tar.bz2 || exit 1
+cd glib-$VERSION
+pkghelpers_permissions
+
+CC="gcc -m32" \
+CFLAGS="$SLKCFLAGS" \
+./configure \
+  --prefix=/usr \
+  --sysconfdir=/etc \
+  --mandir=/usr/man \
+  --host="i686-pc-linux-gnu"
+make -j4 || exit 1
+make install DESTDIR=$PKG
+
+rm -rf $PKG/usr/share
+rm -rf $PKG/usr/include
+rm -rf $PKG/usr/bin
+rm -rf $PKG/usr/man
+
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+
+cd $TMP/package-$PKGNAM
+pkghelpers_fixup
+pkghelpers_makepkg
+
+# Clean up the extra stuff:
+if [ "$1" = "--cleanup" ]; then
+  rm -rf $TMP/${PKGNAM}-$VERSION
+  rm -rf $PKG
+fi

@@ -1,0 +1,44 @@
+#!/bin/sh
+PKGNAM=alsa-lib32
+VERSION=1.0.15
+BUILD=1
+
+. /etc/pkghelpers
+pkghelpers_env
+export MULTILIB=false
+
+SLKCFLAGS="$SLKCFLAGS -m32"
+
+rm -rf $PKG
+mkdir -p $PKG
+
+cd $TMP
+rm -rf alsa-lib-$VERSION
+tar xjvf $CWD/alsa-lib-$VERSION.tar.bz2 || exit 1
+cd alsa-lib-$VERSION
+chown -R root:root .
+CC="gcc -m32" \
+CFLAGS="$SLKCFLAGS" \
+ ./configure \
+ 	--libdir=/usr/lib \
+ 	--disable-python \
+  --build=$ARCH-$DISTRO-linux
+make -j5 || exit 1
+make install DESTDIR=$PKG
+
+( cd $PKG
+	# Get rid of/move stuff that conflicts with the 64-bit package
+	mv usr/bin usr/bin_
+	mkdir usr/bin
+	mv usr/bin_ usr/bin/32
+
+	rm -rf usr/share usr/include
+)
+
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+
+cd $PKG
+pkghelpers_fixup
+pkghelpers_makepkg
+

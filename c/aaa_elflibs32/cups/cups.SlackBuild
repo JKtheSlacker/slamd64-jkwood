@@ -9,9 +9,9 @@ fi
 PKGTMP=$TMP/package-cups32
 PKG=$TMP/package-aaa_elflibs32
 
-VERSION=1.1.23
+VERSION=1.3.7
 ARCH=${ARCH:-x86_64}
-BUILD=${BUILD:-2}
+BUILD=${BUILD:-1}
 
 if [ ! -d $TMP ]; then
   mkdir -p $TMP # location to build the source
@@ -23,18 +23,25 @@ rm -rf cups-$VERSION
 tar xjvf $CWD/cups-$VERSION-source.tar.bz2
 cd cups-$VERSION
 (
-. /etc/profile.d/32dev.sh
-linux32 ./configure \
+#. /etc/profile.d/32dev.sh
+#linux32 
+LDFLAGS="-L/usr/lib" \
+./configure \
 	--libdir=/usr/lib \
+	--enable-32bit \
+	--without-php \
+	--without-perl \
+	--without-python \
+	--without-java \
   --disable-pam
-make -j3 IMGLIBS="-lpng -lz -lm -ltiff -ljpeg" || exit 1 # Something's broken :)
+make -j3 || exit 1
 make BUILDROOT=$PKGTMP install
 )
 
 mkdir -p $PKG/usr/lib
 mv $PKGTMP/usr/lib/libcups*.so.* $PKG/usr/lib
-(
-	cd $PKG/usr/lib
-	ln -s libcups.so.2 libcups.so
-	ln -s libcupsimage.so.2 libcupsimage.so
-)
+#(
+#	cd $PKG/usr/lib
+#	ln -s libcups.so.2 libcups.so
+#	ln -s libcupsimage.so.2 libcupsimage.so
+#)

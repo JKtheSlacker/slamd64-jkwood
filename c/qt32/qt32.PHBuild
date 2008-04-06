@@ -31,6 +31,8 @@ export MULTILIB=false
 rm -rf $PKG
 mkdir -p $PKG
 
+removepkg qt32
+
 cd $TMP
 rm -rf qt-x11-free-${VERSION}
 tar xjvf $CWD/qt-x11-free-$VERSION.tar.bz2 || exit 1
@@ -78,8 +80,8 @@ pkghelpers_permissions
 	
 	# We're using '-i' to work around a bug where the build tries to strip html files.
 	# Build the important stuff:
-	export LD_LIBRARY_PATH=$TMP/qt-x11-free-3.3.8/lib
-	make -j10 -i symlinks sub-src sub-tools || exit 1
+	export LD_LIBRARY_PATH=$TMP/qt-x11-free-$VERSION/lib
+	make -j5 -i symlinks sub-src sub-tools || exit 1
 	make install INSTALL_ROOT=$PKG || exit 1
 )
 
@@ -90,8 +92,8 @@ pkghelpers_permissions
 rm -f $PKG/usr/lib/qt-3.3.8/mkspecs/linux-g++/linux-g++
 
 # Put this back as shipped:
-( cd $PKG/usr/lib/qt
-  zcat $CWD/qt.x86.cflags.diff.gz | patch -p1 -R )
+#( cd $PKG/usr/lib/qt
+#  zcat $CWD/qt.x86.cflags.diff.gz | patch -p1 -R )
 
 # Put a ton of links to more "normal" places.  I'd just use a prefix of /usr, but it
 # creates a ton of new (and ambiguously named) /usr directories...
@@ -108,6 +110,8 @@ mkdir -p $PKG/usr/lib/pkgconfig
   ln -sf /usr/lib/qt-${VERSION}/lib/pkgconfig/qt-mt.pc .
 )
 
+# Remove the documentation - this is already provided by the 64 bit version
+rm -rf $PKG/usr/lib/qt-${VERSION}/doc
 
 cd $PKG
 mkdir install
