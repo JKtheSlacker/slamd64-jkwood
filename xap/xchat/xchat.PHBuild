@@ -1,8 +1,8 @@
 #!/bin/sh
 
 PKGNAM=xchat
-VERSION=2.8.2
-BUILD=2
+VERSION=2.8.4
+BUILD=1
 
 . /etc/pkghelpers
 
@@ -21,9 +21,7 @@ if [ -d $CWD/patches ]; then
     zcat $file | patch -p1 --verbose || exit 1
   done
 fi
-chown -R root:root .
-find . -perm 666 -exec chmod 644 {} \;
-find . -perm 664 -exec chmod 644 {} \;
+pkghelpers_permissions
 CFLAGS="$SLKCFLAGS" \
 ./configure \
   --prefix=/usr \
@@ -32,7 +30,7 @@ CFLAGS="$SLKCFLAGS" \
   --localstatedir=/var/lib \
   --enable-ipv6 \
   $ARCH-$DISTRO-linux
-make -j12 || exit 1
+make -j3 || exit 1
 make install DESTDIR=$PKG
 
 mkdir -p $PKG/usr/doc/xchat-$VERSION
