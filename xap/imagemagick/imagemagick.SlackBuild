@@ -1,6 +1,9 @@
 #!/bin/sh
+if [ "$TMP" = "" ]; then
+  TMP=/tmp
+fi
 CWD=`pwd`
-PKG=/tmp/package-imagemagick
+PKG=$TMP/package-imagemagick
 rm -rf $PKG
 mkdir -p $PKG
 
@@ -11,19 +14,31 @@ mkdir -p $PKG
 # This is a bit messy, so we'll explain it well.  :-)
 
 # This is the base version number, which is needed to cd into the source tree
-BASEVER=6.3.3
+BASEVER=6.3.7
 
 # This is the version number used in the source tarball filename
-FILEVER=6.3.3-9
+FILEVER=6.3.7-10
 
 # This is the version number used in the package, where a version number cannot
 # contain a '-'
-PKGVER=6.3.3_9
+PKGVER=6.3.7_10
 
 ARCH=${ARCH:-x86_64}
 BUILD=1
+DISTRO=${DISTRO:-slamd64}
 
-LIBDIR=lib
+if [ $DISTRO = slackware ]; then
+	PKGARCH=$ARCH
+else
+	PKGARCH=${ARCH}_${DISTRO}
+fi
+
+if [ $DISTRO = slamd64 ]; then
+	LIBSUFFIX=${LIBSUFFIX:-64}
+else
+	LIBSUFFIX=
+fi
+
 if [ "$ARCH" = "i386" ]; then
   SLKCFLAGS="-O2 -march=i386 -mcpu=i686"
 elif [ "$ARCH" = "i486" ]; then
@@ -32,7 +47,6 @@ elif [ "$ARCH" = "s390" ]; then
   SLKCFLAGS="-O2"
 elif [ "$ARCH" = "x86_64" ]; then
   SLKCFLAGS="-O2 -fPIC"
-	LIBDIR=lib64
 fi
 
 # --with-x or not --with-x, that is the question.  It seems many other
@@ -42,32 +56,44 @@ fi
 # I've heard a few reports of compile failures when this isn't in /usr.
 # Everyone else does it -- time to follow the path of least resistance.
 
-cd /tmp
+cd $TMP
 rm -rf ImageMagick-$BASEVER
 tar xjvf $CWD/ImageMagick-$FILEVER.tar.bz2
 cd ImageMagick-$BASEVER
 chown -R root.root .
+find . -perm 664 -exec chmod 644 {} \;
+find . -perm 600 -exec chmod 644 {} \;
+find . -perm 444 -exec chmod 644 {} \;
+find . -perm 400 -exec chmod 644 {} \;
+find . -perm 440 -exec chmod 644 {} \;
 find . -perm 777 -exec chmod 755 {} \;
-find . -perm 666 -exec chmod 644 {} \;
-zcat $CWD/libpng_mmx_patch_x86_64.patch.gz | patch -p1 --verbose
-LDFLAGS=-L/usr/$LIBDIR \
+find . -perm 775 -exec chmod 755 {} \;
+find . -perm 511 -exec chmod 755 {} \;
+find . -perm 711 -exec chmod 755 {} \;
+find . -perm 555 -exec chmod 755 {} \;
+
+if [ "$ARCH" = "x86_64" ]; then
+  zcat $CWD/libpng_mmx_patch_x86_64.patch.gz | patch -p1 --verbose
+fi
+
 CFLAGS="$SLKCFLAGS" \
 CXXFLAGS="$SLKCFLAGS" \
-./configure --prefix=/usr \
-            --libdir=/usr/$LIBDIR \
-            --program-prefix= \
-            --enable-16bit-pixel \
-            --with-x \
-            --with-frozenpaths=no \
-            --enable-static=no \
-            --enable-shared \
-            --with-perl \
-            $ARCH-slamd64-linux
-make -j12
-make install DESTDIR=$PKG
+./configure \
+  --prefix=/usr \
+  --libdir=/usr/lib$LIBSUFFIX \
+  --mandir=/usr/man \
+  --program-prefix= \
+  --with-x \
+  --with-frozenpaths=no \
+  --enable-static=no \
+  --enable-shared \
+  --with-perl \
+  --build=$ARCH-$DISTRO-linux
+make -j4 INSTALLDIRS=vendor || exit 1
+make install INSTALLDIRS=vendor DESTDIR=$PKG
 
 # Lately ImageMagick has been smoking crack:
-rm -f $PKG/usr/$LIBDIR/libltdl.*
+rm -f $PKG/usr/lib$LIBSUFFIX/libltdl.*
 
 ( cd $PKG
   # Nothing but a perl upgrade should replace this (and maybe not even that)
@@ -79,20 +105,27 @@ chmod 644 $PKG/usr/share/man/man3/*
 mv $PKG/usr/share/man/man3 $PKG/usr/man
 rmdir $PKG/usr/share/man
 
-( cd $PKG/usr/$LIBDIR/perl5
+( cd $PKG/usr/lib$LIBSUFFIX/perl5
   # Ditch empty dirs:
   rmdir */* 2> /dev/null
   rmdir * 2> /dev/null
 )
 
+( cd $PKG
+  find . | xargs file | grep "executable" | grep ELF | cut -f 1 -d : | xargs strip --strip-unneeded 2> /dev/null
+  find . | xargs file | grep "shared object" | grep ELF | cut -f 1 -d : | xargs strip --strip-unneeded 2> /dev/null
+)
 gzip -9 $PKG/usr/man/man?/*.?
 
-mkdir -p $PKG/usr/doc/ImageMagick-$FILEVER
-cp -a www/* $PKG/usr/doc/ImageMagick-$FILEVER
-cp -a *.txt $PKG/usr/doc/ImageMagick-$FILEVER
+mkdir -p $PKG/usr
+mv $PKG/usr/share/doc $PKG/usr
+cp -a \
+  AUTHORS LICENSE NEWS NOTICE Platforms.txt QuickStart.txt README.txt \
+  $PKG/usr/doc/Imag*
+
 mkdir -p $PKG/install
 cat $CWD/slack-desc > $PKG/install/slack-desc
 
 cd $PKG
-makepkg -l y -c n ../imagemagick-$PKGVER-${ARCH}_slamd64-$BUILD.tgz
+makepkg -l y -c n ../imagemagick-$PKGVER-$PKGARCH-$BUILD.tgz
 
