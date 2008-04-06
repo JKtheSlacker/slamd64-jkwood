@@ -5,6 +5,7 @@ libfontenc
 libICE
 libSM
 libXau
+libxcb
 libX11
 libXt
 libXfixes
