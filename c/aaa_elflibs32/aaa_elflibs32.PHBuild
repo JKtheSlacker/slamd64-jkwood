@@ -1,0 +1,21 @@
+#!/bin/sh
+PKGNAM=aaa_elflibs32
+VERSION=12.1.0
+BUILD=1
+
+. /etc/pkghelpers
+pkghelpers_env
+export MULTILIB=false
+
+for i in alsa-lib cups cxxlibs devel32 expat partialGlibc; do
+  ( cd ${i}
+    sh ${i}.SlackBuild || exit 1
+  )
+done
+
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+
+cd $PKG
+pkghelpers_fixup
+pkghelpers_makepkg

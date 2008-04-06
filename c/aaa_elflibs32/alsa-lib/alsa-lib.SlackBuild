@@ -1,5 +1,5 @@
 #!/bin/sh
-VERSION=1.0.14rc2
+VERSION=1.0.15
 ARCH=x86_64
 BUILD=1
 DISTRO=${DISTRO:-slamd64}

@@ -1,7 +1,7 @@
 #!/bin/sh
 VERSION=1.0
 ARCH=x86_64
-BUILD=2
+BUILD=3
 DISTRO=${DISTRO:-slamd64}
 
 CWD=`pwd`
@@ -14,8 +14,8 @@ mkdir -p $PKGTMP
 cd $PKGTMP
 
 tar --wildcards -xvf $CWD/devel32-$VERSION-${ARCH}_${DISTRO}-$BUILD.tgz \
-	lib/lib{z,bz2,termcap}.so* \
-	usr/lib/lib{png12,png,jpeg,crypto,ssl,mng}.so.* \
+	lib/lib{bz2,termcap}.so* \
+	usr/lib/lib{z,png12,png,jpeg,crypto,ssl,mng,gpg-error,gcrypt,gnutls,gnutls-openssl,gnutlsxx}.so.* \
 	usr/lib/mysql/libmysqlclient.so.*
 
 mv usr/lib/mysql/* usr/lib/
