@@ -42,9 +42,10 @@ zcat $CWD/jpeg-6b.diff.gz | patch -p0 -E || exit 1
 zcat $CWD/makefile.cfg.diff.gz | patch -p0 --verbose || exit 1
 CFLAGS=-fPIC ./configure
 make CFLAGS=-fPIC CC="gcc -m32" libjpeg.so.62.0.0
+make CFLAGS=-fPIC CC="gcc -m32" libjpeg.a
 strip --strip-unneeded libjpeg.so.62.0.0
 
 (cd $PKG; explodepkg $CWD/_libjpeg.tar.gz )
 
-cat libjpeg.so.62.0.0 > $PKG/usr/lib$LIBSUFFIX/libjpeg.so.62.0.0
-cat libjpeg.a > $PKG/usr/lib$LIBSUFFIX/libjpeg.a
+cat libjpeg.so.62.0.0 > $PKG/usr/lib/libjpeg.so.62.0.0
+cat libjpeg.a > $PKG/usr/lib/libjpeg.a
