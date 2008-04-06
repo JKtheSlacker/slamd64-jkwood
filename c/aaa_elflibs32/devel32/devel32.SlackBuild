@@ -13,7 +13,7 @@ rm -rf $PKGTMP
 mkdir -p $PKGTMP
 cd $PKGTMP
 
-tar --wildcards -xvf $CWD/devel32-$VERSION-${ARCH}_${DISTRO}-$BUILD.tgz \
+tar --wildcards -xvf $CWD/../s/devel32-$VERSION-${ARCH}_${DISTRO}-$BUILD.tgz \
 	lib/lib{bz2,termcap}.so* \
 	usr/lib/lib{z,png12,png,jpeg,crypto,ssl,mng,gpg-error,gcrypt,gnutls,gnutls-openssl,gnutlsxx}.so.* \
 	usr/lib/mysql/libmysqlclient.so.*

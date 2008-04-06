@@ -14,7 +14,7 @@ mkdir $TMP
 cd $TMP
 
 # Extract the stuff we want
-tar --wildcards -xvf $CWD/alsa-lib32-$VERSION-${ARCH}_${DISTRO}-$BUILD.tgz usr/lib/libasound.so.*
+tar --wildcards -xvf $CWD/../s/alsa-lib32-$VERSION-${ARCH}_${DISTRO}-$BUILD.tgz usr/lib/libasound.so.*
 
 # Recreate symlinks
 cd usr/lib

@@ -14,7 +14,7 @@ rm -rf $PKGTMP
 mkdir -p $PKGTMP
 cd $PKGTMP
 
-explodepkg $CWD/gcc32-g++-$VERSION-${ARCH}_${DISTRO}-$BUILD.tgz
+explodepkg $CWD/../s/gcc32-g++-$VERSION-${ARCH}_${DISTRO}-$BUILD.tgz
 
 cd usr/lib
 install -o root -m 755 $CWD/libstdc++.so.$OLDSOVER .

@@ -14,7 +14,7 @@ mkdir $TMP
 cd $TMP
 
 # Extract the stuff we want
-tar --wildcards -xvf $CWD/expat32-$VERSION-${ARCH}_${DISTRO}-$BUILD.tgz usr/lib/*.so.*
+tar --wildcards -xvf $CWD/../s/expat32-$VERSION-${ARCH}_${DISTRO}-$BUILD.tgz usr/lib/*.so.*
 
 # Recreate symlinks
 cd usr/lib

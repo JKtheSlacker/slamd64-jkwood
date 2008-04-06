@@ -13,7 +13,7 @@ rm -rf $PKGTMP
 mkdir -p $PKGTMP
 cd $PKGTMP
 
-explodepkg $CWD/glibc32-$VERSION-${ARCH}_${DISTRO}-$BUILD.tgz
+explodepkg $CWD/../s/glibc32-$VERSION-${ARCH}_${DISTRO}-$BUILD.tgz
 
 cd lib
 ldconfig -n . # Recreate symlinks
