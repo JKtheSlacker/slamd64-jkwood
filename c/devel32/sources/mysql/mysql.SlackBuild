@@ -65,7 +65,7 @@ CFLAGS="$SLKCFLAGS" CXX=gcc CXXFLAGS="$SLKCFLAGS -felide-constructors -fno-excep
   $ARCH-$DISTRO-linux
 #
 # --without-readline
-make -j6 || exit
+make -j6 || exit 1
 make install DESTDIR=$PKG
 
 ( # Stuff we want from the 64-bit package instead, or don't want at all
