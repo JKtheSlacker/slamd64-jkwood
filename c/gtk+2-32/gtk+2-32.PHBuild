@@ -22,13 +22,14 @@ zcat $CWD/gtk.pnglz.diff.gz | patch -p1 --verbose || exit 1
 
 pkghelpers_permissions
 
-LDFLAGS="-L/usr/lib" \
+LDFLAG="-L/usr/lib" \
 CFLAGS="$SLKCFLAGS -m32" \
 linux32 ./configure \
   --prefix=/usr \
   --sysconfdir=/etc \
   --mandir=/usr/man \
   --with-xinput=yes \
+  --enable-cups=/usr/lib \
 	i686-$DISTRO-linux
 
 make -j4 || exit 1
