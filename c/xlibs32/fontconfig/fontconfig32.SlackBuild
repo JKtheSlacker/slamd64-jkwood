@@ -74,6 +74,9 @@ CFLAGS="$SLKCFLAGS -m32" \
 make -i -j$NUMJOBS
 make -i install DESTDIR=$PKG
 
+# These files are already provided by the 64 bit package
+rm -rf $PKG/etc
+
 echo "Installed"
 
 # This ought to be easily found here, but it's still safer to move it:
