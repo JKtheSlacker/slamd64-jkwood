@@ -1,7 +1,6 @@
 #!/bin/sh
 PKGNAM=fluxbox
 VERSION=1.0.0
-ARCH=${ARCH:-x86_64}
 BUILD=${BUILD:-1}
 
 . /etc/pkghelpers
