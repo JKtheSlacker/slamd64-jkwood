@@ -189,5 +189,5 @@ fi
 ( cd usr/lib ; ln -sf ../../lib/libnss_nis.so.2 libnss_nis.so )
 ( cd usr/share/zoneinfo ; rm -rf localtime )
 ( cd usr/share/zoneinfo ; ln -sf /etc/localtime localtime )
-( cd sbin ; rm -rf sln )
-( cd sbin ; ln -sf /bin/sln sln )
+( cd bin ; rm -rf sln )
+( cd bin ; ln -sf /sbin/sln sln )

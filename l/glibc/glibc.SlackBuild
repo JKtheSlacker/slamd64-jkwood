@@ -35,7 +35,7 @@ TARGET32=${TARGET32:-i486} # only needed on multilib
 
 DISTRO=${DISTRO:-slamd64}
 
-BUILD=${BUILD:-6}
+BUILD=${BUILD:-7}
 
 # Automatically work out our libdir
 if [ $DISTRO = slamd64 ]; then
@@ -313,7 +313,6 @@ gzip -9 $PKG/usr/info/*
 
 # This is junk
 rm $PKG/etc/ld.so.cache
-rm $PKG/sbin/sln
 ( cd $PKG
   find . -name "*.orig" -exec rm {} \;
 )
