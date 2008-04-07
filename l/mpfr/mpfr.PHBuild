@@ -12,8 +12,8 @@ mkdir -p $PKG
 
 # Determine patchlevel:
 PATCHLEVEL=$(/bin/ls $CWD/patches/* 2> /dev/null | rev | cut -f 1 -d / | cut -b4- | rev | cut -b6- | tail -n 1 )
-if [ "$PATCHLEVEL" = "" ]; then
-  PATCHLEVEL=0
+if [ ! "$PATCHLEVEL" = "" ]; then
+  PATCHLEVEL="p${PATCHLEVEL}"
 fi
 
 cd $TMP
@@ -48,6 +48,6 @@ mkdir -p $PKG/install
 cat $CWD/slack-desc > $PKG/install/slack-desc
 
 cd $PKG
-PKGVER=${VERSION}p${PATCHLEVEL}
+PKGVER=${VERSION}${PATCHLEVEL}
 pkghelpers_fixup
 pkghelpers_makepkg

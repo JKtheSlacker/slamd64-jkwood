@@ -1,6 +1,6 @@
 #!/bin/sh
 PKGNAM=m4
-VERSION=1.4.9
+VERSION=1.4.10
 BUILD=1
 
 . /etc/pkghelpers
@@ -18,11 +18,11 @@ find . -perm 664 -exec chmod 644 {} \;
 CFLAGS="$SLKCFLAGS" \
 ./configure \
   --prefix=/usr \
-	--libdir=/usr/lib$LIBSUFFIX \
+  --libdir=/usr/lib$LIBSUFFIX \
   --mandir=/usr/man \
   --infodir=/usr/info \
   --build=$ARCH-$DISTRO-linux
-make -j12 || exit 1
+make -j5 || exit 1
 make install DESTDIR=$PKG
 
 # ye olde cruft

@@ -1,7 +1,0 @@
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.6 (GNU/Linux)
-
-iD8DBQBGL5sFAMy1h92+8OERAkhpAJ9j32bAffcHQpZaJYbKoZ70nU6mTgCcCjXo
-d9v8an2sZMH6jtDftPPkKfk=
-=/qG2
------END PGP SIGNATURE-----

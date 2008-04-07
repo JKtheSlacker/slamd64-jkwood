@@ -23,7 +23,7 @@
 
 # Set initial variables:
 PKGNAM=openssh
-VERSION=4.9p1
+VERSION=5.0p1
 ARCH=${ARCH:-x86_64}
 BUILD=1
 
