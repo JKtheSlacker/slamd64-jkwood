@@ -6,9 +6,9 @@ if [ "$TMP" = "" ]; then
 fi
 PKG=$TMP/package-gdb
 
-VERSION=${VERSION:-6.6}
+VERSION=${VERSION:-6.8}
 ARCH=${ARCH:-x86_64}
-BUILD=${BUILD:-2}
+BUILD=${BUILD:-1}
 DISTRO=${DISTRO:-slamd64}
 
 if [ $DISTRO = slackware ]; then

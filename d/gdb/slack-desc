@@ -7,7 +7,6 @@
 
    |-----handy-ruler------------------------------------------------------|
 gdb: gdb (the GNU symbolic debugger)
-gdb:
 gdb: GDB, the GNU Project debugger, allows you to see what is going on 
 gdb: inside another program while it executes -- or what another program
 gdb: was doing at the moment it crashed.  GDB can do four main kinds of
