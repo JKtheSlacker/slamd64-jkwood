@@ -6,7 +6,7 @@
 # customary to leave one space after the ':'.
 
           |-----handy-ruler------------------------------------------------------|
-pkg-config: pkg-config
+pkg-config: pkg-config (system for managing library compile/link flags)
 pkg-config:
 pkg-config: pkg-config is a system for managing library compile/link flags
 pkg-config: that works with automake and autoconf.  It replaces the ubiquitous

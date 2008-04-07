@@ -1,0 +1,43 @@
+#!/bin/sh
+PKGNAM=pkg-config
+VERSION=0.23
+BUILD=1
+
+. /etc/pkghelpers
+pkghelpers_env
+
+rm -rf $PKG
+mkdir -p $PKG/usr
+
+cd $TMP
+rm -rf pkg-config-$VERSION
+tar xjvf $CWD/pkg-config-$VERSION.tar.bz2
+cd pkg-config-$VERSION
+pkghelpers_permissions
+
+CFLAGS="$SLKCFLAGS" \
+./configure \
+  --prefix=/usr \
+  --libdir=/usr/lib$LIBSUFFIX \
+  --mandir=/usr/man
+
+make -j5 || exit 1
+make install DESTDIR=$PKG || exit 1
+
+mkdir -p $PKG/etc/profile.d/
+cp -a $CWD/scripts/* $PKG/etc/profile.d
+chown root:root $PKG/etc/profile.d/*
+chmod 755 $PKG/etc/profile.d/*
+
+mkdir -p $PKG/usr/doc/pkg-config-$VERSION
+cp -a \
+  AUTHORS COPYING NEWS README \
+  $PKG/usr/doc/pkg-config-$VERSION
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+
+cd $TMP/package-pkg-config
+zcat $CWD/doinst.sh.gz | sed "s,/lib/,/lib$LIBSUFFIX/,g" > install/doinst.sh
+
+pkghelpers_fixup
+pkghelpers_makepkg
