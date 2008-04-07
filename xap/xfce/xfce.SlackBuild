@@ -1,6 +1,6 @@
 #!/bin/sh
 # Copyright 2003  Slackware Linux, Inc., Concord, CA, USA
-# Copyright 2007  Patrick J. Volkerding, Sebeka, MN, USA
+# Copyright 2007, 2008  Patrick J. Volkerding, Sebeka, MN, USA
 # All rights reserved.
 #
 # Redistribution and use of this script, with or without modification, is
@@ -32,7 +32,7 @@ mkdir -p $PKG
 VERSION=4.4.2
 PKGVER=4.4.2
 ARCH=${ARCH:-x86_64}
-BUILD=${BUILD:-1}
+BUILD=${BUILD:-2}
 DISTRO=${DISTRO:-slamd64}
 
 if [ $DISTRO = slackware ]; then
@@ -95,10 +95,17 @@ orage-4.4.2.tar.bz2 \
       PACKAGE_SPECIFIC_OPTIONS="--with-sound=alsa"
     fi
 
-    # Official patch from Thunar developer 
-    # http://foo-projects.org/pipermail/xfce4-dev/2007-December/023857.html
+    # Official patches from Thunar developer 
     if [ "$file" = "Thunar-0.9.0.tar.bz2" ]; then
-      zcat $CWD/thunar-vfs-volume-hal_missing-audio-cds-for-volman.patch.gz | patch -p0 --verbose
+      # http://foo-projects.org/pipermail/xfce4-dev/2007-December/023857.html
+      zcat $CWD/thunar-vfs-volume-hal_missing-audio-cds-for-volman.patch.gz | patch -p0 --verbose || exit 1
+      # http://bugzilla.xfce.org/show_bug.cgi?id=2983
+      zcat $CWD/thunar_xfdesktop-zombie_process-fix.diff.gz | patch -p1 --verbose || exit 1
+    fi
+
+    # Official patch to fix memory leak in xfdesktop:
+    if [ "$file" = "xfdesktop-4.4.2.tar.bz2" ]; then
+      zcat $CWD/xfdesktop-desktop-menu-dentry.diff.gz | patch -p1 --verbose || exit 1
     fi
 
     chown -R root:root .

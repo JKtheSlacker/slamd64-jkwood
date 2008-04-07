@@ -3,7 +3,7 @@ TMP=/tmp
 PKG=$TMP/package-xscreensaver
 CWD=`pwd` 
 
-VERSION=5.02
+VERSION=5.04
 ARCH=${ARCH:-x86_64}
 BUILD=${BUILD:-1}
 DISTRO=${DISTRO:-slamd64}
@@ -54,7 +54,7 @@ CXXFLAGS="$SLKCFLAGS" \
   --with-gl \
   --build=$ARCH-$DISTRO-linux
 # We use '-i' because xscreensaver's NLS support has always been horribly broken
-make -i -j 12
+make -i -j3
 make -i install_prefix=$PKG install-strip
 gzip -9 $PKG/usr/man/man?/*
 chown root:shadow $PKG/usr/bin/xscreensaver
