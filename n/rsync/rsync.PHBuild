@@ -1,7 +1,7 @@
 #!/bin/sh
 # Set initial variables:
 PKGNAM=rsync
-VERSION=3.0.0
+VERSION=3.0.1
 BUILD=1
 
 . /etc/pkghelpers
@@ -18,8 +18,6 @@ cd $TMP
 rm -rf rsync-$VERSION
 tar xzvf $CWD/rsync-$VERSION.tar.gz
 cd rsync-$VERSION
-
-zcat $CWD/daemon-crash-fix.diff.gz | patch -p1 --verbose || exit 1
 
 pkghelpers_permissions
 

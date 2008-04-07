@@ -6,7 +6,7 @@
 # customary to leave one space after the ':'.
 
      |-----handy-ruler------------------------------------------------------|
-rsync: rsync
+rsync: rsync (remote file sync)
 rsync:
 rsync: rsync is a replacement for rcp that has many more features.  It
 rsync: uses the "rsync algorithm" which provides a very fast method for
