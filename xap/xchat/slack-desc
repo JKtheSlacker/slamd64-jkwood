@@ -6,7 +6,7 @@
 # customary to leave one space after the ':'.
 
      |-----handy-ruler------------------------------------------------------|
-xchat: xchat
+xchat: xchat (GTK+-based IRC client)
 xchat:
 xchat: X-Chat is a GTK+-based IRC (Internet Relay Chat) client.
 xchat:
