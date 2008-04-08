@@ -1,7 +1,7 @@
 #!/bin/sh
 PKGNAM=gtk+2
 VERSION=2.12.9
-BUILD=${BUILD:-1}
+BUILD=${BUILD:-2}
 
 . /etc/pkghelpers
 pkghelpers_env
@@ -37,6 +37,9 @@ fi
 zcat $CWD/gtk.pnglz.diff.gz | patch -p1 --verbose || exit 1
 # Fix Flash in Konquoror:
 zcat $CWD/gtk.nsplugin.diff.gz | patch -p1 --verbose || exit 1
+
+# From Gentoo bug #215318 - fixes Eclipse on x86-64
+zcat $CWD/gtk+-2.12.9-fix64bitscrash.diff.gz | patch -p1 --verbose || exit 1
 
 pkghelpers_permissions
 
