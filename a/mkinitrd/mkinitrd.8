@@ -7,7 +7,7 @@
 .ie \\n(.$=0:((0\\$1)*2u>(\\n(.lu-\\n(.iu)) .TP
 .el .TP "\\$1"
 ..
-.TH MKINITRD 8 "05 February 2008" "Slackware Version 12.1"
+.TH MKINITRD 8 "04 March 2008" "Slackware Version 12.1"
 .SH NAME
 mkinitrd \- create or rebuilt an initrd (initial ramdisk) using initramfs (simple cpio+gzip).
 .SH SYNOPSIS
@@ -40,7 +40,7 @@ mkinitrd \- create or rebuilt an initrd (initial ramdisk) using initramfs (simpl
 .B \-s source_tree
 ]
 [
-.B \-C
+.B \-C crypt_device
 ]
 [
 .B \-L
@@ -53,16 +53,18 @@ mkinitrd \- create or rebuilt an initrd (initial ramdisk) using initramfs (simpl
 ]
 .SH DESCRIPTION
 .B mkinitrd
-is used to build an initial ramdisk.  An initial ramdisk is a very small set of files
-that are loaded into RAM and "mounted" (as initramfs doesn't actually use a filesystem) as the kernel boots (before the main root filesystem is mounted).  The usual reason to use an initrd
-is because you need to load kernel modules before mounting the root partition.
-Usually these modules are
-required to support the filesystem used by the root partition (ext3,
-reiserfs, xfs), or perhaps the controller that the hard drive is attached
-to (SCSI, RAID, etc).  Essentially, there are so many different options
-available in modern Linux kernels that it isn't practical to try to ship
-many different kernels to try to cover everyone's needs.  It's a lot more
-flexible to ship a generic kernel and a set of kernel modules for it. 
+is used to build an initial ramdisk.  An initial ramdisk is a very small
+set of files that are loaded into RAM and "mounted" (as initramfs doesn't
+actually use a filesystem) as the kernel boots (before the main root
+filesystem is mounted).  The usual reason to use an initrd is because
+you need to load kernel modules before mounting the root partition.
+Usually these modules are required to support the filesystem used by the
+root partition (ext3, reiserfs, xfs), or perhaps the controller that the
+hard drive is attached to (SCSI, RAID, etc).  Essentially, there are so many
+different options available in modern Linux kernels that it isn't practical
+to try to ship many different kernels to try to cover everyone's needs.
+It's a lot more flexible to ship a generic kernel and a set of kernel
+modules for it.
 .SH OPTIONS
 .TP
 .B \-F
@@ -89,8 +91,14 @@ Display a help summary.
 Specify the swap partition holding the hibernation image.
 .TP
 .B \-k kernel version
-Use kernel modules from the specified kernel version.  mkinitrd will look for them in
-/lib/modules/(kernel version).
+Use kernel modules from the specified kernel version.  mkinitrd will look
+for them in /lib/modules/(kernel version).
+.TP
+.B \-l keymap
+Load an alternative keyboard mapping. All supported keyboard mappings
+can be found in /usr/share/mkinitrd/keymaps.tar.gz
+Leave the '.bmap' out when you supply this parameter. E.g. '-l nl' will 
+add support for dutch keyboard mapping to the initrd.
 .TP
 .B \-m module list
 This is a list of colon-delimited modules to build into the initrd.
@@ -115,13 +123,23 @@ drives are spun up and ready to go.
 .TP
 .B \-C
 Use cryptsetup to enable the underlying device of an encrypted root partition.
-Requires '-r' parameter with the *mapped* device name as an argument, like this:
-.PP
+Requires '-r' parameter.  Two scenarios are possible.
+.br
+(1) root filesystem was created on the encrypted disk/LVM partition, example:
+
   -C /dev/sda2 -r cryptroot
-.PP
-where the actual root device name in /etc/fstab is:
-.PP
+
+where /dev/sda2 is the encrypted partition and the actual root device name in /etc/fstab is:
+
   /dev/mapper/cryptroot
+
+(2) the encrypted partition contains a LVM volume which holds the root filesystem, example:
+
+  -C /dev/sda2 -r /dev/vg/root
+
+where /dev/sda2 is the encrypted partition and the actual root device name in /etc/fstab is:
+
+  /dev/vg/root
 .TP
 .B \-L
 This option adds LVM support to the initrd, if the tools are
@@ -138,10 +156,10 @@ A simple example:  Build an initrd for a reiserfs root partition:
 
   mkinitrd -c -m reiserfs
 
-Another example:  Build an initrd image using Linux 2.6.21.3 kernel
+Another example:  Build an initrd image using Linux 2.6.24.4 kernel
 modules for a system with an ext3 root partition on /dev/hdb3:
 
-  mkinitrd -c -k 2.6.21.3 -m ext3 -f ext3 -r /dev/hdb3
+  mkinitrd -c -k 2.6.24.4 -m ext3 -f ext3 -r /dev/hdb3
 
 If run without options, mkinitrd will rebuild an initrd image using
 the contents of the $SOURCE_TREE directory, or, if that directory
@@ -156,10 +174,10 @@ line to /etc/lilo.conf.  Here's a section of lilo.conf that shows
 how to set this up:
 
  # Linux bootable partition config begins
- image = /boot/vmlinuz-generic-2.6.21.3
+ image = /boot/vmlinuz-generic-2.6.24.4
    initrd = /boot/initrd.gz
    root = /dev/hda6
-   label = Linux26213
+   label = Linux26244
    read-only
  # Linux bootable partition config ends
 

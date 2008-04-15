@@ -5,6 +5,7 @@
 #CLEAR_TREE="0"
 #OUTPUT_IMAGE="/boot/initrd.gz"
 #KERNEL_VERSION="$(uname -r)"
+#KEYMAP="us"
 #MODULE_LIST="ext3"
 #LUKSDEV="/dev/hda1"
 #ROOTDEV="/dev/hda1"

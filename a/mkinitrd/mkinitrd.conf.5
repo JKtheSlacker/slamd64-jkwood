@@ -63,7 +63,17 @@ Defaults to "/boot/initrd.gz"
 .I KERNEL_VERSION
 This is the kernel version for which the initrd should be created.
 .br
- Defaults to "$(uname -r)"
+Defaults to "$(uname -r)"
+
+.TP 5
+.I KEYMAP
+This is the custom keyboard map that should be loaded instead of the
+default 'us' keymap.
+.br
+The file /usr/share/mkinitrd/keymaps.tar.gz contains all possible keymaps
+to choose from (omit the '.bmap' extension in the mkinitrd command)
+.br
+Example: KEYMAP="nl"
 
 .TP 5
 .I MODULE_LIST

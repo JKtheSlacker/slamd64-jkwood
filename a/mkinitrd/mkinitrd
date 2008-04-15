@@ -26,8 +26,10 @@
 # Modified by Alan Hicks <alan@slackware.com> 27 November 2007 to enable
 # passing arguments to kernel modules - No additional license terms added
 # volkderdi - feel free to remove these :)
+# Modified by Eric Hameleers <alien@slackware.com> 3 April 2008
+# to add support custom keymaps - No additional license terms added
 
-MKINITRD_VERSION=1.3.1
+MKINITRD_VERSION=1.3.2
 
 print_usage() {
   cat << EOF
@@ -49,6 +51,7 @@ initrd, and the script is easy to modify.  Be creative.  :-)
   -h      Device to resume from hibernation. Needs to be the name of
           the swap partition holding the hibernation image.
   -k      Kernel version to use
+  -l      Custom keymap to load. Like, 'nl' or 'de-latin1-nodeadkeys'
   -m      A colon (:) delimited list of kernel modules to load.
           Additional options may be added to use when loading the
           kernel modules (but in this case the entire list must be
@@ -224,6 +227,10 @@ while [ ! -z "$1" ]; do
       KERNEL_VERSION="$2"
       shift 2
       ;;
+    -l)
+      KEYMAP="$2"
+      shift 2
+      ;;
     -m)
       MODULE_LIST="$2"
       shift 2
@@ -277,23 +284,31 @@ if [ ! -d "$SOURCE_TREE" ]; then
 fi
 
 # If $ROOTDEV and $ROOTFS are not set, assume we want the
-# values for the currently mounted /:
-if [ -z "$ROOTDEV" ]; then
+# values for the currently mounted /
+# (unless we find that values are already set in the initrd-tree):
+if [ -z "$ROOTDEV" -a -z "$(cat $SOURCE_TREE/rootdev)" ]; then
   ROOTDEV=$(mount | grep ' on / ' | cut -f 1 -d ' ')
 fi
-if [ -z "$ROOTFS" ]; then
+if [ -z "$ROOTFS" -a -z "$(cat $SOURCE_TREE/rootfs)" ]; then
   ROOTFS=$(mount | grep ' on / ' | cut -f 5 -d ' ')
 fi
-# Next, write them in the initrd-tree:
-echo $ROOTDEV > $SOURCE_TREE/rootdev
-echo $ROOTFS > $SOURCE_TREE/rootfs
+# If needed, write them in the initrd-tree:
+if [ ! -z "$ROOTDEV" ]; then
+  echo $ROOTDEV > $SOURCE_TREE/rootdev
+fi
+if [ ! -z "$ROOTFS" ]; then
+  echo $ROOTFS > $SOURCE_TREE/rootfs
+fi
 
-# If $WAIT are not set, assume we need only one second
+# If $WAIT is not set, assume we need only one second
 # to have all devices done
-if [ -z "$WAIT" ]; then
+# (unless we find that value is already set in the initrd-tree):
+if [ -z "$WAIT" -a -z "$(cat $SOURCE_TREE/wait-for-root)" ]; then
   WAIT=1
 fi
-echo $WAIT > $SOURCE_TREE/wait-for-root
+if [ ! -z "$WAIT" ]; then
+  echo $WAIT > $SOURCE_TREE/wait-for-root
+fi
 
 # Useful to know which initrd is running:
 INITRD_NAME=$(basename $OUTPUT_IMAGE)
@@ -302,6 +317,12 @@ echo $INITRD_NAME > $SOURCE_TREE/initrd-name
 # Fill /resumedev with the swap partition holding the hibernation image
 if [ ! -z "$RESUMEDEV" ]; then
   echo $RESUMEDEV > $SOURCE_TREE/resumedev
+fi
+
+# Add custom keymap support if one was given
+if [ ! -z "$KEYMAP" ]; then
+  echo $KEYMAP > $SOURCE_TREE/keymap
+  cp /usr/share/mkinitrd/keymaps.tar.gz $SOURCE_TREE/etc/
 fi
 
 # If LUKSDEV was set in the config file, then we need to set CRYPT=1
