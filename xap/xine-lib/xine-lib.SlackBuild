@@ -16,7 +16,7 @@ PKGVER=1.1.11.1
 # I'd rather have it work well for the i686/Athlon crowd than suck for everyone.
 ARCH=${ARCH:-x86_64}
 TARGET=${TARGET:-$ARCH-pc-linux-gnu}
-BUILD=1
+BUILD=2
 DISTRO=${DISTRO:-slamd64}
 
 if [ $DISTRO = slackware ]; then
@@ -33,6 +33,9 @@ cd $TMP
 rm -rf xine-lib-$VERSION
 tar xjvf $CWD/xine-lib-$VERSION.tar.bz2 || exit 1
 cd xine-lib-$DIRVER
+
+zcat $CWD/xine-lib.demux_qt.diff.gz | patch -p1 --verbose || exit 1
+zcat $CWD/xine-lib.embl.diff.gz | patch -p1 --verbose || exit 1
 
 chown -R root:root .
 find . -perm 664 -exec chmod 644 {} \;
