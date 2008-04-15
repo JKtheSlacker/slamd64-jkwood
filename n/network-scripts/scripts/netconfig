@@ -85,7 +85,7 @@ DEBUG_ETH_UP="no"
 ##WLAN_RATE[4]="54M auto"
 ##WLAN_CHANNEL[4]="auto"
 ##WLAN_KEY[4]="D5AD1F04ACF048EC2D0B1C80C7"
-##WLAN_IWPRIV[4]="AuthMode=WPAPSK EncrypType=TKIP WPAPSK=7B1ABEEB5D197741923ED26727569C365E31212096A0EAFAD563B268BAD01CAF TxRate=0"
+##WLAN_IWPRIV[4]="set AuthMode=WPAPSK | set EncrypType=TKIP | set WPAPSK=96389dc66eaf7e6efd5b5523ae43c7925ff4df2f8b7099495192d44a774fda16"
 #WLAN_WPA[4]="wpa_supplicant"
 #WLAN_WPADRIVER[4]="ndiswrapper"
 
@@ -106,12 +106,12 @@ DEBUG_ETH_UP="no"
                                 # defined in rc.wireless.conf, by prepending
                                 # 'WLAN_' to the parameter's name. Useful for
                                 # those with multiple wireless interfaces.
-#WLAN_IWPRIV[4]="AuthMode=WPAPSK EncrypType=TKIP WPAPSK=thekey TxRate=0"
+#WLAN_IWPRIV[4]="set AuthMode=WPAPSK | set EncrypType=TKIP | set WPAPSK=thekey"
                                 # Some drivers require a private ioctl to be
                                 # set through the iwpriv command. If more than
                                 # one is required, you can place them in the
-                                # IWPRIV parameter (space-separated, see the
-                                # example).
+                                # IWPRIV parameter (separated with the pipe (|)
+                                # character, see the example).
 ENDFILE
 chmod 644 $RC
 #

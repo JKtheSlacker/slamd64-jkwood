@@ -1,6 +1,6 @@
 #!/bin/sh
 PKGNAM=whois
-VERSION=4.7.21
+VERSION=4.7.26
 BUILD=1
 
 . /etc/pkghelpers

@@ -1,7 +1,7 @@
 #!?bin/sh
 
 PKGNAM=iptables
-VERSION=1.3.8
+VERSION=1.4.0
 BUILD=1
 
 . /etc/pkghelpers

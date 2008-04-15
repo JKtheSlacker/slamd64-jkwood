@@ -44,9 +44,18 @@ if [ -x /etc/rc.d/rc.rpc ]; then
   sh /etc/rc.d/rc.rpc start
 fi
 
-# Mount remote (SMB) filesystems:
+# Mount remote CIFS filesystems.  Note that where possible, using CIFS is
+# preferred over SMBFS.  SMBFS is no longer actively maintained.
+if cat /etc/fstab | grep -v '^#' | grep -w cifs 1> /dev/null 2> /dev/null ; then
+  echo "Mounting remote CIFS file systems:  /sbin/mount -a -t cifs"
+  /sbin/mount -a -t cifs
+  # Show the mounted volumes:
+  /sbin/mount -v -t cifs
+fi
+
+# Mount remote SMB filesystems:
 if cat /etc/fstab | grep -v '^#' | grep -w smbfs 1> /dev/null 2> /dev/null ; then
-  echo "Mounting remote (SMB) file systems:  /sbin/mount -a -t smbfs"
+  echo "Mounting remote SMBFS file systems:  /sbin/mount -a -t smbfs"
   /sbin/mount -a -t smbfs
   # Show the mounted volumes:
   /sbin/mount -v -t smbfs
