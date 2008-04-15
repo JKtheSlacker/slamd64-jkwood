@@ -1,6 +1,6 @@
 #!/bin/sh
 PKGNAM=m4
-VERSION=1.4.10
+VERSION=1.4.11
 BUILD=1
 
 . /etc/pkghelpers
