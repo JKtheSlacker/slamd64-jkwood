@@ -50,7 +50,7 @@
 PRGNAM=scim
 VERSION=${VERSION:-1.4.7}
 ARCH=${ARCH:-x86_64}
-BUILD=${BUILD:-2}
+BUILD=${BUILD:-3}
 TAG=${TAG:-}
 
 DOCS="ABOUT-NLS AUTHORS COPYING ChangeLog INSTALL NEWS README THANKS TODO"
@@ -168,7 +168,7 @@ cat <<EOT > $PKG/etc/profile.d/scim.sh.new
 
 # For SCIM to work, you need to use a UTF-8 locale.  Make sure it ends on
 # ".UTF-8", not "utf-8"!  As an example, you would need to use us_US.UTF-8
-# for a US locale (export LANG=us_US.UTF-8), not us_US.
+# for a US locale (export LANG=us_US.UTF-8), not en_US.
 #
 # The locale (LANG variable) is set in /etc/profile.d/lang.sh.
 
