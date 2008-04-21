@@ -6,15 +6,14 @@
 # leave one space after the ':'.
 
      |-----handy-ruler------------------------------------------------------|
-cmake: CMake, the cross-platform, open-source make system.
+cmake: CMake (cross-platform, open-source make system)
 cmake:
 cmake: CMake is used to control the software process using simple platform
 cmake: and compiler independed configuration files. CMake generates
 cmake: native makefiles and workspaces that can be used in the
 cmake: compiler environment of your choice.
-cmake: 
+cmake:
 cmake: CMake's home on the web is:  http://www.cmake.org
-cmake: 
-cmake: 
-cmake: 
+cmake:
+cmake:
 cmake:

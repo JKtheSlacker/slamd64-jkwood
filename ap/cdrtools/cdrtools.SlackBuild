@@ -6,7 +6,7 @@ if [ "$TMP" = "" ]; then
 fi
 PKG=$TMP/package-cdrtools
 
-VERSION=2.01.01a37
+VERSION=2.01.01a38
 ZISOFSTOOLS=1.0.8
 ARCH=${ARCH:-x86_64}
 BUILD=${BUILD:-1}
