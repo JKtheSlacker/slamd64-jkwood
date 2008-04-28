@@ -16,7 +16,7 @@ PKGVER=1.1.11.1
 # I'd rather have it work well for the i686/Athlon crowd than suck for everyone.
 ARCH=${ARCH:-x86_64}
 TARGET=${TARGET:-$ARCH-pc-linux-gnu}
-BUILD=2
+BUILD=3
 DISTRO=${DISTRO:-slamd64}
 
 if [ $DISTRO = slackware ]; then
@@ -44,6 +44,9 @@ XINE_BUILD=$TARGET \
 ./configure \
   --prefix=/usr \
   --libdir=/usr/lib$LIBSUFFIX \
+  --with-arts \
+  --disable-nosefart \
+  --without-speex \
   --mandir=/usr/man \
   --with-xv-path=/usr/lib$LIBSUFFIX \
   --with-w32-path=/usr/lib/codecs
