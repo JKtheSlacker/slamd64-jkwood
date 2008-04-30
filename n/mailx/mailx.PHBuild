@@ -1,8 +1,8 @@
 #!/bin/sh
 # Set initial variables:
 PKGNAM=mailx
-VERSION=12.1
-BUILD=2
+VERSION=12.3
+BUILD=1
 
 . /etc/pkghelpers
 pkghelpers_env
@@ -14,18 +14,7 @@ cd $TMP
 rm -rf mailx-$VERSION
 tar xjvf $CWD/mailx-$VERSION.tar.bz2
 cd mailx-$VERSION
-chown -R root:root .
-find . -perm 666 -exec chmod 644 {} \;
-find . -perm 664 -exec chmod 644 {} \;
-find . -perm 600 -exec chmod 644 {} \;
-find . -perm 444 -exec chmod 644 {} \;
-find . -perm 400 -exec chmod 644 {} \;
-find . -perm 440 -exec chmod 644 {} \;
-find . -perm 777 -exec chmod 755 {} \;
-find . -perm 775 -exec chmod 755 {} \;
-find . -perm 511 -exec chmod 755 {} \;
-find . -perm 711 -exec chmod 755 {} \;
-find . -perm 555 -exec chmod 755 {} \;
+pkghelpers_permissions
 make CFLAGS=-O2 PREFIX=/usr MANDIR=/usr/man MAILSPOOL=/var/spool/mail UCBINSTALL=/usr/bin/install SENDMAIL=/usr/sbin/sendmail
 make install CFLAGS=-O2 PREFIX=/usr MANDIR=/usr/man MAILSPOOL=/var/spool/mail UCBINSTALL=/usr/bin/install SENDMAIL=/usr/sbin/sendmail DESTDIR=$PKG
 # We put symlinks in /bin since some things still expect '/bin/mail' or '/bin/Mail':
@@ -51,7 +40,7 @@ strip $PKG/usr/bin/mailx
 )
 mkdir -p $PKG/usr/doc/mailx-$VERSION
 cp -a \
-  AUTHORS COPYING ChangeLog INSTALL README TODO \
+  AUTHORS COPYING* ChangeLog INSTALL README TODO \
   $PKG/usr/doc/mailx-$VERSION
 mkdir -p $PKG/install
 zcat $CWD/doinst.sh.gz > $PKG/install/doinst.sh
