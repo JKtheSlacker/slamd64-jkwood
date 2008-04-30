@@ -23,7 +23,7 @@
 PRGNAM=libgpg-error
 PKGNAM=$PRGNAM
 VERSION=1.6
-BUILD=${BUILD:-1}
+BUILD=${BUILD:-2}
 
 . /etc/pkghelpers
 pkghelpers_env
@@ -43,7 +43,7 @@ CXXFLAGS="$SLKCFLAGS" \
   --libdir=/usr/lib$LIBSUFFIX \
   --infodir=/usr/info \
   --enable-shared=yes \
-  --enable-static=no \
+  --enable-static=yes \
   --build=$ARCH-$DISTRO-linux \
   --host=$ARCH-$DISTRO-linux
 
