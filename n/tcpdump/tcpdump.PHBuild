@@ -1,9 +1,9 @@
 #!/bin/sh
 # Set initial variables:
 PKGNAM=tcpdump
-VERSION=3.9.7
-LIBVER=0.9.7
-BUILD=2
+VERSION=3.9.8
+LIBVER=0.9.8
+BUILD=1
 
 . /etc/pkghelpers
 pkghelpers_env
@@ -19,14 +19,15 @@ rm -rf libpcap-$LIBVER
 tar xzvf $CWD/libpcap-$LIBVER.tar.gz
 cd libpcap-$LIBVER
 find . -type d -name CVS -exec rm -rf {} \;
-chown -R root:root .
+pkghelpers_permissions
 CFLAGS="`getconf LFS_CFLAGS`" \
 ./configure \
   --prefix=/usr \
 	--libdir=/usr/lib$LIBSUFFIX \
+  --mandir=/usr/man \
   --enable-ipv6 \
   $ARCH-$DISTRO-linux
-make -j 10 || exit 1
+make || exit 1
 make install DESTDIR=$PKG
 mkdir -p $PKG/usr/doc/libpcap-$LIBVER
 cp -a \
@@ -41,13 +42,14 @@ rm -rf tcpdump-$VERSION
 tar xzvf $CWD/tcpdump-$VERSION.tar.gz
 cd tcpdump-$VERSION
 find . -type d -name CVS -exec rm -rf {} \;
-chown -R root:root .
+pkghelpers_permissions
 ./configure \
   --prefix=/usr \
 	--libdir=/usr/lib$LIBSUFFIX \
+  --mandir=/usr/man \
   --enable-ipv6 \
   $ARCH-$DISTRO-linux
-make -j 10 || exit 1
+make || exit 1
 make install DESTDIR=$PKG
 mkdir -p $PKG/usr/doc/tcpdump-$VERSION
 cp -a \
