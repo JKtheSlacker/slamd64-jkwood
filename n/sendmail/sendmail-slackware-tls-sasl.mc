@@ -4,7 +4,7 @@ dnl# some changes), use the m4 files in /usr/share/sendmail/cf like this:
 dnl#
 dnl# cp sendmail-slackware-tls.mc /usr/share/sendmail/cf/config.mc
 dnl# cd /usr/share/sendmail/cf
-dnl# sh Build config.cf
+dnl# sh Build config.mc
 dnl#
 dnl# You may then install the resulting .cf file:
 dnl# cp config.cf /etc/mail/sendmail.cf
@@ -38,6 +38,7 @@ FEATURE(`blacklist_recipients')dnl
 FEATURE(`local_procmail',`',`procmail -t -Y -a $h -d $u')dnl
 FEATURE(`always_add_domain')dnl
 FEATURE(`redirect')dnl
+FEATURE(`no_default_msa')dnl
 dnl# Turn this feature on if you don't always have DNS, or enjoy junk mail:
 dnl FEATURE(`accept_unresolvable_domains')dnl
 EXPOSED_USER(`root')dnl
@@ -50,6 +51,11 @@ dnl# Allow SASL authentication/relaying:
 define(`confAUTH_OPTIONS', `A p y')dnl
 define(`confAUTH_MECHANISMS', `LOGIN PLAIN DIGEST-MD5 CRAM-MD5')dnl
 TRUST_AUTH_MECH(`LOGIN PLAIN DIGEST-MD5 CRAM-MD5')dnl
-FEATURE(`no_default_msa')dnl
 DAEMON_OPTIONS(`Port=smtp, Name=MTA')dnl
-DAEMON_OPTIONS(`Port=smtps, Name=MSA-SSL, M=E')dnl
+dnl# Daemon options after M= below that might need to be changed are:
+dnl# s (allow SSL, not only TLS)
+dnl# a (require authentication)
+DAEMON_OPTIONS(`Port=smtps, Name=MSA-SSL, M=Esa')dnl
+LOCAL_CONFIG
+dnl# Do not allow the weak SSLv2:
+O CipherList=ALL:!ADH:!NULL:!EXPORT56:RC4+RSA:+HIGH:+MEDIUM:-LOW:+SSLv3:+TLSv1:-SSLv2:+EXP:+eNULL
