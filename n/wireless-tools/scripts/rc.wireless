@@ -44,6 +44,10 @@
 #                                in IWPRIV, you must separate them with the pipe
 #                                (|) character - this used to be a space char!
 #                                See the example in rc.inet1.conf.
+# 16/apr/2008 * Pat Volkerding * Make sure that HWADDR is all upper case.
+# 23/apr/2008 * Pat Volkerding * Increase sleep time after bringing up an
+#                                interface to 3 seconds.  Some drivers
+#                                need this additional time to initalize.
 # ------------------------------------------------------------------------------
 
 LOGGER=${LOGGER:-cat}
@@ -108,10 +112,10 @@ fi
 
 # Bring interface up - for determining the HWADDR
 $IFCOMMAND up
-sleep 2
+sleep 3
 
 # Get the MAC address for the interface
-HWADDR=`/sbin/ifconfig ${INTERFACE} | sed -ne 's/.*\(..:..:..:..:..:..\).*/\1/p'`
+HWADDR=`/sbin/ifconfig ${INTERFACE} | sed -ne 's/.*\(..:..:..:..:..:..\).*/\1/p' | tr [a-f] [A-F]`
 
 # Empty all wireless parameters- some of them could still be set for a previous interface:
 # when rc.inet1 is sourced from rc.M all scripts are run in the same shell.
@@ -301,7 +305,7 @@ if [ "$WPA" = "wpa_supplicant" ] || [ "$WPA" = "wpaxsupplicant" ] && [ -x ${SUPP
 	fi
 	# Bring interface up to avoid 'not ready' errors when calling iwconfig
 	$IFCOMMAND up
-	sleep 1
+	sleep 3
 
 else
 
