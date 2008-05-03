@@ -1,8 +1,8 @@
 #!/bin/sh
 # Set initial variables:
 PKGNAM=cscope
-VERSION=15.5
-BUILD=2
+VERSION=15.6
+BUILD=1
 
 . /etc/pkghelpers
 pkghelpers_env
@@ -12,18 +12,18 @@ mkdir -p $PKG
 
 cd $TMP
 rm -rf cscope-$VERSION
-tar xzvf $CWD/cscope-$VERSION.tar.gz
+tar xvf $CWD/cscope-$VERSION.tar.*
 cd cscope-$VERSION
-chown -R root.root .
-find . -perm 777 -exec chmod 755 {} \;
-find . -perm 666 -exec chmod 644 {} \;
-./configure --prefix=/usr
-make -j12 || exit 1
+pkghelpers_permissions
+./configure \
+  --prefix=/usr \
+  --build=${ARCH}-$DISTRO-linux
+make -j4 || exit 1
 make install DESTDIR=$PKG
-gzip -9 $PKG/usr/man/man1/cscope.1
+
 mkdir -p $PKG/usr/doc/cscope-$VERSION
 cp -a \
-  AUTHORS COPYING INSTALL NEWS README TODO \
+  AUTHORS COPYING* INSTALL NEWS README TODO \
   $PKG/usr/doc/cscope-$VERSION
 mkdir -p $PKG/install
 cat $CWD/slack-desc > $PKG/install/slack-desc
