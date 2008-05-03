@@ -12,7 +12,7 @@ mkdir -p $PKG
 
 VERSION=${VERSION:-1.2}
 ARCH=${ARCH:-noarch}
-BUILD=${BUILD:-6}
+BUILD=${BUILD:-7}
 
 # Install Slackware scripts and config files from $CWD/scripts/:
 mkdir -p $PKG/etc/rc.d
@@ -20,6 +20,9 @@ for file in rc.{4,6,K,M,S} rc.local rc.sysvinit ; do
   cp -a $CWD/scripts/$file $PKG/etc/rc.d/${file}.new
   chmod 755 $PKG/etc/rc.d/${file}.new
   chown root:root $PKG/etc/rc.d/${file}.new
+  if [ "$file" = "rc.M" ]; then
+    sed -i s%/etc/gtk-2.0/%/etc/gtk-2.0-64/%g $PKG/etc/rc.d/${file}.new
+  fi
 done
 cat $CWD/scripts/inittab > $PKG/etc/inittab.new
 chmod 644 $PKG/etc/inittab.new
