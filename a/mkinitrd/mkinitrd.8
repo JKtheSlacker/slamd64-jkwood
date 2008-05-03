@@ -156,10 +156,10 @@ A simple example:  Build an initrd for a reiserfs root partition:
 
   mkinitrd -c -m reiserfs
 
-Another example:  Build an initrd image using Linux 2.6.24.4 kernel
+Another example:  Build an initrd image using Linux 2.6.24.5 kernel
 modules for a system with an ext3 root partition on /dev/hdb3:
 
-  mkinitrd -c -k 2.6.24.4 -m ext3 -f ext3 -r /dev/hdb3
+  mkinitrd -c -k 2.6.24.5 -m ext3 -f ext3 -r /dev/hdb3
 
 If run without options, mkinitrd will rebuild an initrd image using
 the contents of the $SOURCE_TREE directory, or, if that directory
@@ -174,10 +174,10 @@ line to /etc/lilo.conf.  Here's a section of lilo.conf that shows
 how to set this up:
 
  # Linux bootable partition config begins
- image = /boot/vmlinuz-generic-2.6.24.4
+ image = /boot/vmlinuz-generic-2.6.24.5
    initrd = /boot/initrd.gz
    root = /dev/hda6
-   label = Linux26244
+   label = Linux26245
    read-only
  # Linux bootable partition config ends
 
