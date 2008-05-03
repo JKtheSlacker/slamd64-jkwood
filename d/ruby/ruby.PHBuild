@@ -1,6 +1,6 @@
 #!/bin/sh
 PKGNAM=ruby
-VERSION=1.8.6-p111
+VERSION=1.8.6-p114
 BUILD=${BUILD:-1}
 
 . /etc/pkghelpers
@@ -23,6 +23,9 @@ if [ "x$LIBSUFFIX" = "x64" ]; then
 	zcat $CWD/ruby-tcltk-multilib.patch.gz | patch -p1 --verbose || exit 1
 fi
 
+# Evidently certain things must be linked static. 
+# Seems suboptimal to me... 
+
 CFLAGS="$SLKCFLAGS" \
 ./configure \
   --prefix=/usr \
@@ -31,22 +34,16 @@ CFLAGS="$SLKCFLAGS" \
   --datadir=/usr/share \
   --enable-shared \
   --enable-install-doc \
-  --disable-static \
-  $ARCH-$DISTRO-linux
+  --enable-static \
+  --build=$ARCH-$DISTRO-linux
 
-make -j5 || exit 1
+make -j6 || exit 1
 make install DESTDIR=$PKG
 
 mkdir -p $PKG/usr/doc/ruby-$VERSION
 cp -a \
   COPYING COPYING.ja GPL LEGAL LGPL README README.EXT README.EXT.ja README.ja ToDo \
   $PKG/usr/doc/ruby-$VERSION
-
-# Fun for later
-#( cd $PKG/usr/man
-#  for i in `find . -type l` ; do ln -s $( readlink $i ).gz $i.gz ; rm $i ; done
-#  gzip -9 */*.?
-#)
 
 mkdir -p $PKG/install
 cat $CWD/slack-desc > $PKG/install/slack-desc
