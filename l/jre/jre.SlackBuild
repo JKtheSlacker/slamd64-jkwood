@@ -4,8 +4,8 @@ PKG=/tmp/package-jre
 rm -rf $PKG
 mkdir -p $PKG
 
-VERSION=6u5
-DVER=1.6.0_05
+VERSION=6u6
+DVER=1.6.0_06
 ARCH=x86_64
 JARCH=x64
 BUILD=1
@@ -31,10 +31,37 @@ find . -perm 555 -exec chmod 755 {} \;
 )
 chmod 755 $PKG/etc/profile.d/*
 ( cd $PKG/usr/lib64
+  mv jre${DVER} java
   ln -sf jre${DVER} java
 )
 mkdir -p $PKG/install
 cat $CWD/slack-desc > $PKG/install/slack-desc
+cat << EOF > $PKG/install/doinst.sh
+# Clean up a potential upgrade mess caused by changing the
+# installation directory to /usr/lib64/java/:
+if [ -L usr/lib64/java ]; then
+  rm -rf usr/lib64/java
+  mkdir -p usr/lib64/java/man
+  mkdir -p usr/lib64/java/lib/amd64/server
+  mkdir -p usr/lib64/java/lib/amd64/client
+  mkdir -p usr/lib64/java/javaws
+  mkdir -p usr/lib64/java/bin
+  mkdir -p usr/lib64/mozilla/plugins
+fi
+if [ -L ControlPanel ]; then
+  rm -f ControlPanel
+fi
+if [ -L ja ]; then
+  rm -f ja
+fi
+if [ -L javaws ]; then
+  rm -f javaws
+fi
+if [ -L libjsig.so ]; then
+  rm -f libjsig.so
+fi
+# End cleanup.
+EOF
 
 cd $PKG
 makepkg -l y -c n /tmp/jre-$VERSION-${ARCH}_slamd64-$BUILD.tgz

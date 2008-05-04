@@ -1,7 +1,7 @@
 #!/bin/sh
 PKGNAM=glib2
 VERSION=2.14.6
-BUILD=2
+BUILD=3
 
 . /etc/pkghelpers
 pkghelpers_env
@@ -26,11 +26,11 @@ make install DESTDIR=$PKG
 
 # Install profile scripts:
 mkdir -p $PKG/etc/profile.d/
-cp -a $CWD/glib2.{csh,sh} $PKG/etc/profile.d/
+cp -a $CWD/libglib2.{csh,sh} $PKG/etc/profile.d/
 chown root:root $PKG/etc/profile.d/*
 chmod 755 $PKG/etc/profile.d/*
-mv $PKG/etc/profile.d/glib2.csh $PKG/etc/profile.d/glib2.csh.new
-mv $PKG/etc/profile.d/glib2.sh $PKG/etc/profile.d/glib2.sh.new
+mv $PKG/etc/profile.d/libglib2.csh $PKG/etc/profile.d/libglib2.csh.new
+mv $PKG/etc/profile.d/libglib2.sh $PKG/etc/profile.d/libglib2.sh.new
 
 mkdir -p $PKG/usr/doc/glib-$VERSION
 cp -a \
