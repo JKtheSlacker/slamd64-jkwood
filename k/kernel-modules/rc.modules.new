@@ -30,7 +30,7 @@ RELEASE=$(uname -r)
 # If /usr is mounted and we have 'find', we can try to take a shortcut:
 if [ -x /usr/bin/find -a -e /lib/modules/$RELEASE/modules.dep \
      -a /lib/modules/$RELEASE/modules.dep -nt /etc/modules.conf ]; then
-  NEWMODS="$(/usr/bin/find /lib/modules/$RELEASE -type f -mindepth 2 -newer /lib/modules/$RELEASE/modules.dep)"
+  NEWMODS="$(/usr/bin/find /lib/modules/$RELEASE -mindepth 2 -type f -newer /lib/modules/$RELEASE/modules.dep)"
   # Only rebuild dependencies if new module(s) are found:
   if [ ! "" = "$NEWMODS" ]; then
     echo "Updating module dependencies for Linux $RELEASE:"

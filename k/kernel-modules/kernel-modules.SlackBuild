@@ -3,10 +3,10 @@ CWD=`pwd`
 TMP=${TMP:-/tmp}
 PKG=$TMP/package-kernel-modules
 
-VERSION=${VERSION:-2.6.24.4}
+VERSION=${VERSION:-2.6.24.5}
 ARCH=${ARCH:-x86_64}
 PKGARCH=${ARCH}_slamd64
-BUILD=${BUILD:-2}
+BUILD=${BUILD:-1}
 
 if [ ! -d $TMP ]; then
   mkdir -p $TMP
