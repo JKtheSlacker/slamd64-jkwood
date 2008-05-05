@@ -1,14 +1,11 @@
 #!/bin/sh
-# Set initial variables:
-CWD=`pwd`
-if [ "$TMP" = "" ]; then
-  TMP=/tmp
-fi
-PKG=$TMP/package-bash-completion
-
+PKGNAM=bash-completion
 VERSION=20060301
-ARCH=noarch_slamd64
-BUILD=2
+ARCH=noarch
+BUILD=3
+
+. /etc/pkghelpers
+pkghelpers_env
 
 if [ ! -d $TMP ]; then
   mkdir -p $TMP # location to build the source
@@ -26,6 +23,7 @@ gzip -d $PKG/etc/profile.d/bash_completion.sh.gz
 chmod 755 $PKG/etc/profile.d/bash_completion.sh
 cp -a bash_completion $PKG/etc
 chmod 644 $PKG/etc/bash_completion
+sed -i "s/slackware-version/$DISTRO-version/" $PKG/etc/bash_completion
 cp -a contrib/* $PKG/etc/bash_completion.d
 chmod 755 $PKG/etc/bash_completion.d/*
 mkdir -p $PKG/usr/doc/bash-completion-$VERSION
@@ -37,10 +35,5 @@ cat $CWD/slack-desc > $PKG/install/slack-desc
 
 # Build the package:
 cd $PKG
-makepkg -l y -c n $TMP/bash-completion-$VERSION-$ARCH-$BUILD.tgz
-
-# Clean up the extra stuff:
-if [ "$1" = "--cleanup" ]; then
-  rm -rf $TMP/bash_completion
-  rm -rf $PKG
-fi
+pkghelpers_fixup
+pkghelpers_makepkg
