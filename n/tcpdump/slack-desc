@@ -6,7 +6,7 @@
 # customary to leave one space after the ':'.
 
        |-----handy-ruler------------------------------------------------------|
-tcpdump: tcpdump
+tcpdump: tcpdump (network monitor)
 tcpdump:
 tcpdump: Tcpdump is a tool for network monitoring and data acquisition.  You
 tcpdump: can use it to dump information on all the packets on a network that

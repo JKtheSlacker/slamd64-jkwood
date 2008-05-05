@@ -16,4 +16,4 @@ mailx: operation for IMAP, message threading, scoring, and filtering.
 mailx: It is also usable as a mail batch language, both for sending
 mailx: and receiving mail.
 mailx:
-mailx: The maintainer and primary developer of nail is Gunnar Ritter.
+mailx: The maintainer and primary developer of mailx is Gunnar Ritter.
