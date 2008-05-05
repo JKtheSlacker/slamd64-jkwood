@@ -1,0 +1,26 @@
+#!/bin/sh
+PKGNAM=kvm
+VERSION=57
+BUILD=1
+
+. /etc/pkghelpers
+pkghelpers_env
+
+cd $TMP
+tar xfv $CWD/$PKGNAM-$VERSION.tar.gz || exit 1
+cd $PKGNAM-$VERSION
+./configure \
+	--prefix=/usr \
+	--with-patched-kernel \
+	--enable-alsa \
+	--disable-gcc-check
+make -j5 || exit 1
+
+make install DESTDIR=$PKG
+
+cd $PKG
+mv usr/share/man usr/man
+mkdir install
+cat $CWD/slack-desc > install/slack-desc
+pkghelpers_fixup
+pkghelpers_makepkg
