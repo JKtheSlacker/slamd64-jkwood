@@ -1,7 +1,7 @@
 #!/bin/sh
 PKGNAM=smartmontools
-VERSION=5.36
-BUILD=2
+VERSION=5.38
+BUILD=1
 
 . /etc/pkghelpers
 pkghelpers_env
@@ -11,23 +11,28 @@ mkdir -p $PKG
 
 cd $TMP
 rm -rf smartmontools-$VERSION
-tar xzvf $CWD/smartmontools-$VERSION.tar.gz
+tar xvf $CWD/smartmontools-$VERSION.tar.*
 cd smartmontools-$VERSION
-chown -R root.root .
+pkghelpers_permissions
 ./configure \
   --prefix=/usr \
   --libdir=/usr/lib$LIBSUFFIX \
-  --sysconfdir=/etc
-make -j12
+  --mandir=/usr/man \
+  --sysconfdir=/etc \
+  $ARCH-$DISTRO-linux
+make -j4
 make install DESTDIR=$PKG
 # Not used on Slackware:
 rm -rf $PKG/etc/rc.d
 mv $PKG/etc/smartd.conf $PKG/etc/smartd.conf.new
+
 chown -R root:root $PKG/usr/sbin
+
 mv $PKG/usr/share/doc $PKG/usr
 rmdir $PKG/usr/share
 rm -f $PKG/usr/doc/smartmontools-$VERSION/CHANGELOG \
       $PKG/usr/doc/smartmontools-$VERSION/smartd.conf
+
 mkdir -p $PKG/install
 zcat $CWD/doinst.sh.gz > $PKG/install/doinst.sh
 cat $CWD/slack-desc > $PKG/install/slack-desc

@@ -22,7 +22,7 @@
 
 PKGNAM=ed
 VERSION=${VERSION:-0.9}
-BUILD=${BUILD:-1}
+BUILD=${BUILD:-2}
 
 . /etc/pkghelpers
 pkghelpers_env
@@ -47,6 +47,11 @@ CFLAGS="$SLKCFLAGS" \
 # Build and install:
 make -j6 || exit 1
 make install DESTDIR=$PKG || exit 1
+
+if [ ! -r $PKG/usr/man/man1/ed.1 ]; then
+  mkdir -p $PKG/usr/man/man1
+  cat doc/ed.1 > $PKG/usr/man/man1/ed.1
+fi
 
 # Traditional:
 ( mkdir $PKG/bin
