@@ -1,7 +1,7 @@
 #!/bin/sh
 PKGNAM=pkg-config
 VERSION=0.23
-BUILD=1
+BUILD=2
 
 . /etc/pkghelpers
 pkghelpers_env
@@ -19,7 +19,8 @@ CFLAGS="$SLKCFLAGS" \
 ./configure \
   --prefix=/usr \
   --libdir=/usr/lib$LIBSUFFIX \
-  --mandir=/usr/man
+  --mandir=/usr/man \
+  --build=${ARCH}-$DISTRO-linux
 
 make -j5 || exit 1
 make install DESTDIR=$PKG || exit 1
