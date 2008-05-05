@@ -1,7 +1,7 @@
 #!/bin/sh
 PKGNAM=man
-VERSION=1.6c
-BUILD=${BUILD:-2}
+VERSION=1.6f
+BUILD=${BUILD:-1}
 
 . /etc/pkghelpers
 pkghelpers_env

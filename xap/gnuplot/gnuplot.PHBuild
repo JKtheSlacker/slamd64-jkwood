@@ -1,6 +1,6 @@
 #!/bin/sh
 PKGNAM=gnuplot
-VERSION=4.2.0
+VERSION=4.2.3
 BUILD=${BUILD:-1}
 
 . /etc/pkghelpers
@@ -30,13 +30,13 @@ find . -perm 555 -exec chmod 755 {} \;
 CFLAGS="$SLKCFLAGS" \
 ./configure \
   --prefix=/usr \
-	--libdir=/usr/lib$LIBSUFFIX \
+  --libdir=/usr/lib$LIBSUFFIX \
   --with-png \
   --with-gd \
   --datadir=/usr/share/gnuplot \
   --with-readline=builtin
 
-make -j10 || exit 1
+make -j5 || exit 1
 make install DESTDIR=$PKG || exit 1
 
 mkdir -p $PKG/usr/doc/gnuplot-$VERSION

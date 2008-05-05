@@ -22,7 +22,7 @@
 
 
 PKGNAM=lm_sensors
-PKGVER=2.10.5
+PKGVER=2.10.6
 BUILD=1
 
 . /etc/pkghelpers

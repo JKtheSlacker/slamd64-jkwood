@@ -42,7 +42,7 @@ CXXFLAGS="$SLKCFLAGS" \
   --with-x-toolkit=gtk \
   --build=${ARCH}-$DISTRO-linux
 
-make -j3 || exit 1
+make -j5 || exit 1
 make install DESTDIR=$PKG
 
 ( cd $PKG/usr/bin
