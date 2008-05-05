@@ -1,0 +1,38 @@
+#!/bin/sh
+# Args:
+# $1 = slackware initrd
+# $2 = slamd64 initrd
+
+BBVER=1.4.2
+CWD=$(pwd)
+
+if [ $(whoami) != "root" ]; then
+	echo "You must be root to run this script."
+	exit 1
+fi
+
+echo "# Replacing 32-bit binaries with 64-bit binaries"
+for file in $(find -type f | xargs file | grep "ELF 32" | cut -f1 -d: ); do
+	rm $file
+	sfile=$(basename $file .bin)
+	if echo $file | grep -q '\.so'; then
+		# Got a library
+		dirs="/lib64 /usr/lib64"
+	else
+		dirs="/bin /usr/bin /sbin /usr/sbin /usr/libexec /lib64"
+	fi
+	for dir in $dirs fail; do
+		if [ $dir = fail ]; then
+			echo "Could not find $file"
+			break;
+		fi
+		if [ -e $dir/$sfile ]; then
+			cp $dir/$sfile $file
+			break;
+		fi
+	done
+done
+
+echo "# Cleaning up libraries"
+mv lib lib64
+mv usr/lib usr/lib64
