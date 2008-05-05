@@ -71,11 +71,15 @@ for file in $(find -type f | xargs file | grep "ELF 32" | cut -f1 -d: ); do
 	done
 done
 
-echo "# Adding libattr and libacl"
+echo "# Adding extra libraries"
 # Slackware apparently recompiles coreutils to not depend on them; I'm not going to.
-for lib in libattr libacl; do
-	ls /lib64/$lib*.so* | xargs file | grep "ELF 64" | cut -f1 -d: | xargs -ifoo install -oroot -groot -m755 foo lib/
+for lib in libattr libacl libmagic; do
+	grep lib64/$lib*.so /var/log/packages/* | cut -f2 -d: | xargs -ifoo install -oroot -groot -m755 /foo lib/
 done
+
+echo "# Installing /etc/magic"
+# Needed by 'file'
+install -oroot -groot -m644 /etc/magic etc/magic
 		
 echo "# Cleaning up libraries"
 for dir in lib usr/lib; do
