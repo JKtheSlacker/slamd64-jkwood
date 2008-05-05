@@ -1,4 +1,0 @@
-IMPORTANT
-
-This package *MUST* build with gcc 3 at the moment.
-It's currently built on Slamd64 11.0
