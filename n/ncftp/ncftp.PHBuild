@@ -1,8 +1,8 @@
 #!/bin/sh
 # Set initial variables:
 PKGNAM=ncftp
-VERSION=3.2.0
-BUILD=2
+VERSION=3.2.1
+BUILD=1
 
 . /etc/pkghelpers
 pkghelpers_env
@@ -14,29 +14,23 @@ cd $TMP
 rm -rf ncftp-$VERSION
 tar xjvf $CWD/ncftp-$VERSION-src.tar.bz2
 cd ncftp-$VERSION
-chown -R root:root .
+
+pkghelpers_permissions
+
 CFLAGS="$SLKCFLAGS" \
 ./configure \
   --prefix=/usr \
-  $ARCH-$DISTRO-linux
+  --sysconfdir=/etc \
+  --mandir=/usr/man \
+  --build=$ARCH-$DISTRO-linux
 
-make -j12 || exit 1
+make -j4 || exit 1
+make install DESTDIR=$PKG || exit 1
 
-mkdir -p $PKG/usr/bin
-( cd bin
-  for file in ncftp ncftpbatch ncftpbookmarks ncftpget ncftpls ncftpput ; do
-    cat $file > $PKG/usr/bin/$file
-  done
+( cd $PKG/usr/bin
   rm -f ncftpspooler
   ln -sf ncftpbatch ncftpspooler
 )
-chmod 755 $PKG/usr/bin/*
-
-mkdir -p $PKG/usr/man/man1
-( cd doc/man
-  for file in *.1 ; do
-    cat $file | gzip -9c > $PKG/usr/man/man1/$file.gz
-  done )
 
 mkdir -p $PKG/usr/doc/ncftp-$VERSION
 cp -a doc/* $PKG/usr/doc/ncftp-$VERSION

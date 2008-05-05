@@ -22,7 +22,7 @@
 
 
 PKGNAM=mcabber
-VERSION=${VERSION:-0.9.6}
+VERSION=${VERSION:-0.9.7}
 BUILD=${BUILD:-1}
 
 . /etc/pkghelpers

@@ -24,7 +24,7 @@ PKGNAM=bind
 
 VERSION=${VERSION:-9.4.2}
 PKGVER=$(echo $VERSION | tr - _)
-BUILD=1
+BUILD=2
 
 . /etc/pkghelpers
 
@@ -56,12 +56,7 @@ zcat $CWD/bind.var.run.named.diff.gz | patch -p1 --verbose --backup --suffix=.or
 zcat $CWD/bind.man.diff.gz | patch -p1 --verbose --backup --suffix=.orig || exit 1
 
 # Make sure ownerships and permissions are sane:
-chown -R root:root .
-find . \
- \( -perm 777 -o -perm 775 -o -perm 711 -o -perm 555 -o -perm 511 \) \
- -exec chmod 755 {} \; -o \
- \( -perm 666 -o -perm 664 -o -perm 600 -o -perm 444 -o -perm 440 -o -perm 400 \) \
- -exec chmod 644 {} \;
+pkghelpers_permissions
 
 # Configure:
 CFLAGS="$SLKCFLAGS" \
@@ -79,7 +74,7 @@ CFLAGS="$SLKCFLAGS" \
   --build=$ARCH-$DISTRO-linux || exit 1
 
 # Build and install:
-make -j10 || exit 1
+make -j4 || exit 1
 make install DESTDIR=$PKG || exit 1
 
 # We like symlinks.

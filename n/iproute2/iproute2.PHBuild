@@ -1,0 +1,51 @@
+#!/bin/sh
+# Build this against 2.6.x kernel source and headers...
+
+PKGNAM=iproute2
+VERSION=2.6.16-060323
+PKGVER=$(echo $VERSION | tr - _)
+ARCH=${ARCH:-x86_64}
+BUILD=${BUILD:-3}
+DISTRO=${DISTRO:-slamd64}
+
+. /etc/pkghelpers
+pkghelpers_env
+
+rm -rf $PKG
+mkdir -p $PKG
+mkdir -p $PKG/usr/man/man8
+cd $TMP
+rm -rf iproute2-$VERSION
+tar xzvf $CWD/iproute2-$VERSION.tar.gz
+cd iproute2-$VERSION
+
+zcat $CWD/iproute2.dbpath.diff.gz | patch -p1 --verbose --backup --suffix=.orig || exit 1
+zcat $CWD/iproute2.iptablespath.diff.gz | patch -p1 --verbose --backup --suffix=.orig || exit 1
+if [ "$LIBSUFFIX" = "64" ]; then
+  sed -i s%/usr/lib/iptables%/usr/lib$LIBSUFFIX/iptables% include/iptables.h || exit 1
+  sed -i s%/usr/lib/iptables%/usr/lib$LIBSUFFIX/iptables% tc/m_ipt.c || exit 1
+  # Loosely based on a CLFS patch
+  zcat $CWD/iproute2-2.6.16-060323-lib64.diff.gz | patch -p1 --verbose --backup --suffix=.orig || exit 1
+fi
+
+pkghelpers_permissions
+
+make || exit 1
+make install DESTDIR=$PKG || exit 1
+for file in $PKG/etc/iproute2/* ; do
+  mv $file ${file}.new
+done
+
+mkdir -p $PKG/var/lib/arpd
+
+mv $PKG/usr/doc/iproute2 $PKG/usr/doc/iproute2-$VERSION
+cp -a RE* \
+  $PKG/usr/doc/iproute2-$VERSION
+
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+zcat $CWD/doinst.sh.gz > $PKG/install/doinst.sh
+
+cd $PKG
+pkghelpers_fixup
+pkghelpers_makepkg

@@ -8,7 +8,7 @@ PKG=$TMP/package-sendmail-cf
 
 VERSION=8.14.2
 ARCH=noarch
-BUILD=1
+BUILD=2
 
 if [ ! -d $TMP ]; then
   mkdir -p $TMP # location to build the source

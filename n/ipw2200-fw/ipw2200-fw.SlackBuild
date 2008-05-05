@@ -23,7 +23,7 @@
 PKGNAM=ipw2200-fw
 VERSION=${VERSION:-3.0}
 ARCH=${ARCH:-fw}
-BUILD=${BUILD:-1}
+BUILD=${BUILD:-2}
 
 
 CWD=`pwd`
@@ -49,7 +49,7 @@ cp -a * $PKG/lib/firmware
 
 # Add a documentation directory:
 mkdir -p $PKG/usr/doc/${PKGNAM}-${VERSION}
-cp -a LICENSE $PKG/usr/doc/${PKGNAM}-${VERSION}
+cp -a LICENSE* $PKG/usr/doc/${PKGNAM}-${VERSION}
 
 mkdir -p $PKG/install
 cat << EOF > $PKG/install/slack-desc

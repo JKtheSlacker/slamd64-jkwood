@@ -35,7 +35,7 @@
 
 PKGNAM=cryptsetup
 VERSION=${VERSION:-1.0.5}
-BUILD=${BUILD:-1}
+BUILD=${BUILD:-2}
 
 pkghelpers_env
 
@@ -44,11 +44,10 @@ DOCS="AUTHORS COPYING ChangeLog INSTALL NEWS README TODO"
 rm -rf $PKG
 mkdir $PKG
 
-cd $TMP/tmp-$PKGNAM
+cd $TMP
 
 tar xfv $CWD/$PKGNAM-$VERSION.tar.*
 
- 
 cd ${PKGNAM}-${VERSION}
 
 chown -R root:root .
@@ -86,7 +85,7 @@ CFLAGS="$SLKCFLAGS" \
             --sysconfdir=/etc \
             --datarootdir=/usr \
             --datadir=/usr/share \
-            --disable-libgcrypt \
+            --enable-libgcrypt \
             --enable-libdevmapper \
             --enable-static \
             --disable-shared \
@@ -96,6 +95,23 @@ CFLAGS="$SLKCFLAGS" \
             --build=$ARCH-$DISTRO-linux \
             2>&1 | tee $OUTPUT/configure-${PKGNAM}-static.log
 make 2>&1 | tee $OUTPUT/make-${PKGNAM}-static.log
+
+# I have to do one old-school thing to leave a mark here:
+mkdir -p $PKG/sbin
+cat src/cryptsetup > $PKG/sbin/cryptsetup.static
+chmod 755 $PKG/sbin/cryptsetup.static
+
+# Now that we have the .static version, it only makes sense to
+# use it by default (even when calling /usr/sbin/cryptsetup).
+# This avoids missing library issues if someone installs an
+# encrypted system using only the A package series.
+#
+# This is small, so save it:
+mv $PKG/usr/sbin/cryptsetup $PKG/usr/sbin/cryptsetup.dynamic
+# Replace with a link:
+( cd $PKG/usr/sbin ; ln -sf ../../sbin/cryptsetup.static cryptsetup )
+# Put one in /sbin too, in case someone tries to use /sbin/cryptsetup:
+( cd $PKG/sbin ; ln -sf cryptsetup.static cryptsetup )
 
 # I have to do one old-school thing to leave a mark here:
 mkdir -p $PKG/sbin

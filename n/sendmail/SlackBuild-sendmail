@@ -8,7 +8,7 @@ PKG=$TMP/package-sendmail
 
 VERSION=8.14.2
 ARCH=${ARCH:-x86_64}
-BUILD=1
+BUILD=2
 
 if [ "$ARCH" = "i386" ]; then
   SLKCFLAGS="-O2 -march=i386 -mcpu=i686"
@@ -82,8 +82,6 @@ make O="$SLKCFLAGS" -j12
 cat sendmail/mailq.1 | gzip -9c > $PKG/usr/man/man1/mailq.1.gz
 cat sendmail/newaliases.1 | gzip -9c > $PKG/usr/man/man1/newaliases.1.gz
 mkdir -p $PKG/usr/doc/sendmail-$VERSION
-#wget -N -k -r http://www.sendmail.org/faq/faq.txt
-#cp -a www.sendmail.org/faq/faq.txt $PKG/usr/doc/sendmail-$VERSION
 ( cd $PKG/usr/doc/sendmail-$VERSION ; lftpget http://www.sendmail.org/faq/faq.txt ; chmod 644 faq.txt )
 cp -a FAQ INSTALL KNOWNBUGS LICENSE PGPKEYS README RELEASE_NOTES $PKG/usr/doc/sendmail-$VERSION
 ( cd doc ; cp -a op $PKG/usr/doc/sendmail-$VERSION )
