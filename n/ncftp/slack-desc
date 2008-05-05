@@ -6,7 +6,7 @@
 # customary to leave one space after the ':'.
 
      |-----handy-ruler------------------------------------------------------|
-ncftp: ncftp
+ncftp: ncftp (ftp client)
 ncftp:
 ncftp: NcFTP is a user interface to the Internet standard File Transfer
 ncftp: Protocol.  This program allows a user to transfer files to and from a
