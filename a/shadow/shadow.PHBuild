@@ -3,7 +3,7 @@
 PKGNAM=shadow
 VERSION=4.0.6
 ARCH=${ARCH:-x86_64}
-BUILD=4
+BUILD=5
 
 . /etc/pkghelpers
 pkghelpers_env
@@ -32,7 +32,7 @@ zcat $CWD/shadow.audiovideocdrom.diff.gz | patch -p1 --verbose --backup
             --disable-shared \
             --disable-desrpc \
             $ARCH-$DISTRO-linux
-make -j12
+make -j5
 cat etc/login.defs.linux > $PKG/etc/login.defs.new
 cat etc/login.access > $PKG/etc/login.access.new
 cat $CWD/adduser > $PKG/usr/sbin/adduser

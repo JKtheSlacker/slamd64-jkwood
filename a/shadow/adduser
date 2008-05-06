@@ -1,8 +1,8 @@
 #!/bin/bash
 #
 # Copyright 1995  Hrvoje Dogan, Croatia.
-# Copyright 2002, 2003, 2004  Stuart Winter, West Midlands, England, UK.
-# Copyright 2004  Slackware Linux, Inc., Concord, CA, USA
+# Copyright 2002, 2003, 2004, 2008  Stuart Winter, Surrey, England, UK.
+# Copyright 2004, 2008  Slackware Linux, Inc., Concord, CA, USA
 # All rights reserved.
 #
 # Redistribution and use of this script, with or without modification, is
@@ -26,15 +26,22 @@
 ##########################################################################
 # Program: /usr/sbin/adduser
 # Purpose: Interactive front end to /usr/sbin/useradd for Slackware Linux
-# Author : Stuart Winter <stuart@polplex.co.uk>
+# Author : Stuart Winter <mozes@slackware.com>
 #          Based on the original Slackware adduser by Hrvoje Dogan
 #          with modifications by Patrick Volkerding
-# Version: 1.09
+# Version: 1.10
 ##########################################################################
 # Usage..: adduser [<new_user_name>]
 ##########################################################################
 # History #
 ###########
+# v1.10 - 24/03/08
+#       * To facilitate use of the automatic mounting features of HAL,
+#         allow the admin to easily add users to the default groups:
+#         audio,cdrom,video,plugdev,floppy.
+#         The default is not to add new users to these groups.
+#         And by the way, this script is "useradd from Slackware" not
+#         "superadduser from Gentoo" ;-)
 # v1.09 - 07/06/04 
 #       * Added standard Slackware script licence to the head of this file.
 # v1.08 - 25/04/04
@@ -91,7 +98,8 @@ chmod=/bin/chmod
 defhome=/home
 defshell=/bin/bash
 defchmod=711 # home dir permissions - may be preferable to use 701, however.
-defgroup=users
+defgroup=users 
+AGID="audio cdrom floppy plugdev video" # additional groups for desktop users
 
 # Determine what the minimum UID is (for UID recycling)
 # (we ignore it if it's not at the beginning of the line (i.e. commented out with #))
@@ -249,21 +257,39 @@ fi
 
 #: Get additional groups for the user :#
 #
+echo "Additional UNIX groups:"
+echo
+echo "Users can belong to additional UNIX groups on the system."
+echo "For local users using graphical desktop login managers such"
+echo "as XDM/KDM, users may need to be members of additional groups"
+echo "to access the full functionality of removable media devices."
+echo
+echo "* Security implications *"
+echo "Please be aware that by adding users to additional groups may"
+echo "potentially give access to the removable media of other users."
+echo
+echo "If you are creating a new user for remote shell access only,"
+echo "users do not need to belong to any additional groups as standard,"
+echo "so you may press ENTER at the next prompt."
 echo
 needinput=yes
 while [ ! -z "$needinput" ]; do
-  AGID="$(get_input "Additional groups (comma separated) []:")"
-  AGID="$(echo "$AGID" | tr -d ' ' | tr , ' ')" # fix up for parsing 
+  history -c
+  history -s "$AGID"
+  echo "Press ENTER to continue without adding any additional groups"
+  echo "Or press the UP arrow to add/select/edit additional groups"
+  AGID="$(get_input ": " | tr -d '[:punct:]' | tr -s ' ' | sed 's?^ $??g' )"
   if [ ! -z "$AGID" ]; then
-    check_group "$AGID"  # check all groups at once (treated as N # of params)
+    check_group "$AGID" # check all groups at once (treated as N # of params)
     if [ $? -gt 0 ]; then
       echo "- Please re-enter the group(s)"
+      echo
     else
       unset needinput # we found all groups specified
-      AGID="-G $(echo "$AGID" | tr ' ' ,)"
+      AGID="-G $(echo $AGID | tr ' ' ,)" # useradd takes comma delimited groups
     fi
   else
-    unset needinput   # we don't *have* to have additional groups
+    unset needinput # we don't *have* to have additional groups
   fi
 done
 
@@ -404,4 +430,3 @@ echo
 echo
 echo "Account setup complete."
 exit 0
-
