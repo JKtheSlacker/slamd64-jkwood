@@ -38,6 +38,10 @@
 # 1.4.7-2:   30/Jan/2008 by Eric Hameleers <alien@slackware.com>
 #            * Add profile.d script to configure the proper use of scim;
 #              add scim to the list of GTK immodules
+# 1.4.7-5:   31/Mar/2008 by Patrick Volkerding
+#            * Put scim.desktop (startup utility) in the Utilities menu.
+# 1.4.7-6:   09/Apr/2008 by Patrick Volkerding
+#            Fix us_US locale typo in profile.d scripts.
 # 
 # Run 'sh scim.SlackBuild --cleanup' to build a Slackware package.
 # The package (.tgz) plus descriptive .txt file are created in /tmp .
@@ -50,7 +54,7 @@
 PRGNAM=scim
 VERSION=${VERSION:-1.4.7}
 ARCH=${ARCH:-x86_64}
-BUILD=${BUILD:-3}
+BUILD=${BUILD:-4}
 TAG=${TAG:-}
 
 DOCS="ABOUT-NLS AUTHORS COPYING ChangeLog INSTALL NEWS README THANKS TODO"
@@ -167,8 +171,8 @@ cat <<EOT > $PKG/etc/profile.d/scim.sh.new
 # entering of text in non-US-English languages.
 
 # For SCIM to work, you need to use a UTF-8 locale.  Make sure it ends on
-# ".UTF-8", not "utf-8"!  As an example, you would need to use us_US.UTF-8
-# for a US locale (export LANG=us_US.UTF-8), not en_US.
+# ".UTF-8", not "utf-8"!  As an example, you would need to use en_US.UTF-8
+# for a US locale (export LANG=en_US.UTF-8), not en_US.
 #
 # The locale (LANG variable) is set in /etc/profile.d/lang.sh.
 
@@ -218,8 +222,8 @@ cat <<EOT > $PKG/etc/profile.d/scim.csh.new
 # entering of text in non-US-English languages.
 
 # For SCIM to work, you need to use a UTF-8 locale.  Make sure it ends on
-# ".UTF-8", not "utf-8"!  As an example, you would need to use us_US.UTF-8
-# for a US locale (setenv LANG us_US.UTF-8), not us_US.
+# ".UTF-8", not "utf-8"!  As an example, you would need to use en_US.UTF-8
+# for a US locale (setenv LANG en_US.UTF-8), not en_US.
 #
 # The locale (LANG variable) is set in /etc/profile.d/lang.csh.
 
