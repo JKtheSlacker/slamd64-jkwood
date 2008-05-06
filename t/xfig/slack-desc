@@ -6,7 +6,7 @@
 # customary to leave one space after the ':'.
 
     |-----handy-ruler------------------------------------------------------|
-xfig: xfig
+xfig: xfig (interactive drawing tool)
 xfig:
 xfig: This package contains the binary for xfig, an interactive drawing tool
 xfig: under X.  Xfig can create fig, epsf, and LaTeX files with various

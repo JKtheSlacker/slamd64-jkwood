@@ -2,26 +2,13 @@
 CWD=`pwd`
 TMP=${TMP:-/tmp}
 
+PKGNAM=xfig
 VERSION=3.2.4
-ARCH=${ARCH:-x86_64}
 BUILD=${BUILD:-4}
-DISTRO=${DISTRO:-slamd64}
 
-if [ $DISTRO = slackware ]; then
-	PKGARCH=$ARCH
-else
-	PKGARCH=${ARCH}_${DISTRO}
-fi
+. /etc/pkghelpers
+pkghelpers_env
 
-if [ $DISTRO = slamd64 ]; then
-	LIBSUFFIX=64
-	SLKLDFLAGS="-L/usr/lib64"
-else
-	LIBSUFFIX=
-	SLKLDFLAGS=
-fi
-
-PKG=$TMP/package-xfig
 rm -rf $PKG
 mkdir -p $PKG
 
@@ -30,12 +17,7 @@ rm -rf $CWD/xfig-$VERSION
 tar xjvf $CWD/xfig.$VERSION.full.tar.bz2
 cd xfig.$VERSION
 
-chown -R root:root .
-find . -perm 666 -exec chmod 644 {} \;
-find . -perm 664 -exec chmod 644 {} \;
-find . -perm 444 -exec chmod 644 {} \;
-find . -perm 777 -exec chmod 755 {} \;
-find . -perm 775 -exec chmod 755 {} \;
+pkghelpers_permissions
 find . -perm 2775 -exec chmod 755 {} \;
 
 zcat $CWD/xfig-3.2.4-mkstemp.diff.gz | patch -E -p1 --verbose || exit 1
@@ -58,24 +40,17 @@ zcat $CWD/xfig.fig.ad.diff.gz | patch -E -p1 --verbose || exit 1
 zcat $CWD/xfig.docs.location.diff.gz | patch -E -p1 --verbose || exit 1
 
 xmkmf
-make -j10 || exit 1
+make -j4 || exit 1
 make install DESTDIR=$PKG || exit 1
 make install.man DESTDIR=$PKG || exit 1
 make install.libs DESTDIR=$PKG || exit 1
 # if this fails (which it has been for some reason), do it manually:
-if [ ! -d $PKG/usr/lib$LIBSUFFIX/X11/xfig/Libraries ]; then
-  mkdir -p $PKG/usr/lib$LIBSUFFIX/X11/xfig
-  cp -a Libraries $PKG/usr/lib$LIBSUFFIX/X11/xfig
-  cp -a CompKeyDB $PKG/usr/lib$LIBSUFFIX/X11/xfig
-fi
+#if [ ! -d $PKG/usr/lib$LIBSUFFIX/X11/xfig/Libraries ]; then
+#  mkdir -p $PKG/usr/lib$LIBSUFFIX/X11/xfig
+#  cp -a Libraries $PKG/usr/lib$LIBSUFFIX/X11/xfig
+#  cp -a CompKeyDB $PKG/usr/lib$LIBSUFFIX/X11/xfig
+#fi
 make install.html DESTDIR=$PKG || exit 1
-
-( cd $PKG
-  find . | xargs file | grep "executable" | grep ELF | cut -f 1 -d : | xargs strip --strip-unneeded 2> /dev/null
-  find . | xargs file | grep "shared object" | grep ELF | cut -f 1 -d : | xargs strip --strip-unneeded 2> /dev/null
-)
-
-gzip -9 $PKG/usr/man/man1/*
 
 mkdir -p $PKG/usr/doc/xfig-$VERSION
 cp -a \
@@ -89,5 +64,6 @@ mkdir -p $PKG/install
 cat $CWD/slack-desc > $PKG/install/slack-desc
 
 cd $PKG
-makepkg -l y -c n $TMP/xfig-$VERSION-$PKGARCH-$BUILD.tgz
+pkghelpers_fixup
+pkghelpers_makepkg
 
