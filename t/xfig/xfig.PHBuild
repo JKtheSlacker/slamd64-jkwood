@@ -4,7 +4,7 @@ TMP=${TMP:-/tmp}
 
 PKGNAM=xfig
 VERSION=3.2.4
-BUILD=${BUILD:-4}
+BUILD=${BUILD:-5}
 
 . /etc/pkghelpers
 pkghelpers_env
