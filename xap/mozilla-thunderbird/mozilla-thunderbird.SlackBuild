@@ -3,7 +3,7 @@ CWD=`pwd`
 TMP=${TMP:-/tmp}
 PKG=$TMP/package-mozilla-thunderbird
 
-VERSION=2.0.0.12
+VERSION=2.0.0.14
 ARCH=${ARCH:-x86_64}
 BUILD=${BUILD:-1}
 

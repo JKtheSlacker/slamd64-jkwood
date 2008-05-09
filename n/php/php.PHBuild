@@ -23,9 +23,9 @@
 #  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 PKGNAM=php
-VERSION=5.2.5
+VERSION=5.2.6
 PINE=4.64
-BUILD=${BUILD:-2}
+BUILD=${BUILD:-1}
 
 . /etc/pkghelpers
 pkghelpers_env
@@ -37,7 +37,7 @@ if [ -r $IMAPLIBDIR/lib$LIBSUFFIX/c-client.a ]; then
   ls -l $IMAPLIBDIR/lib$LIBSUFFIX/c-client.a
   sleep 5
 else
-  ( cd $CWD/../pine ; ./pine.PHBuild )
+  ( cd $CWD/../pine ; ./pine.PHBuild || exit 1) || exit 1
   ( cd $TMP/pine${PINE}/imap/c-client
     strip -g c-client.a
     mkdir -p $IMAPLIBDIR/lib$LIBSUFFIX
