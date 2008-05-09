@@ -6,7 +6,7 @@
 # customary to leave one space after the ':'.
 
       |-----handy-ruler------------------------------------------------------|
-expect: expect
+expect: expect (program that talks to other interactive programs)
 expect:
 expect: Expect is a program that talks to other interactive programs according
 expect: to a script.  Following the script, Expect knows what can be expected
