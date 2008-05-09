@@ -4,7 +4,7 @@
 PKGNAM=expect
 PKGVER=${PKGVER:-5.43.0}
 SRCVER=${SRCVER:-5.43}
-BUILD=${BUILD:-1}
+BUILD=${BUILD:-2}
 
 . /etc/pkghelpers
 pkghelpers_env
@@ -30,17 +30,7 @@ tar xzvf $CWD/expect-${PKGVER}.tar.gz || exit 1
 cd expect-$SRCVER || exit 1
 
 # Make sure ownerships and permissions are sane:
-chown -R root:root .
-find . -perm 664 -exec chmod 644 {} \;
-find . -perm 600 -exec chmod 644 {} \;
-find . -perm 444 -exec chmod 644 {} \;
-find . -perm 400 -exec chmod 644 {} \;
-find . -perm 440 -exec chmod 644 {} \;
-find . -perm 777 -exec chmod 755 {} \;
-find . -perm 775 -exec chmod 755 {} \;
-find . -perm 511 -exec chmod 755 {} \;
-find . -perm 711 -exec chmod 755 {} \;
-find . -perm 555 -exec chmod 755 {} \;
+pkghelpers_permissions
 
 # Configure:
 CFLAGS="$SLKCFLAGS" \
@@ -49,7 +39,8 @@ CFLAGS="$SLKCFLAGS" \
   --libdir=/usr/lib$LIBSUFFIX \
   --with-tclconfig=/usr/lib$LIBSUFFIX \
   --with-tclinclude=/usr/include/tcl-private/generic \
-  --enable-shared
+  --enable-shared \
+  --build=$ARCH-$DISTRO-linux
 
 # Build and install:
 make -j12 || exit 1

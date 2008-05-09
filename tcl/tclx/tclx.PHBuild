@@ -1,5 +1,5 @@
 #!/bin/sh
-# Copyright 2006, 2007  Patrick J. Volkerding, Sebeka, MN, USA
+# Copyright 2006, 2007, 2008  Patrick J. Volkerding, Sebeka, MN, USA
 # Copyright 2007  Frederick Emmott
 # All rights reserved.
 #
@@ -23,11 +23,13 @@
 
 PKGNAM=tclx
 VERSION=${VERSION:-8.4}
-BUILD=${BUILD:-1}
+BUILD=${BUILD:-2}
 
 . /etc/pkghelpers
 pkghelpers_env
+
 rm -rf $PKG
+mkdir -p $PKG
 
 cd $TMP
 rm -rf ${PKGNAM}${VERSION}
@@ -38,35 +40,21 @@ zcat $CWD/tclx-8.4.configure.diff.gz | patch -p1 --verbose || exit 1
 zcat $CWD/tclx-8.4.gcc4.diff.gz | patch -p1 --verbose || exit 1
 
 # Make sure ownerships and permissions are sane:
-chown -R root:root .
-find . -perm 666 -exec chmod 644 {} \;
-find . -perm 664 -exec chmod 644 {} \;
-find . -perm 600 -exec chmod 644 {} \;
-find . -perm 444 -exec chmod 644 {} \;
-find . -perm 400 -exec chmod 644 {} \;
-find . -perm 440 -exec chmod 644 {} \;
-find . -perm 777 -exec chmod 755 {} \;
-find . -perm 775 -exec chmod 755 {} \;
-find . -perm 511 -exec chmod 755 {} \;
-find . -perm 711 -exec chmod 755 {} \;
-find . -perm 555 -exec chmod 755 {} \;
-
-if [ $ARCH != x86_64 ]; then
-	EXTRACONF="--enable-64bit"
-fi
+pkghelpers_permissions
 
 # Configure:
-CFLAGS="$SLKCFLAGS" \
+CFLAGS="$SLKCFLAGS -I/usr/include/tcl-private/generic -I/usr/include/tcl-private/unix" \
 ./configure \
   --prefix=/usr \
 	--libdir=/usr/lib$LIBSUFFIX \
+	--with-tcl=/usr/lib$LIBSUFFIX \
   --enable-tk=YES \
   --enable-shared \
-  $EXTRACONF \
+  --enable-64bit \
   --build=$ARCH-$DISTRO-linux
 
 # Build and install:
-make -j10 || exit 1
+make -j4 || exit 1
 make install DESTDIR=$PKG || exit 1
 
 ( cd $PKG/usr/lib$LIBSUFFIX
