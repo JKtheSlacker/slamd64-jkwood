@@ -5,7 +5,7 @@ VERSION=3.2.7
 # Sometimes this number lags behind...
 SOVER=3.2.7
 PSMISCVER=22.2
-BUILD=${BUILD:-2}
+BUILD=${BUILD:-3}
 
 . /etc/pkghelpers
 pkghelpers_env
@@ -20,7 +20,7 @@ cd $TMP
 rm -rf procps-$VERSION
 tar xzvf $CWD/procps-$VERSION.tar.gz
 cd procps-$VERSION
-chown -R root:root .
+pkghelpers_permissions
 mkdir -p $PKG/usr/doc/procps-$VERSION
 cp -a BUGS COPYING COPYING.LIB NEWS TODO $PKG/usr/doc/procps-$VERSION
 chown root:root $PKG/usr/doc/procps-$VERSION/*
@@ -36,6 +36,13 @@ chmod 644 $PKG/usr/doc/procps-$VERSION/*
 # defaulted.
 echo zcat $CWD/procps.w.showfrom.diff.gz
 zcat $CWD/procps.w.showfrom.diff.gz | patch -p1 --verbose || exit 1
+
+if [ $ARCH = "x86_64" ]; then
+# Patch from Red Hat/ Fedora - eip and esp are truncated to 32 bits on x86-64.
+# So, offer rip and rsp as well to x86-64 users, which can be used instead
+# of eip and esp on x86-64 to obtain the expected 64 bit result.
+  zcat $CWD/procps-3.2.7-ps-eip64.diff.gz | patch -p1 --verbose || exit 1
+fi
 
 make OPT="$SLKCFLAGS"
 mkdir -p $PKG/lib$LIBSUFFIX $PKG/bin $PKG/sbin $PKG/usr/bin
