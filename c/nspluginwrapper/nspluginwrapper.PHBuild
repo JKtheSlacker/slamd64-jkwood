@@ -1,0 +1,36 @@
+#!/bin/sh
+# Copyright (c) 2007 Frederick Emmott <mail@fredemmott.co.uk>
+# Distributed under the GNU General Public License, version 2,
+# as published by the Free Software Foundation, NOT any later
+# version.
+PKGNAM=nspluginwrapper
+VERSION=0.9.91.5
+BUILD=${BUILD:-2}
+
+. /etc/pkghelpers
+pkghelpers_env
+export MULTILIB=false
+
+rm -rf $PKG
+mkdir -p $PKG
+cd $TMP
+rm -rf $PKGNAM-$VERSION
+tar xfv $CWD/$PKGNAM-$VERSION.tar.bz2
+cd $PKGNAM-$VERSION
+
+# Fix an SMP race based crash (patch from Ubuntu, in turn taken from nspluginwrapper SVN)
+zcat $CWD/004_fix_threading.diff.gz | patch -p1 --verbose || exit 1
+
+pkghelpers_permissions
+ 
+CXXFLAGS="$SLKCFLAGS" \
+./configure
+make -j5 || exit 1
+make install DESTDIR=$PKG || exit 1
+
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+
+cd $PKG
+pkghelpers_fixup
+pkghelpers_makepkg
