@@ -1,6 +1,6 @@
 #!/bin/sh
 PKGNAM=icecc
-PKGVER=0.7.14
+VERSION=0.9.0
 BUILD=1
 
 . /etc/pkghelpers
@@ -8,17 +8,15 @@ pkghelpers_env
 
 rm -rf $PKG
 cd $TMP
-rm -rf icecream
-tar xfv $CWD/$PKGNAM-$PKGVER.tar.*
-cd icecream
-tar xfv $CWD/kde-common-admin.tar.bz2
-make -f Makefile.cvs
+rm -rf icecc-$VERSION
+tar xfv $CWD/$PKGNAM-$VERSION.tar.*
+cd icecc-$VERSION
 CFLAGS=$SLKCFLAGS \
 CXXFLAGS=$SLKCFLAGS \
 ./configure \
 	--prefix=/opt/icecream \
 	--libdir=/opt/icecream/lib$LIBSUFFIX
-make
+make -j5 || exit 1
 make install DESTDIR=$PKG pkgconfigdir=/usr/lib$LIBSUFFIX/pkgconfig
 
 cd $PKG
