@@ -6,7 +6,7 @@
 # customary to leave one space after the ':'.
 
      |-----handy-ruler------------------------------------------------------|
-imlib: imlib
+imlib: imlib (image loading and rendering library)
 imlib:
 imlib: Imlib is a display depth-independent image loading and rendering
 imlib: library.  Imlib is designed to simplify and speed up the process of
