@@ -21,9 +21,9 @@
 
 
 PKGNAM=rdesktop
-VERSION=${VERSION:-1.5.0}
+VERSION=${VERSION:-1.6.0}
 ARCH=${ARCH:-x86_64}
-BUILD=${BUILD:-2}
+BUILD=${BUILD:-1}
 DISTRO=${DISTRO:-slamd64}
 
 if [ $DISTRO = slackware ]; then

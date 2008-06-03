@@ -4,7 +4,12 @@
 # many!) most of which are not shown in this example
 #
 # For a step to step guide on installing, configuring and using samba, 
-# read the Samba HOWTO Collection.
+# read the Samba-HOWTO-Collection. This may be obtained from:
+#  http://www.samba.org/samba/docs/Samba-HOWTO-Collection.pdf
+#
+# Many working examples of smb.conf files can be found in the 
+# Samba-Guide which is generated daily and can be downloaded from: 
+#  http://www.samba.org/samba/docs/Samba-Guide.pdf
 #
 # Any line which starts with a ; (semi-colon) or a # (hash) 
 # is a comment and is ignored. In this example we will use a #
@@ -25,7 +30,7 @@
 
 # Security mode. Defines in which mode Samba will operate. Possible 
 # values are share, user, server, domain and ads. Most people will want 
-# user level security. See the HOWTO Collection for details.
+# user level security. See the Samba-HOWTO-Collection for details.
    security = user
 
 # This option is important for security. It allows you to restrict
@@ -85,13 +90,6 @@
 # Note: Consider carefully the location in the configuration file of
 #       this line.  The included file is read at that point.
 ;   include = /usr/local/samba/lib/smb.conf.%m
-
-# Most people will find that this option gives better performance.
-# See the chapter 'Samba performance issues' in the Samba HOWTO Collection
-# and the manual pages for details.
-# You may want to add the following on a Linux system:
-#         SO_RCVBUF=8192 SO_SNDBUF=8192
-   socket options = TCP_NODELAY 
 
 # Configure Samba to use multiple interfaces
 # If you have multiple network interfaces then you must list them

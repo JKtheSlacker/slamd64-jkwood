@@ -15,12 +15,20 @@ fi
 # Now find the "real" gcc
 RealCC=$(PATH="$(echo $PATH | sed "s#.*:\?$HERE/\?:\?##")" which `basename $0`)
 
-# Filter out -m64 from $@ - printf needed so echo doesn't gobble up our arguments
-# eg when calling the preprocessor (gcc -E)
-Arguments=`printf "%s\n" "$*" | sed 's#-m64##'` 
+# Filter out -m64 from $@
+declare -a Arguments
+for i; do
+	case "$i" in 
+		-m64)
+			;;
+		*)
+			Arguments[${#Arguments[@]}]="$i"
+			;;
+	esac
+done
 
 # Compiling, call it with -m32
-$RealCC -m32 $Arguments
+$RealCC -m32 "${Arguments[@]}"
 
 # Exit with $RealCC's exit code
 exit $?
