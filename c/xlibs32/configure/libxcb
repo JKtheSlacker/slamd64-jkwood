@@ -1,0 +1,12 @@
+zcat $SRCDIR/libxcb/libxcb-no-assert-on-lock.diff.gz | patch -p0 --verbose || exit 1
+CFLAGS=$SLKCFLAGS \
+CXXFLAGS=$SLKCFLAGS \
+./configure \
+  --prefix=/usr \
+  --libdir=/usr/lib \
+  --sysconfdir=/etc \
+  --localstatedir=/var \
+  --infodir=/usr/info \
+  --mandir=/usr/man \
+  --disable-static \
+  --build=$ARCH-$DISTRO-linux

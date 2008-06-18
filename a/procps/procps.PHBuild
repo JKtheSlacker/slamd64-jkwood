@@ -4,8 +4,8 @@ PKGNAM=procps
 VERSION=3.2.7
 # Sometimes this number lags behind...
 SOVER=3.2.7
-PSMISCVER=22.2
-BUILD=${BUILD:-3}
+PSMISCVER=22.3
+BUILD=${BUILD:-5}
 
 . /etc/pkghelpers
 pkghelpers_env
@@ -113,6 +113,7 @@ rm -rf procinfo-18
 tar xzvf $CWD/procinfo-18.tar.gz
 cd procinfo-18
 zcat $CWD/procinfo.gcc3.diff.gz | patch -p1 --backup --suffix=.orig --verbose || exit 1
+zcat $CWD/procinfo-large-buffer.diff.gz | patch -p1 --verbose || exit 1
 mkdir -p $PKG/usr/doc/procinfo-18
 cp -a CHANGES README $PKG/usr/doc/procinfo-18
 chmod 644 $PKG/usr/doc/procinfo-18/*
