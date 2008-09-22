@@ -3,7 +3,7 @@
 PKGNAM=windowmaker
 SRCNAM=WindowMaker
 VERSION=${VERSION:-0.92.0}
-BUILD=${BUILD:-3}
+BUILD=${BUILD:-4}
 
 . /etc/pkghelpers
 pkghelpers_env

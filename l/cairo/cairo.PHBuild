@@ -1,6 +1,6 @@
 #!/bin/sh
 PKGNAM=cairo
-VERSION=1.4.14
+VERSION=1.6.4
 BUILD=1
 
 . /etc/pkghelpers
@@ -16,7 +16,7 @@ pkghelpers_permissions
 CFLAGS="$SLKCFLAGS" \
 ./configure \
   --prefix=/usr \
-	--libdir=/usr/lib$LIBSUFFIX \
+  --libdir=/usr/lib$LIBSUFFIX \
   --mandir=/usr/man \
   --sysconfdir=/etc \
   --enable-warnings \
@@ -27,7 +27,7 @@ CFLAGS="$SLKCFLAGS" \
   --disable-xcb \
   --disable-static \
   --disable-win32
-make -j10 || exit 1
+make -j5 || exit 1
 make install DESTDIR=$PKG
 #mv $PKG/usr/share/gtk-doc/
 #rm -rf $PKG/usr/share/gtk-doc

@@ -14,14 +14,14 @@ mkdir -p $PKG
 # This is a bit messy, so we'll explain it well.  :-)
 
 # This is the base version number, which is needed to cd into the source tree
-BASEVER=6.3.7
+BASEVER=6.4.2
 
 # This is the version number used in the source tarball filename
-FILEVER=6.3.7-10
+FILEVER=6.4.2-5
 
 # This is the version number used in the package, where a version number cannot
 # contain a '-'
-PKGVER=6.3.7_10
+PKGVER=6.4.2_5
 
 ARCH=${ARCH:-x86_64}
 BUILD=1

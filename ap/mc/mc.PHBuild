@@ -1,6 +1,6 @@
 #!/bin/sh
 PKGNAM=mc
-VERSION=4.6.1_20070309
+VERSION=4.6.1_20070623p14
 BUILD=${BUILD:-1}
 
 . /etc/pkghelpers
@@ -13,7 +13,7 @@ rm -rf mc-$VERSION
 tar xjvf $CWD/mc-$VERSION.tar.bz2 || exit 1
 cd mc-$VERSION
 
-zcat $CWD/mc-4.6.1.php.syntax.diff.gz | patch -p1 --verbose || exit 1
+zcat $CWD/mc-4.6.1_20070623_utf8_mls_r2008-08-28.diff.gz | patch -p1 --verbose || exit 1
 
 chown -R root:root .
 find . -perm 664 -exec chmod 644 {} \;

@@ -6,7 +6,7 @@
 # customary to leave one space after the ':'.
 
         |-----handy-ruler------------------------------------------------------|
-hfsutils: hfsutils
+hfsutils: hfsutils (HFS volume utilities)
 hfsutils:
 hfsutils: hfsutils is a collection of tools for reading and writing Macintosh
 hfsutils: HFS volumes.  These utilities can manipulate HFS volumes on nearly any

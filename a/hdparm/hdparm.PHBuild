@@ -1,6 +1,6 @@
 #!/bin/sh
 PKGNAM=hdparm
-VERSION=${VERSION:-8.6}
+VERSION=${VERSION:-8.9}
 BUILD=${BUILD:-1}
 
 . /etc/pkghelpers

@@ -1,0 +1,73 @@
+#!/bin/sh
+CWD=`pwd`
+
+PKGNAM=xmms
+VERSION=1.2.11
+ARTSPLUG=0.7.1
+BUILD=${BUILD:-1}
+
+. /etc/pkghelpers
+pkghelpers_env
+
+rm -rf $PKG
+mkdir -p $PKG
+
+cd /tmp
+rm -rf xmms-$VERSION
+tar xjvf $CWD/xmms-$VERSION.tar.bz2
+cd xmms-$VERSION
+
+zcat $CWD/xmms.gtk.doublesize.diff.gz | patch -p1 || exit 1
+
+pkghelpers_permissions
+
+CFLAGS="$SLKCFLAGS" \
+CXXFLAGS="$SLKCFLAGS" \
+  ./configure \
+  --prefix=/usr \
+  --libdir=/usr/lib$LIBSUFFIX \
+  --localstatedir=/var/lib \
+  --disable-static \
+  --enable-simd \
+  --with-ipv6 \
+  $ARCH-$DISTRO-linux
+make -j5 || exit 1
+# This needs to go to the system so the arts plugin can build:
+make install
+
+# Add a .desktop file for the menus:
+mkdir -p $PKG/usr/share/applications
+cat $CWD/xmms.desktop > $PKG/usr/share/applications/xmms.desktop
+
+# Next, install to $PKG:
+make install DESTDIR=$PKG
+mkdir -p $PKG/usr/doc/xmms-$VERSION
+cp -a ABOUT-NLS AUTHORS COPYING FAQ INSTALL NEWS README TODO \
+  $PKG/usr/doc/xmms-$VERSION
+
+# Install the arts plugin:
+cd /tmp
+rm -rf arts_output-$ARTSPLUG
+tar xzf $CWD/arts_output-${ARTSPLUG}.tar.gz
+cd arts_output-$ARTSPLUG
+pkghelpers_permissions
+CFLAGS=$SLKCFLAGS \
+CXXFLAGS=$SLKCFLAGS \
+./configure \
+  --prefix=/usr \
+  --libdir=/usr/lib$LIBSUFFIX \
+  $ARCH-$DISTRO-linux
+  make -j5 || exit 
+  make install DESTDIR=$PKG
+mkdir -p $PKG/usr/doc/xmms-$VERSION/arts_output-$ARTSPLUG
+cp -a \
+  AUTHORS COPYING INSTALL NEWS README \
+  $PKG/usr/doc/xmms-$VERSION/arts_output-$ARTSPLUG
+
+# Finish up...
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+
+cd $PKG
+pkghelpers_fixup
+pkghelpers_makepkg

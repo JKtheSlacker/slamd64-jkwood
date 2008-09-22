@@ -1,28 +1,59 @@
-#!?bin/sh
+#!/bin/sh
+
+# Slackware build script for iptables
+
+# Copyright 2008  Patrick J. Volkerding, Sebeka, MN, USA
+# All rights reserved.
+#
+# Redistribution and use of this script, with or without modification, is
+# permitted provided that the following conditions are met:
+#
+# 1. Redistributions of this script must retain the above copyright
+#    notice, this list of conditions and the following disclaimer.
+#
+#  THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR IMPLIED
+#  WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+#  MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.  IN NO
+#  EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+#  SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+#  PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+#  OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+#  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+#  OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+#  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 PKGNAM=iptables
-VERSION=1.4.0
-BUILD=1
+VERSION=1.4.1.1
+BUILD=${BUILD:-1}
 
 . /etc/pkghelpers
 pkghelpers_env
 
 rm -rf $PKG
-mkdir -p $PKG
+mkdir -p $TMP $PKG
 cd $TMP
 rm -rf iptables-$VERSION
-tar xjvf $CWD/iptables-$VERSION.tar.bz2
+tar xvf $CWD/iptables-$VERSION.tar.bz2
 cd iptables-$VERSION
-chown -R root:root .
-zcat $CWD/iptables.prefix.diff.gz | patch -p1 || exit
-make -j 10
+pkghelpers_permissions
+
+CFLAGS="$SLKCFLAGS" \
+./configure \
+  --prefix=/usr \
+  --prefix=/usr/lib$LIBSUFFIX \
+  --mandir=/usr/man \
+  --docdir=/usr/doc/iptables-$VERSION \
+  --enable-devel \
+  --enable-libipq \
+  --disable-static \
+  --build=$ARCH-$DISTRO-linux
+
+make -j5
 make install DESTDIR=$PKG
-make install-devel DESTDIR=$PKG
-make -j 10 experimental
-make install-experimental DESTDIR=$PKG
+
 mkdir -p $PKG/usr/doc/iptables-$VERSION
-cp -a COPYING INSTALL KNOWN_BUGS $PKG/usr/doc/iptables-$VERSION
-chmod 644 $PKG/usr/doc/iptables-$VERSION/*
+cp -a COPYING* INCOMPATIBILITIES INSTALL $PKG/usr/doc/iptables-$VERSION
+
 mkdir -p $PKG/install
 cat $CWD/slack-desc > $PKG/install/slack-desc
 

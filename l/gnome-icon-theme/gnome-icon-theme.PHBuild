@@ -1,6 +1,6 @@
 #!/bin/sh
 PKGNAM=gnome-icon-theme
-VERSION=2.22.0
+VERSION=2.23.92
 ARCH=noarch
 BUILD=1
 

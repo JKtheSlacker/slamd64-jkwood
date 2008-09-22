@@ -3,7 +3,7 @@ CWD=$(pwd)
 TMP=${TMP:-/tmp}
 PKG=$TMP/package-liberation-fonts-ttf
 
-VERSION=1.0
+VERSION=1.04
 ARCH=noarch
 BUILD=1
 DISTRO=${DISTRO:-slamd64}
@@ -18,8 +18,8 @@ rm -rf $PKG
 mkdir -p $PKG
 cd $TMP
 rm -rf liberation-fonts-ttf-$VERSION
-tar xvf $CWD/liberation-fonts.tar.* || exit 1
-cd liberation-fonts || exit 1
+tar xvf $CWD/liberation-fonts-$VERSION.tar.* || exit 1
+cd liberation-fonts-$VERSION || exit 1
 
 chown -R root:root .
 find . -perm 666 -exec chmod 644 {} \;

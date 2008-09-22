@@ -22,7 +22,7 @@
 
 
 PKGNAM=pan
-VERSION=${VERSION:-0.132}
+VERSION=${VERSION:-0.133}
 BUILD=${BUILD:-1}
 
 . /etc/pkghelpers

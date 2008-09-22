@@ -5,7 +5,7 @@
 # Distributed under the terms of the GNU General Public License, Version 2
 
 PKGNAM=mtr
-VERSION=0.72
+VERSION=0.73
 BUILD=1
 
 . /etc/pkghelpers
@@ -19,10 +19,13 @@ cd $TMP
 tar xjvf $CWD/${PKGNAM}-${VERSION}.tar.bz2 || exit 1
 cd ${PKGNAM}-${VERSION}
 chown -R root.root *
+zcat $CWD/mtr-0.73.configure.error.diff.gz | patch -p0 --verbose || exit 1
 CFLAGS="$SLKCFLAGS" \
 ./configure --prefix=/usr \
             --localstatedir=/var \
             --sysconfdir=/etc \
+			--mandir=/usr/man \
+			--enable-gtk2 \
             --build=$ARCH-$DISTRO-linux
 make -j10 || exit 1
 make DESTDIR=$PKG install || exit 1

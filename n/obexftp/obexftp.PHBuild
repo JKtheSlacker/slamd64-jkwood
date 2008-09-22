@@ -21,8 +21,8 @@
 
 
 PKGNAM=obexftp
-VERSION=${VERSION:-0.21}
-BUILD=${BUILD:-2}
+VERSION=${VERSION:-0.22}
+BUILD=${BUILD:-1}
 
 . /etc/pkghelpers
 pkghelpers_env
@@ -53,6 +53,7 @@ CFLAGS="$SLKCFLAGS" \
   --mandir=/usr/man \
   --program-prefix= \
   --program-suffix= \
+  --disable-ruby \
   --build=$ARCH-$DISTRO-linux
 
 # Build and install:

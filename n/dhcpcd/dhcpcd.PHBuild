@@ -1,7 +1,7 @@
 #!/bin/sh
 PKGNAM=dhcpcd
-VERSION=2.0.4
-BUILD=2
+VERSION=2.0.8
+BUILD=1
 
 . /etc/pkghelpers
 pkghelpers_env
@@ -19,6 +19,10 @@ cd dhcpcd-$VERSION
 # importantly) you can't be sure that /var is mounted
 # yet when dhcpcd is invoked.
 zcat $CWD/dhcpcd.etc.dhcpc.diff.gz | patch -p1 --verbose || exit 1
+
+# Default to less noise to the console, and begin lines with a
+# capital letter where it looks better:
+zcat $CWD/dhcpcd.console.messages.diff.gz | patch -p1 --verbose || exit 1
 
 chown -R root:root .
 find . -perm 777 -exec chmod 755 {} \;

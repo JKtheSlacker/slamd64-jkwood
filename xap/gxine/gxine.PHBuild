@@ -1,7 +1,7 @@
 #!/bin/sh
 PKGNAM=gxine
-VERSION=0.5.11
-BUILD=2
+VERSION=0.5.903
+BUILD=1
 
 . /etc/pkghelpers
 pkghelpers_env
@@ -20,14 +20,14 @@ find . -perm 664 -exec chmod 644 {} \;
 CFLAGS="$SLKCFLAGS" \
 ./configure \
   --prefix=/usr \
-	--libdir=/usr/lib$LIBSUFFIX \
+  --libdir=/usr/lib$LIBSUFFIX \
   --sysconfdir=/etc \
   --localstatedir=/var/lib \
   --mandir=/usr/man \
   --disable-static \
   --with-browser-plugin \
   --build=$ARCH-$DISTRO-linux
-make -j12 || exit 1
+make -j5 || exit 1
 make install DESTDIR=$PKG
 #zcat $CWD/gxine.desktop.gz > $PKG/usr/share/applications/gxine.desktop
 #if [ ! -r $PKG/usr/share/pixmaps/gxine.png ]; then

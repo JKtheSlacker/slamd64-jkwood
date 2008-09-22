@@ -140,6 +140,10 @@ if [ -x /sbin/accton -a -r /var/log/pacct ]; then
   /sbin/accton
 fi
 
+if [ -x /etc/rc.d/rc.acpid -a -r /var/run/acpid.pid ]; then # quit
+  . /etc/rc.d/rc.acpid stop
+fi
+
 # Kill all processes.
 # INIT is supposed to handle this entirely now, but this didn't always
 # work correctly without this second pass at killing off the processes.

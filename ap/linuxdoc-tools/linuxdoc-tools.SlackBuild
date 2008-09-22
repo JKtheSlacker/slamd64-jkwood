@@ -24,7 +24,7 @@
 # Package info:
 PKGNAM=linuxdoc-tools
 ARCH=${ARCH:-x86_64}
-BUILD=${BUILD:-5}
+BUILD=${BUILD:-6}
 VERSION=0.9.21 # use the version of linuxdoc-tools as the package version.
 DISTRO=${DISTRO:-slamd64}
 

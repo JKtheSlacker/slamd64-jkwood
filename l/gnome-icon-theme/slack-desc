@@ -6,7 +6,7 @@
 # customary to leave one space after the ':'.
 
                 |-----handy-ruler------------------------------------------------------|
-gnome-icon-theme: gnome-icon-theme
+gnome-icon-theme: gnome-icon-theme (default icons used by GTK+)
 gnome-icon-theme:
 gnome-icon-theme: A set of default icons used by many GTK+ applications.
 gnome-icon-theme:

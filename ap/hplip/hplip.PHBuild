@@ -28,8 +28,8 @@
 # Set initial variables:
 PRGNAM=hplip
 PKGNAM=$PRGNAM
-VERSION=${VERSION:-2.8.4}
-BUILD=${BUILD:-2}
+VERSION=${VERSION:-2.8.7}
+BUILD=${BUILD:-1}
 
 . /etc/pkghelpers
 pkghelpers_env

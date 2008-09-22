@@ -1,6 +1,6 @@
 #!/bin/sh
 PKGNAM=dnsmasq
-VERSION=2.41
+VERSION=2.45
 BUILD=${BUILD:-1}
 
 . /etc/pkghelpers

@@ -21,8 +21,8 @@
 
 
 PKGNAM=net-snmp
-VERSION=${VERSION:-5.4}
-BUILD=${BUILD:-3}
+VERSION=${VERSION:-5.4.1.2}
+BUILD=${BUILD:-2}
 
 . /etc/pkghelpers
 pkghelpers_env
@@ -61,7 +61,7 @@ CFLAGS="$SLKCFLAGS" \
   --build=$ARCH-$DISTRO-linux
 
 # Build and install:
-make -j5 INSTALLDIRS=vendor || exit 1
+make INSTALLDIRS=vendor || exit 1
 make install INSTALLDIRS=vendor DESTDIR=$PKG || exit 1
 
 # Evidently --mandir=/usr/man doesn't catch everything...

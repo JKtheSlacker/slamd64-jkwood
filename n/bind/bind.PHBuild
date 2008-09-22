@@ -22,9 +22,9 @@
 
 PKGNAM=bind
 
-VERSION=${VERSION:-9.4.2}
+VERSION=${VERSION:-9.4.2-P1}
 PKGVER=$(echo $VERSION | tr - _)
-BUILD=2
+BUILD=1_slamd64_12.0
 
 . /etc/pkghelpers
 
@@ -74,7 +74,7 @@ CFLAGS="$SLKCFLAGS" \
   --build=$ARCH-$DISTRO-linux || exit 1
 
 # Build and install:
-make -j4 || exit 1
+make -j7 || exit 1
 make install DESTDIR=$PKG || exit 1
 
 # We like symlinks.

@@ -1,7 +1,7 @@
 #!/bin/sh
 PKGNAM=less
-VERSION=${VERSION:-394}
-BUILD=${BUILD:-2}
+VERSION=${VERSION:-418}
+BUILD=${BUILD:-1}
 
 . /etc/pkghelpers
 pkghelpers_env
@@ -14,7 +14,7 @@ mkdir -p $PKG
 
 cd $TMP
 rm -rf less-$VERSION
-tar xzvf $CWD/less-$VERSION.tar.gz
+tar xvf $CWD/less-$VERSION.tar.*
 cd less-$VERSION
 zcat $CWD/less.sysconfdir.diff.gz | patch -p1 --verbose || exit 1
 
@@ -36,7 +36,7 @@ CFLAGS="$SLKCFLAGS" \
   --prefix=/usr \
   --sysconfdir=/etc
 
-make -j12 || exit 1
+make -j5 || exit 1
 
 mkdir -p $PKG/usr/bin
 cat less > $PKG/usr/bin/less

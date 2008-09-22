@@ -1,0 +1,64 @@
+#!/bin/sh
+PKGNAM=man-pages
+VERSION=3.08
+ARCH=noarch
+BUILD=1
+
+. /etc/pkghelpers
+pkghelpers_env
+rm -rf $PKG
+mkdir -p $PKG
+
+cd $TMP
+rm -rf man-pages-$VERSION
+tar xjvf $CWD/man-pages-$VERSION.tar.bz2
+tar xjvf $CWD/man-pages-posix-2003-a.tar.bz2
+( cd man-pages-$VERSION; pkghelpers_permissions )
+( cd man-pages-posix-2003-a; pkghelpers_permissions )
+
+mkdir -p $PKG/usr/man
+cp -a man-pages-$VERSION/* $PKG/usr/man
+
+# The pthread manpages are the only POSIX ones that anyone
+# has requested saving.  If I missed anything important, let me know.
+# The pthread manpages are the only POSIX ones that anyone
+# has requested saving.  If I missed anything important, let me know.
+mv man-pages-posix-2003-a/man0p/pthread.h.0p $PKG/usr/man/man3/pthread.h.3p
+mv man-pages-posix-2003-a/man3p/pthread_* $PKG/usr/man/man3
+cp man-pages-posix-2003-a/POSIX-COPYRIGHT $PKG/usr/man
+
+# Also probably not needed in the package
+rm -rf $PKG/usr/man/scripts
+rm -f $PKG/usr/man/Makefile
+
+# Compress the pages:
+gzip -9 $PKG/usr/man/man*/*.*
+
+# If a man page exists in some other package, assume that's the
+# newer, better version:
+( cd $PKG
+  for file in usr/man/man*/*.gz ; do
+    if grep -l $file /var/log/packages/* | grep -v var/log/packages/man-pages ; then
+      rm -f --verbose $file
+    fi
+  done
+)
+
+# Some of the posix pages don't display correctly without this
+( cd $PKG/usr/man ; ln -s man3 man3p )
+
+# This package has always provided the initial whatis sample
+# file, so we'll continue to have that here, too:
+cp -a $CWD/whatis.sample.bz2 $PKG/usr/man
+( cd $PKG/usr/man
+  chown root:root whatis.sample.bz2
+  chmod 644 whatis.sample.bz2
+  bzip2 -d whatis.sample.bz2
+)
+
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+zcat $CWD/doinst.sh.gz > $PKG/install/doinst.sh
+
+cd $PKG
+pkghelpers_makepkg

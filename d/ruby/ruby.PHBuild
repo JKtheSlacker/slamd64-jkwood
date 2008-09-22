@@ -1,6 +1,6 @@
 #!/bin/sh
 PKGNAM=ruby
-VERSION=1.8.6-p114
+VERSION=1.8.6-p230
 BUILD=${BUILD:-1}
 
 . /etc/pkghelpers
@@ -37,7 +37,7 @@ CFLAGS="$SLKCFLAGS" \
   --enable-static \
   --build=$ARCH-$DISTRO-linux
 
-make -j6 || exit 1
+make -j7 || exit 1
 make install DESTDIR=$PKG
 
 mkdir -p $PKG/usr/doc/ruby-$VERSION

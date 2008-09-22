@@ -22,7 +22,7 @@
 
 PKGNAM=libmtp
 
-VERSION=${VERSION:-0.2.6.1}
+VERSION=${VERSION:-0.3.1}
 BUILD=${BUILD:-1}
 
 . /etc/pkghelpers

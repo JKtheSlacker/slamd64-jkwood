@@ -5,18 +5,18 @@
 # modified for multilib by:  Fred Emmott <mail@fredemmott.co.uk>
 
 PKGNAM=perl
-VERSION=5.8.8
+VERSION=5.10.0
 # IMPORTANT: also update -Dinc_version_list in ./configure below!
 
-BUILD=5
+BUILD=1
 
 # Additional required modules:
-DBI=1.602
-DBDMYSQL=4.001
+URI=1.35
+DBI=1.607
+DBDMYSQL=4.008
 XMLPARSER=2.36
 XMLSIMPLE=2.18
-# For XFce:
-URI=1.35
+URI=1.37
 
 . /etc/pkghelpers
 pkghelpers_env
@@ -51,7 +51,7 @@ USE_THREADS="-Dusethreads -Duseithreads"
 
 # Thanks to cross-lfs.org for the following fixes:
 # - Add multilib support to the build system
-zcat $CWD/perl-$VERSION-Configure_multilib-1.patch.gz | patch -p1 --verbose || exit 1
+zcat $CWD/perl-5.8.8-Configure_multilib-1.patch.gz | patch -p1 --verbose || exit 1
 # - make it so that "perl -V" doesn't claim that libc is in /lib
 sed -i 's/libc/s@/lib@/lib64@' hints/linux.sh
 # - tell perl to actually use lib64
@@ -75,7 +75,7 @@ echo 'installstyle="lib64/perl5"' >>hints/linux.sh
 	-Dlibpth="/usr/local/lib64 /usr/lib64 /lib64" \
   $USE_THREADS \
   -Dpager='/usr/bin/less -isr' \
-  -Dinc_version_list='5.8.7 5.8.6 5.8.5 5.8.4 5.8.3 5.8.2 5.8.1 5.8.0' \
+  -Dinc_version_list='5.8.8 5.8.7 5.8.6 5.8.5 5.8.4 5.8.3 5.8.2 5.8.1 5.8.0' \
   -Darchname=$ARCH-linux
 
 # Kludge for gcc-4.2.3's needlessly changed output:

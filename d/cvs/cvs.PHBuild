@@ -1,7 +1,7 @@
 #!/bin/sh
 PKGNAM=cvs
-VERSION=1.11.22
-BUILD=2
+VERSION=1.11.23
+BUILD=1
 
 . /etc/pkghelpers
 pkghelpers_env

@@ -3,7 +3,7 @@ TMP=/tmp
 PKG=$TMP/package-xscreensaver
 CWD=`pwd` 
 
-VERSION=5.05
+VERSION=5.07
 ARCH=${ARCH:-x86_64}
 BUILD=${BUILD:-1}
 DISTRO=${DISTRO:-slamd64}

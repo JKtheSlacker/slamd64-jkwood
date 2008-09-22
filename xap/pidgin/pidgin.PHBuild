@@ -22,7 +22,7 @@
 
 
 PKGNAM=pidgin
-VERSION=${VERSION:-2.4.1}
+VERSION=${VERSION:-2.5.1}
 PIDGINENC=${PIDGINENC:-3.0}
 BUILD=${BUILD:-1}
 
@@ -49,12 +49,15 @@ CFLAGS="$SLKCFLAGS" \
   --mandir=/usr/man \
   --enable-dot=no \
   --disable-schemas-install \
-  --disable-gstreamer \
   --enable-dbus \
   --enable-gnutls=yes \
   --enable-nss=no \
+  --enable-gtkspell \
   --enable-cyrus-sasl \
   --with-perl-lib=vendor \
+  --disable-meanwhile \
+  --disable-avahi \
+  --disable-nm \
   --program-prefix= \
   --program-suffix= \
   --build=$ARCH-$DISTRO-linux

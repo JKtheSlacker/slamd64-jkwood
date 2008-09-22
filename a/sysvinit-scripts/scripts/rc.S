@@ -239,6 +239,11 @@ fi # Done checking root filesystem
 # Remounting the / partition will initialize the new /etc/mtab:
 /sbin/mount -w -o remount /
 
+# Read in the correct / filesystem complete with arguments so mount will
+# show them correctly. This does not stop those arguments from functioning
+# but does prevent a small bug with /etc/mtab.
+/bin/grep ' / ' /proc/mounts | grep -v "^rootfs" > /etc/mtab
+
 # Fix /etc/mtab to list sys and proc if they were not yet entered in
 # /etc/mtab because / was still mounted read-only:
 if [ -d /proc/sys ]; then
@@ -336,10 +341,12 @@ touch /var/run/utmp
 chown root:utmp /var/run/utmp
 chmod 664 /var/run/utmp
 
-# Setup the /etc/motd to reflect the current kernel level:
-# THIS WIPES ANY CHANGES YOU MAKE TO /ETC/MOTD WITH EACH BOOT.
-# COMMENT THIS OUT IF YOU WANT TO MAKE A CUSTOM VERSION.
-echo "$(/bin/uname -sr)." > /etc/motd
+# Update the current kernel level in the /etc/motd (Message Of The Day) file,
+# if the first line of that file begins with the word 'Linux'.
+# You are free to modify the rest of the file as you see fit.
+if [ -x /bin/sed ]; then
+  /bin/sed -i "{1s/^Linux.*/$(/bin/uname -sr)\./}" /etc/motd
+fi
 
 # If there are SystemV init scripts for this runlevel, run them.
 if [ -x /etc/rc.d/rc.sysvinit ]; then

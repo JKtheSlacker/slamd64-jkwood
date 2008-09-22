@@ -6,7 +6,7 @@
 # customary to leave one space after the ':'.
 
        |-----handy-ruler------------------------------------------------------|
-librsvg: librsvg
+librsvg: librsvg (SVG library)
 librsvg:
 librsvg: Library for handling SVG (Scalable Vector Graphics).
 librsvg:

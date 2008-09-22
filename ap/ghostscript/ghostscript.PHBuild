@@ -21,8 +21,8 @@
 
 
 PKGNAM=ghostscript
-VERSION=${VERSION:-8.62}
-BUILD=${BUILD:-2}
+VERSION=${VERSION:-8.63}
+BUILD=${BUILD:-1}
 
 . /etc/pkghelpers
 pkghelpers_env
@@ -36,7 +36,7 @@ tar xjvf $CWD/${PKGNAM}-$VERSION.tar.bz2 || exit 1
 cd ${PKGNAM}-$VERSION
 
 # Patch gs_res.ps to find resources in the correct directories:
-zcat $CWD/ghostscript-8.62.gs_res.ps.diff.gz | patch -p1 --verbose || exit 1
+zcat $CWD/ghostscript-8.63.gs_res.ps.diff.gz | patch -p1 --verbose || exit 1
 
 # Make sure ownerships and permissions are sane:
 pkghelpers_permissions

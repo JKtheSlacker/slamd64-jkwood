@@ -27,8 +27,8 @@
 
 # Set initial variables:
 PKGNAM=tix
-VERSION=${VERSION:-8.1.4}
-BUILD=${BUILD:-2}
+VERSION=${VERSION:-8.4.3}
+BUILD=${BUILD:-1}
 
 pkghelpers_env
 
@@ -37,8 +37,11 @@ mkdir -p $PKG
 
 cd $TMP
 rm -rf $PKGNAM-$VERSION
-tar xzvf $CWD/$PKGNAM-$VERSION.tar.gz
-cd $PKGNAM-$VERSION
+tar xzvf $CWD/Tix$VERSION.tar.gz
+cd Tix$VERSION
+
+zcat $CWD/tix.tcl8.5.patch.gz | patch -p1 --backup --suffix=.orig || exit 1
+zcat $CWD/tix.soname.patch.gz | patch -p1 || exit 1
 
 # Make sure ownerships and permissions are sane:
 chown -R root:root .
@@ -59,49 +62,25 @@ mkdir -p $PKG/usr/bin
 mkdir -p $PKG/usr/lib$LIBSUFFIX
 mkdir -p $PKG/usr/man
 
-# Configure:
-( cd unix/tk8.4
-  LDFLAGS="-L/usr/lib$LIBSUFFIX" \
-  CFLAGS="$SLKCFLAGS" \
-  CXXFLAGS="$SLKCFLAGS" \
-  ./configure \
-    --prefix=/usr \
-    --enable-shared \
-    --with-tclconfig=/usr/lib$LIBSUFFIX \
-    --with-tkconfig=/usr/lib$LIBSUFFIX \
-    --with-tclinclude=/usr/include \
-    --with-tkinclude=/usr/include
-)
-( cd unix
-  LDFLAGS="-L/usr/lib$LIBSUFFIX" \
-  CFLAGS="$SLKCFLAGS" \
-  CXXFLAGS="$SLKCFLAGS" \
-  ./configure \
-    --prefix=/usr \
-    --enable-shared \
-    --with-tclconfig=/usr/lib$LIBSUFFIX \
-    --with-tkconfig=/usr/lib$LIBSUFFIX \
-    --with-tclinclude=/usr/include \
-    --with-tkinclude=/usr/include
-)
+LDFLAGS="-L/usr/lib$LIBSUFFIX" \
+CFLAGS="$SLKCFLAGS" \
+CXXFLAGS="$SLKCFLAGS" \
+./configure \
+  --prefix=/usr \
+  --enable-shared \
+  --with-tclconfig=/usr/lib$LIBSUFFIX \
+  --with-tkconfig=/usr/lib$LIBSUFFIX \
+  --with-tclinclude=/usr/include \
+  --with-tkinclude=/usr/include
 
-# Build and install:
-( cd unix/tk8.4
-  make install \
-    prefix=$PKG/usr \
-    libdir=$PKG/usr/lib$LIBSUFFIX \
-    LIB_DIR=$PKG/usr/lib$LIBSUFFIX \
-    TCL_SRC_DIR=/usr/include/tcl-private \
-    TK_SRC_DIR=/usr/include/tk-private \
-    TCL_BIN_DIR=/usr/bin || exit 1
-)
-(
-  cd unix
-  make install \
-    prefix=$PKG/usr \
-    libdir=$PKG/usr/lib$LIBSUFFIX \
-    LIB_DIR=$PKG/usr/lib$LIBSUFFIX || exit 1
-)
+make -j5 \
+  prefix=$PKG/usr \
+  libdir=$PKG/usr/lib$LIBSUFFIX \
+  LIB_DIR=$PKG/usr/lib$LIBSUFFIX || exit 1
+make install \
+  prefix=$PKG/usr \
+  libdir=$PKG/usr/lib$LIBSUFFIX \
+  LIB_DIR=$PKG/usr/lib$LIBSUFFIX || exit 1
 
 # Cleanup empty directories
 rm -rf $PKG/usr/man/man3

@@ -24,7 +24,7 @@
 
 
 PKGNAM=httpd
-VERSION=${VERSION:-2.2.8}
+VERSION=${VERSION:-2.2.9}
 BUILD=${BUILD:-1}
 
 . /etc/pkghelpers

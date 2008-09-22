@@ -1,6 +1,6 @@
 #!/bin/sh
 PKGNAM=atk
-VERSION=1.22.0
+VERSION=1.23.5
 BUILD=1
 
 . /etc/pkghelpers
@@ -16,7 +16,7 @@ pkghelpers_permissions
 CFLAGS="$SLKCFLAGS" \
 ./configure \
   --prefix=/usr \
-	--libdir=/usr/lib$LIBSUFFIX \
+  --libdir=/usr/lib$LIBSUFFIX \
   --sysconfdir=/etc \
   --build=$ARCH-$DISTRO-linux
 make -j5 || exit 1

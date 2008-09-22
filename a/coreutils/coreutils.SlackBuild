@@ -8,7 +8,7 @@ PKG=$TMP/package-coreutils
 
 VERSION=6.9
 ARCH=${ARCH:-x86_64}
-BUILD=${BUILD:-1}
+BUILD=${BUILD:-2}
 DISTRO=${DISTRO:-slamd64}
 
 if [ $DISTRO = slackware ]; then
@@ -54,6 +54,10 @@ find . -perm 555 -exec chmod 755 {} \;
 # Patch in the uname for Linux enhancements
 zcat $CWD/coreutils.uname.diff.gz | patch -p1 --verbose --backup --suffix=.orig || exit 1
 
+# Fix for futimens conflict between coreutils and glibc
+# Fix taken from http://bugs.archlinux.org/task/7768
+sed -i.bak 's/futimens/gl_&/' src/{copy,touch}.c lib/utimens.{c,h}
+
 # Compilation with glibc version later than 2.3.2 needs the environment
 # variable DEFAULT_POSIX2_VERSION set to 199209.
 # Without the next line, the coreutils will start complaining about 'obsolete'
@@ -66,18 +70,24 @@ DEFAULT_POSIX2_VERSION=199209 \
 CFLAGS=-O2 ./configure \
   --prefix=/usr \
   --bindir=/bin \
+  --mandir=/usr/man \
+  --infodir=/usr/info \
   --sysconfdir=/etc \
-  $ARCH-$DISTRO-linux
-make -j10 || exit 1
+  --build=$ARCH-$DISTRO-linux
+make -j5 || exit 1
 make install DESTDIR=$PKG
+
+# This seems wrong, and it stomps on files in the ksh93 package.  Though, I'm
+# not sure the placement of those is correct, either...
+( cd $PKG/usr/share/locale
+  rm -rf */LC_TIME
+)
+
 mkdir -p $PKG/usr/sbin
 mkdir -p $PKG/usr/doc/coreutils-$VERSION $PKG/usr/sbin
 cp -a \
   ABOUT-NLS AUTHORS COPYING NEWS README THANKS THANKS-to-translators TODO \
   $PKG/usr/doc/coreutils-$VERSION
-
-cd $PKG
-mv $PKG/usr/share/info $PKG/usr/share/man $PKG/usr || exit
 
 # These are important enough that they should probably all go into /bin at this
 # point...   Having some of them unavailable when /usr isn't mounted is just a
@@ -89,6 +99,7 @@ mkdir -p $PKG/bin $PKG/usr/bin
     ln  --verbose -sf $file .
   done
 )
+cd $PKG
 rm -f usr/info/dir
 gzip -9 usr/info/*
 gzip -9 usr/man/man?/*.?

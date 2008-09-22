@@ -46,9 +46,9 @@
 
 PRGNAM=m17n-lib
 SHORTNAM=m17n
-VERSION=${VERSION:-1.5.0}
-DBVERSION=${DBVERSION:-1.5.0}
-DOCVERSION=${DOCVERSION:-1.5.0}
+VERSION=${VERSION:-1.5.2}
+DBVERSION=${DBVERSION:-1.5.2}
+DOCVERSION=${DOCVERSION:-1.5.2}
 ARCH=${ARCH:-x86_64}
 BUILD=${BUILD:-1}
 TAG=${TAG:-}
@@ -162,7 +162,7 @@ CFLAGS="$SLKCFLAGS" \
             --disable-static \
             --program-prefix="" \
             --program-suffix="" \
-            --build=$ARCH-slackware-linux \
+            --build=$ARCH-slamd64-linux \
             2>&1 | tee $OUTPUT/configure-${PRGNAM}.log
 make 2>&1 | tee $OUTPUT/make-${PRGNAM}.log
 

@@ -1,0 +1,17 @@
+--- ./firefox-orig	2008-06-13 23:16:59.000000000 +0300
++++ ./firefox	2008-06-13 23:30:35.000000000 +0300
+@@ -54,6 +54,14 @@
+ 
+ moz_libdir=/usr/lib64/firefox-3.0
+ 
++# Include /usr/lib64/mozilla/plugins in the plugin path:
++if [ "$MOZ_PLUGIN_PATH" ] ; then
++  MOZ_PLUGIN_PATH=$MOZ_PLUGIN_PATH:${moz_libdir}/plugins:/usr/lib64/mozilla/plugins
++else
++  MOZ_PLUGIN_PATH=${moz_libdir}/plugins:/usr/lib64/mozilla/plugins
++fi
++export MOZ_PLUGIN_PATH
++
+ # Use run-mozilla.sh in the current dir if it exists
+ # If not, then start resolving symlinks until we find run-mozilla.sh
+ found=0

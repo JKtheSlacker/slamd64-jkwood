@@ -4,13 +4,25 @@
 PKGNAM=expect
 PKGVER=${PKGVER:-5.43.0}
 SRCVER=${SRCVER:-5.43}
-BUILD=${BUILD:-2}
+BUILD=${BUILD:-3}
 
 . /etc/pkghelpers
 pkghelpers_env
 
 rm -rf $PKG
 mkdir -p $PKG
+
+# We need includes from this:
+( cd /tmp
+  tar xjvf $CWD/tcl8.5.4-src.tar.bz2
+  cd tcl8.5.4/unix
+  ./configure --prefix=/usr )
+
+# Gosh, this is ugly.  If anyone has a better way, let me know.
+( cd /tmp/tcl8.5.4
+  cp -a generic/* unix
+  cp -a unix/* generic
+)
 
 ## Build and install static version:
 #( cd $TMP
@@ -28,6 +40,8 @@ cd $TMP
 rm -rf expect-$SRCVER
 tar xzvf $CWD/expect-${PKGVER}.tar.gz || exit 1
 cd expect-$SRCVER || exit 1
+zcat $CWD/expect-5.43-avoid-tcl-internals-1.patch.gz | patch -p1 -l || exit 1
+zcat $CWD/expect-5.43.exp_inter.c.tclInt.h.diff.gz | patch -p1 || exit 1
 
 # Make sure ownerships and permissions are sane:
 pkghelpers_permissions
@@ -38,12 +52,13 @@ CFLAGS="$SLKCFLAGS" \
   --prefix=/usr \
   --libdir=/usr/lib$LIBSUFFIX \
   --with-tclconfig=/usr/lib$LIBSUFFIX \
-  --with-tclinclude=/usr/include/tcl-private/generic \
+  --with-tclinclude=/tmp/tcl8.5.4/generic \
   --enable-shared \
   --build=$ARCH-$DISTRO-linux
 
 # Build and install:
-make -j12 || exit 1
+make -j5 || exit 1
+make install || exit 1 # sorry
 make install INSTALL_ROOT=$PKG || exit 1
 
 # Fix symlinks

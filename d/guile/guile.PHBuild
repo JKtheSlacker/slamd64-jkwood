@@ -1,6 +1,6 @@
 #!/bin/sh
 PKGNAM=guile
-VERSION=1.8.4
+VERSION=1.8.5
 BUILD=${BUILD:-1}
 
 . /etc/pkghelpers

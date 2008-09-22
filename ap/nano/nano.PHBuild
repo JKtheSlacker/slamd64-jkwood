@@ -21,7 +21,7 @@
 
 
 PKGNAM=nano
-VERSION=${VERSION:-2.0.7}
+VERSION=${VERSION:-2.0.9}
 BUILD=${BUILD:-1}
 
 . /etc/pkghelpers

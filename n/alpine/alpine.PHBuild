@@ -1,0 +1,142 @@
+#!/bin/sh
+# Copyright 2006, 2007, 2008  Patrick J. Volkerding, Sebeka, MN, USA
+# All rights reserved.
+#
+# Redistribution and use of this script, with or without modification, is
+# permitted provided that the following conditions are met:
+#
+# 1. Redistributions of this script must retain the above copyright
+#    notice, this list of conditions and the following disclaimer.
+#
+#  THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR IMPLIED
+#  WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+#  MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.  IN NO
+#  EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+#  SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+#  PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+#  OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+#  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+#  OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+#  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+. /etc/pkghelpers
+
+PKGNAM=alpine
+VERSION=${VERSION:-1.10}
+ALPINEBUILD=${ALPINEBUILD:-2}
+IMAPDBUILD=${IMAPDBUILD:-2}
+PINEPGP=${PINEPGP:-0.18.0}
+
+pkghelpers_env
+
+rm -rf $PKG
+mkdir -p $PKG/etc
+
+cd $TMP
+rm -rf ${PKGNAM}-${VERSION}
+tar xjvf $CWD/${PKGNAM}-$VERSION.tar.bz2 || exit 1
+cd ${PKGNAM}-$VERSION
+
+# Make sure ownerships and permissions are sane:
+chown -R root:root .
+find . \
+ \( -perm 777 -o -perm 775 -o -perm 711 -o -perm 555 -o -perm 511 \) \
+ -exec chmod 755 {} \; -o \
+ \( -perm 666 -o -perm 664 -o -perm 600 -o -perm 444 -o -perm 440 -o -perm 400 \) \
+ -exec chmod 644 {} \;
+
+zcat $CWD/alpine.manpage.diff.gz | patch -p1 --verbose || exit 1
+
+# Configure:
+CFLAGS="$SLKCFLAGS" \
+./configure \
+  --prefix=/usr \
+  --libdir=/usr/lib$LIBSUFFIX \
+  --mandir=/usr/man \
+  --with-ssl-dir=/usr \
+  --with-ssl-certs-dir=/etc/ssl/certs \
+  --disable-debug \
+  --with-debug-level=0 \
+  --without-tcl \
+  --program-prefix= \
+  --program-suffix= \
+  --build=$ARCH-$DISTRO-linux
+
+# This seems to ignore sysconfdir and libdir, so it's pretty useless to try them.
+# Brute-force it.
+zcat $CWD/alpine.config.h.diff.gz | patch -p1 --verbose || exit 1
+
+# Correct paths and programs in tech-notes.txt:
+zcat $CWD/alpine.tech-notes.txt.diff.gz | patch -p1 --verbose || exit 1
+
+# Build and install:
+make slx SSLTYPE=unix
+make install SSLTYPE=unix DESTDIR=$PKG
+
+# Add default config file:
+./alpine/alpine -conf > $PKG/etc/pine.conf.new
+
+# Add a documentation directory:
+mkdir -p $PKG/usr/doc/${PKGNAM}-$VERSION
+cp -a \
+  LICENSE NOTICE README* VERSION \
+  doc/tech-notes.txt doc/brochure.txt doc/mailcap.unx doc/mime.types \
+  $PKG/usr/doc/${PKGNAM}-$VERSION
+gzip -9 $PKG/usr/doc/${PKGNAM}-$VERSION/tech-notes.txt
+
+# Add pinepgp support:
+cd $TMP
+rm -rf pinepgp-$PINEPGP
+tar xzvf $CWD/pinepgp-$PINEPGP.tar.gz
+cd pinepgp-$PINEPGP
+zcat $CWD/pinepgp-${PINEPGP}-makefile-sed-fix.diff.gz | patch -p1 --verbose || exit 1
+zcat $CWD/pinepgp.pinegpgp.in.diff.gz | patch -p1 --verbose || exit 1
+chown -R root:root .
+./configure --prefix=/usr
+make || exit 1
+make install DESTDIR=$PKG || exit 1
+mkdir -p $PKG/usr/doc/pinepgp-$PINEPGP
+cp -a COPYING* README $PKG/usr/doc/pinepgp-$PINEPGP
+chmod 644 $PKG/usr/doc/pinepgp-$PINEPGP/*
+
+mkdir -p $PKG/install
+cat $CWD/doinst.sh.alpine > $PKG/install/doinst.sh
+cat $CWD/slack-desc.alpine > $PKG/install/slack-desc
+
+cd $PKG
+pkghelpers_fixup
+
+makepkg -l y -c n ../${PKGNAM}-$VERSION-$PKGARCH-$ALPINEBUILD.tgz
+
+# As is customary, now build a package for the included IMAP and
+# POP3 daemons:
+PKG2=/tmp/package-imapd
+cd $TMP
+rm -rf $PKG2
+mkdir -p $PKG2
+cd ${PKGNAM}-$VERSION/imap
+mkdir -p $PKG2/usr/doc/imapd-$VERSION
+cp -a \
+  CONTENTS LICENSE.txt NOTICE SUPPORT \
+  imap/docs/md5.txt \
+  $PKG2/usr/doc/imapd-$VERSION
+cat << EOF > $PKG2/usr/doc/imapd-$VERSION/additional-imap-documentation
+Additional documentation for imapd may be found in the alpine
+sources in the /imap/docs directory.
+EOF
+mkdir -p $PKG2/usr/man/man8
+for file in src/imapd/imapd.8 src/ipopd/ipopd.8 ; do
+  cat $file | gzip -9c > $PKG2/usr/man/man8/`basename $file`.gz
+done
+mkdir -p $PKG2/usr/sbin
+cat imapd/imapd > $PKG2/usr/sbin/imapd
+cat ipopd/ipop3d > $PKG2/usr/sbin/ipop3d
+chmod 755 $PKG2/usr/sbin/imapd $PKG2/usr/sbin/ipop3d
+
+
+# Add slack-desc file:
+mkdir -p $PKG2/install
+cat $CWD/slack-desc.imapd > $PKG2/install/slack-desc
+cd $PKG2
+pkghelpers_fixup
+makepkg -l y -c n $TMP/imapd-$VERSION-$PKGARCH-$IMAPDBUILD.tgz

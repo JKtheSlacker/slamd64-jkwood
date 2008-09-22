@@ -23,7 +23,7 @@
 PKGNAM=ghostscript-fonts-std
 VERSION=${VERSION:-8.11}
 ARCH=${ARCH:-noarch}
-BUILD=${BUILD:-1}
+BUILD=${BUILD:-3}
 DISTRO=${DISTRO:-slamd64}
 
 if [ $DISTRO = slackware ]; then

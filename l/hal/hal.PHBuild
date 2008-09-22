@@ -28,9 +28,9 @@
 # No additional license terms added
 
 PKGNAM=hal
-VERSION=0.5.10
-PKG_VERSION=0.5.10
-BUILD=${BUILD:-2}
+VERSION=0.5.11
+PKG_VERSION=0.5.11
+BUILD=${BUILD:-1}
 
 . /etc/pkghelpers
 pkghelpers_env
@@ -75,9 +75,8 @@ make -j12 || exit 1
 make install DESTDIR=$PKG || exit 1
 
 # Make the defaults for manipulating/mounting system devices a bit more sane
-( cd $PKG/etc/dbus-1/system.d
-  zcat $CWD/hal.conf.diff.gz | patch -p0 || exit 1
-) || exit 1
+cd $PKG ; zcat $CWD/hal.conf.diff.gz | patch -p1 || exit 1 ; cd -
+
 # Don't clobber existing config file in case custom changes have been made
 mv $PKG/etc/dbus-1/system.d/hal.conf $PKG/etc/dbus-1/system.d/hal.conf.new
 

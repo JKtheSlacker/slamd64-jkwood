@@ -24,7 +24,7 @@
 # ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 PKGNAM=hal-info
-VERSION=20080317
+VERSION=20080508
 ARCH=noarch
 BUILD=1
 
@@ -35,7 +35,7 @@ rm -rf $PKG
 mkdir -p $TMP $PKG
 cd $TMP || exit 1
 rm -rf $PKGNAM-$VERSION
-tar xvf $CWD/$PKGNAM-$VERSION.tar.bz2 || exit 1
+tar xvf $CWD/$PKGNAM-$VERSION.tar.* || exit 1
 cd $PKGNAM-$VERSION || exit 1
 
 # Make sure ownerships and permissions are sane:

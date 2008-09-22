@@ -6,7 +6,7 @@ if [ "$TMP" = "" ]; then
 fi
 PKG=$TMP/package-xlockmore
 
-VERSION=5.23
+VERSION=5.26.1
 ARCH=${ARCH:-x86_64}
 BUILD=1
 DISTRO=${DISTRO:-slamd64}

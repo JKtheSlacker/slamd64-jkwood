@@ -23,19 +23,21 @@ rm -rf cups-$VERSION
 tar xjvf $CWD/cups-$VERSION-source.tar.bz2
 cd cups-$VERSION
 (
-#. /etc/profile.d/32dev.sh
-#linux32 
 LDFLAGS="-L/usr/lib" \
 ./configure \
-	--libdir=/usr/lib \
+	--prefix=/usr \
 	--enable-32bit \
+	--enable-64bit=no \
+	--without-dbus \
 	--without-php \
 	--without-perl \
 	--without-python \
 	--without-java \
-  --disable-pam
-make -j3 || exit 1
-make BUILDROOT=$PKGTMP install
+	--disable-pam
+make -j5 || exit 1
+for dir in cups filter; do
+	(cd $dir; make BUILDROOT=$PKGTMP install32bit)
+done
 )
 
 mkdir -p $PKG/usr/lib

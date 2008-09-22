@@ -6,7 +6,7 @@ PKG=$TMP/package-gimp
 rm -rf $PKG
 mkdir -p $PKG
 
-VERSION=2.4.5
+VERSION=2.4.7
 ARCH=${ARCH:-x86_64}
 BUILD=1
 DISTRO=${DISTRO:-slamd64}

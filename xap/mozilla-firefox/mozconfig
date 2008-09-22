@@ -1,0 +1,44 @@
+# use an OBJDIR
+mk_add_options MOZ_OBJDIR=@TOPSRCDIR@/firefox-shared
+
+# source the defaults from the firefox tarball
+. $topsrcdir/browser/config/mozconfig
+
+# Parallel build
+mk_add_options MOZ_MAKE_FLAGS=-j3
+
+# slamd64 configure options
+
+ac_add_options --prefix=/usr
+ac_add_options --libdir=/usr/lib64
+ac_add_options --with-system-jpeg
+ac_add_options --with-system-zlib
+ac_add_options --with-pthreads
+ac_add_options --enable-optimize="-O2 -fPIC"
+ac_add_options --enable-official-branding
+ac_add_options --enable-extensions=default,-gnomevfs
+ac_add_options --enable-shared
+ac_add_options --enable-safe-browsing
+ac_add_options --enable-svg
+ac_add_options --enable-canvas
+ac_add_options --enable-crypto
+ac_add_options --enable-single-profile
+ac_add_options --enable-places
+ac_add_options --enable-storage
+ac_add_options --enable-places_bookmarks
+ac_add_options --enable-image-encoder=all
+ac_add_options --enable-xft
+ac_add_options --enable-64-bit
+ac_add_options --enable-default-toolkit=cairo-gtk2
+ac_add_options --enable-static
+ac_add_options --disable-libxul
+ac_add_options --disable-tests
+ac_add_options --disable-mochitest
+ac_add_options --disable-debug
+ac_add_options --disable-installer
+ac_add_options --disable-updater
+ac_add_options --disable-xprint
+ac_add_options --disable-gnomevfs
+ac_add_options --disable-gnomeui
+ac_add_options --disable-mailnews
+ac_add_options --disable-crashreporter

@@ -22,7 +22,7 @@
 
 
 PKGNAM=poppler
-VERSION=${VERSION:-0.6.4}
+VERSION=${VERSION:-0.8.5}
 BUILD=${BUILD:-1}
 
 . /etc/pkghelpers
@@ -43,7 +43,7 @@ pkghelpers_permissions
 CFLAGS="$SLKCFLAGS" \
 ./configure \
   --prefix=/usr \
-	--libdir=/usr/lib$LIBSUFFIX \
+  --libdir=/usr/lib$LIBSUFFIX \
   --sysconfdir=/etc \
   --enable-xpdf-headers \
   --mandir=/usr/man \

@@ -4,7 +4,7 @@
 . /etc/pkghelpers
 
 PKGNAM=tk
-VERSION=8.4.18
+VERSION=8.5.4
 # See also version number 8.4 in the symlinks below...)
 BUILD=1
 
@@ -49,7 +49,7 @@ CFLAGS="$SLKCFLAGS -I/usr/include/tcl-private/generic" \
   --enable-man-symlinks \
   --enable-man-compression=gzip \
 	$EXTRACONF
-make -j10 || exit 1
+make -j5 || exit 1
 make install DESTDIR=$PKG
 
 # Some sources require Tk's private headers, which might not be the
@@ -67,11 +67,11 @@ cp -a ../unix/*.h $PKG/usr/include/tk-private/unix
 
 ( cd $PKG/usr/bin
   rm -f wish
-  ln -sf wish8.4 wish
+  ln -sf wish8.5 wish
 )
 ( cd $PKG/usr/lib$LIBSUFFIX
   rm -f libtk.so
-  ln -sf libtk8.4.so libtk.so
+  ln -sf libtk8.5.so libtk.so
 )
 
 mkdir -p $PKG/install

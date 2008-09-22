@@ -53,7 +53,7 @@ CFLAGS="-O2 -fPIC" \
 ./configure \
   --prefix=/usr \
   --build=$ARCH-$DISTRO-linux
-make -j5 || exit 1
+make || exit 1
 mkdir -p $PKG/usr/bin
 cat ctags > $PKG/usr/bin/ctags
 chmod 755 $PKG/usr/bin/ctags

@@ -69,6 +69,11 @@ if [ -x /etc/rc.d/rc.pcmcia ] ; then
   sleep 5
 fi
 
+# Terminate acpid before syslog:
+if ps axc | grep -q bin/acpid ; then
+  killall -SIGQUIT acpid
+fi
+
 # Kill all processes.
 echo
 echo "Sending all processes the SIGHUP signal."

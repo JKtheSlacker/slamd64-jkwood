@@ -6,7 +6,7 @@
 # customary to leave one space after the ':'.
 
           |-----handy-ruler------------------------------------------------------|
-pilot-link: pilot-link
+pilot-link: pilot-link (library for communicating with PalmOS devices)
 pilot-link:
 pilot-link: This is a library for communicating with Palm Computing, Inc.  Palm
 pilot-link: Devices as well as the Handspring Visor,  TRGPro,  and other devices
