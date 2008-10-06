@@ -22,7 +22,7 @@
 
 PKGNAM=ghostscript
 VERSION=${VERSION:-8.63}
-BUILD=${BUILD:-1}
+BUILD=${BUILD:-2}
 
 . /etc/pkghelpers
 pkghelpers_env
@@ -77,8 +77,10 @@ CFLAGS="$SLKCFLAGS" \
 
 # Build and install:
 make || exit 1
-
 make install DESTDIR=$PKG || exit 1
+make clean || exit 1
+make so || exit 1
+make soinstall DESTDIR=$PKG || exit 1
 
 # Replace the default cidfmap with one containing additional
 # support for CJK printing:
