@@ -34,7 +34,7 @@ pkghelpers_env
 rm -rf $PKG
 mkdir -p $TMP $PKG $OUTPUT
 cd $TMP
-rm -rf PyQt-$VERSION
+rm -rf PyQt-x11-gpl-$VERSION
 tar xvf $CWD/PyQt-x11-gpl-$VERSION.tar.bz2
 cd PyQt-x11-gpl-$VERSION
 pkghelpers_permissions
