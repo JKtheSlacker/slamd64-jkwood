@@ -1,24 +1,21 @@
 #!/bin/sh
-if [ ! -e /etc/pkghelpers ]; then
-	echo "Sorry, you must manually install pkghelpers before packaging it; packaging it requires it."
-	exit 1
-fi
-
-. /etc/pkghelpers
-
-PKGNAM=pkghelpers
-PKGVER=12.1.0
-ARCH=noarch # don't set this normally
+PKGVER=12.1.1
 BUILD=1
 
+for file in etc/pkghelpers.d/*; do
+	. $file
+done
 pkghelpers_env
 
 rm -rf $PKG
-mkdir -p $PKG/etc
+mkdir -p $PKG/bin $PKG/etc/pkghelpers.d
 
-cd $PKG/etc
-cp -R $CWD/scripts/* .
-chown -R root:root .
+gcc -o $PKG/bin/pkghelpers pkghelpers.c
+strip --strip-unneeded $PKG/bin/pkghelpers
+
+install -oroot -groot -m755 pkghelpers.sh $PKG/bin/
+install -oroot -groot -m755 $CWD/etc/pkghelpers $PKG/etc
+install -oroot -groot -m755 $CWD/etc/pkghelpers.d/* $PKG/etc/pkghelpers.d/
 
 cd $PKG
 mkdir install

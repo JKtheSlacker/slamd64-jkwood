@@ -1,0 +1,5 @@
+#!/bin/bash
+
+pkghelpers_warn() {
+	echo "***WARNING***" $*
+}

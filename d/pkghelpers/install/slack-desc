@@ -1,0 +1,11 @@
+pkghelpers: pkghelpers (Helper script for making packages)
+pkghelpers: This script installs several helper functions for making
+pkghelpers: Slackware packages:
+pkghelpers: - pkghelpers_env: sets various environment variables
+pkghelpers: - pkghelpers_fixup: strips binaries and other standard fixes
+pkghelpers: - pkghelpers_makepkg: checks the package 'sanity' and makes
+pkghelpers:    makes the package.
+pkghelpers:
+pkghelpers:
+pkghelpers:
+pkghelpers:

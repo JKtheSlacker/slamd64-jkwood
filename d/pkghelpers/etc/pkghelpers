@@ -1,0 +1,4 @@
+#!/bin/bash
+for file in /etc/pkghelpers.d/*; do
+	. $file
+done
