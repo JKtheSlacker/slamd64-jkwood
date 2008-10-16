@@ -1,7 +1,7 @@
 #!/bin/sh
 PKGNAM=imlib
 VERSION=1.9.15
-BUILD=4
+BUILD=5
 
 . /etc/pkghelpers
 pkghelpers_env
@@ -16,6 +16,7 @@ CFLAGS="$SLKCFLAGS" \
 ./configure \
   --prefix=/usr \
 	--libdir=/usr/lib$LIBSUFFIX \
+  --sysconfdir=/etc \
   --mandir=/usr/man \
   --build=${ARCH}-${DISTRO}-linux
 make -j4 || exit 1
