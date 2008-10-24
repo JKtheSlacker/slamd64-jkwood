@@ -14,11 +14,6 @@ if [ -r ./local.options ]; then
   . ./local.options
 fi
 
-# Avoid a version number in .la files:
-if [ -d /usr/lib/qt ]; then
-  QTDIR=/usr/lib/qt
-fi
-
 rm -rf $PKG
 mkdir -p $TMP $PKG
 cd $TMP
@@ -36,6 +31,7 @@ cmake \
   -DCMAKE_C_FLAGS:STRING="$SLKCFLAGS" \
   -DCMAKE_CXX_FLAGS:STRING="$SLKCFLAGS" \
   -DCMAKE_INSTALL_PREFIX=/usr \
+  -DLIB_SUFFIX=$LIBSUFFIX \
   -DMAN_INSTALL_DIR=/usr/man \
   -DSYSCONF_INSTALL_DIR=/etc/kde \
   .
@@ -59,5 +55,5 @@ cat $CWD/slack-desc > $PKG/install/slack-desc
 zcat $CWD/doinst.sh.gz > $PKG/install/doinst.sh
 
 cd $PKG
-/sbin/makepkg -l y -c n /tmp/kaudiocreator-$VERSION-$ARCH-$BUILD.tgz
+/sbin/makepkg -l y -c n /tmp/kaudiocreator-$VERSION-$PKGARCH-$BUILD.tgz
 

@@ -24,7 +24,7 @@
 
 PKGNAM=strigi
 VERSION=0.5.11
-BUILD=${BUILD:-1}
+BUILD=${BUILD:-2}
 NUMJOBS=${NUMJOBS:--j6}
 
 . /etc/pkghelpers

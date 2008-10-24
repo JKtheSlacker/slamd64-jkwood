@@ -4,7 +4,7 @@ TMP=/tmp
 PKG=$TMP/package-arts
 
 VERSION=${VERSION:-1.5.10}
-ARCH=${ARCH:-i486}
+ARCH=${ARCH:-x86_64}
 BUILD=${BUILD:-opt1}
 
 rm -rf $PKG
@@ -33,8 +33,8 @@ CXXFLAGS=$CPUOPT \
   --disable-debug \
   --program-prefix="" \
   --program-suffix="" \
-  --build=$ARCH-slackware-linux
-make -j4 || exit 1
+  --build=$ARCH-$DISTRO-linux
+make -j5 || exit 1
 make install DESTDIR=$PKG
 
 mkdir -p $PKG/usr/doc/arts-$VERSION
@@ -52,5 +52,5 @@ if [ -d $PKG/usr/man ]; then
 fi
 
 cd $PKG
-makepkg -l y -c n ../arts-$VERSION-$ARCH-$BUILD.tgz
+makepkg -l y -c n ../arts-$VERSION-${ARCH}_slamd64-$BUILD.tgz
 

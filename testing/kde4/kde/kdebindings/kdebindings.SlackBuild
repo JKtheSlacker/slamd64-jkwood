@@ -15,8 +15,8 @@ if [ -r ./local.options ]; then
 fi
 
 # Avoid a version number in .la files:
-if [ -d /usr/lib/qt ]; then
-  QTDIR=/usr/lib/qt
+if [ -d /usr/lib$LIBSUFFIX/qt ]; then
+  QTDIR=/usr/lib$LIBSUFFIX/qt
 fi
 
 rm -rf $PKG
@@ -73,5 +73,5 @@ mkdir -p $PKG/install
 cat $CWD/slack-desc > $PKG/install/slack-desc
 
 cd $PKG
-/sbin/makepkg -l y -c n /tmp/kdebindings-$VERSION-$ARCH-$BUILD.tgz
+/sbin/makepkg -l y -c n /tmp/kdebindings-$VERSION-$PKGARCH-$BUILD.tgz
 

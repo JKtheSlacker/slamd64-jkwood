@@ -17,7 +17,7 @@ rm -rf $PKG
 mkdir -p $PKG/usr
 
 # Avoid a version number in .la files:
-if [ -d /usr/lib/qt ]; then
+if [ -d /usr/lib$LIBSUFFIX/qt ]; then
   QTDIR=/opt/kde3/lib/qt3
 fi
 
@@ -42,7 +42,7 @@ CXXFLAGS=$CPUOPT \
   --enable-dnotify \
   --program-prefix="" \
   --program-suffix="" \
-  --build=$TARGET-slackware-linux
+  --build=$TARGET-$DISTRO-linux
 
 make $NUMJOBS || exit 1
 make install DESTDIR=$PKG
@@ -63,5 +63,5 @@ if [ -d $PKG/usr/man ]; then
 fi
 
 cd $PKG
-makepkg -l y -c n ../kdelibs3-$VERSION-$ARCH-$BUILD.tgz
+makepkg -l y -c n ../kdelibs3-$VERSION-${ARCH}_slamd64-$BUILD.tgz
 

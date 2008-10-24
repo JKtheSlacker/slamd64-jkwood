@@ -15,8 +15,52 @@ if [ -r ./local.options ]; then
 fi
 
 # Avoid a version number in .la files:
-if [ -d /usr/lib/qt ]; then
-  QTDIR=/usr/lib/qt
+if [ -d /usr/lib$LIBSUFFIX/qt ]; then
+  QTDIR=/usr/lib$LIBSUFFIX/qt
+fi
+
+# If there's no libmysqld.a, we have to build it:
+if [ ! -r /usr/lib$LIBSUFFIX/mysql/libmysqld.a ]; then
+  MYSQL="$CWD/../../../../../source/ap/mysql/mysql*.tar.bz2"
+  if [ ! -e $MYSQL ]; then
+    if [ -e $CWD/mysql*.tar.?z* ]; then
+      MYSQL="$CWD/mysql*.tar.?z*"
+    fi
+  fi
+  ( cd $TMP
+    tar xvf $MYSQL
+    MYSQLDIR="mysql-$(basename $(echo $MYSQL | rev | cut -f 1 -d - | rev) .tar.bz2)"
+    if [ -d "$MYSQLDIR" ]; then
+      cd "$MYSQLDIR"
+      CFLAGS=" $SLKCFLAGS -fPIC" CXXFLAGS=" $SLKCFLAGS -fPIC" \
+      ./configure \
+      --prefix=/usr \
+      --libdir=/usr/lib$LIBSUFFIX \
+      --with-mysqld-user=mysql \
+      --with-unix-socket-path=/var/run/mysql/mysql.sock \
+      --localstatedir=/var/lib/mysql \
+      --enable-assembler \
+      --with-raid \
+      --without-debug \
+      --enable-thread-safe-client \
+      --without-bench \
+      --with-extra-charsets=complex \
+      --with-embedded-server \
+      --with-vio \
+      --with-pic \
+      --with-openssl \
+      --build=$ARCH-$DISTRO-linux
+      make || exit 1
+      mkdir -p /usr/lib$LIBSUFFIX/mysql
+      cp libmysqld/libmysqld.a /usr/lib$LIBSUFFIX/mysql   
+    fi
+  )
+fi
+
+if [ ! -r /usr/lib$LIBSUFFIX/mysql/libmysqld.a ]; then
+  echo "ERROR:  No libmysqld.a.  Strongly advised to put a MySQL source .tar.bz2 in"
+  echo "this directory and try again..."
+  sleep 10
 fi
 
 rm -rf $PKG
@@ -38,10 +82,11 @@ cd build
     -DCMAKE_C_FLAGS:STRING="$SLKCFLAGS" \
     -DCMAKE_CXX_FLAGS:STRING="$SLKCFLAGS" \
     -DCMAKE_INSTALL_PREFIX=/usr \
+    -DLIB_SUFFIX=64 \
     -DMAN_INSTALL_DIR=/usr/man \
     -DSYSCONF_INSTALL_DIR=/etc/kde \
     ..
-   make || exit 1
+   make $NUMJOBS || make || exit 1
    make install DESTDIR=$PKG || exit 1
 cd -
 
@@ -63,5 +108,5 @@ cat $CWD/slack-desc > $PKG/install/slack-desc
 zcat $CWD/doinst.sh.gz > $PKG/install/doinst.sh
 
 cd $PKG
-/sbin/makepkg -l y -c n /tmp/amarok-$VERSION-$ARCH-$BUILD.tgz
+/sbin/makepkg -l y -c n /tmp/amarok-$VERSION-$PKGARCH-$BUILD.tgz
 

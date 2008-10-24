@@ -27,7 +27,7 @@
 # has at least one bugfix strongly recommended by the kde developers
 
 PKGNAM=qt
-VERSION=r860451
+VERSION=r869114
 BUILD=${BUILD:-1}
 NUMJOBS=${NUMJOBS:--j6}
 
