@@ -9,7 +9,7 @@ if [ "$TMP" = "" ]; then
 fi
 PKG=$TMP/package-$NAME
 
-VERSION=${VERSION:-2.6.1}
+VERSION=${VERSION:-2.6.2}
 ARCH=${ARCH:-x86_64}
 BUILD=${BUILD:-1}
 DISTRO=${DISTRO:-slamd64}
@@ -43,7 +43,7 @@ mkdir -p $PKG
 # Decompress
 cd $TMP
 rm -rf $NAME-$VERSION
-tar xjvf $CWD/$NAME-$VERSION.tar.bz2 || exit 1
+tar xvf $CWD/$NAME-$VERSION.tar.* || exit 1
 cd $NAME-$VERSION
 
 # Fix
