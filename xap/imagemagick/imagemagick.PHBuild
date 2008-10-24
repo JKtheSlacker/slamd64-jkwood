@@ -1,11 +1,11 @@
 #!/bin/sh
-if [ "$TMP" = "" ]; then
-  TMP=/tmp
-fi
-CWD=`pwd`
-PKG=$TMP/package-imagemagick
-rm -rf $PKG
-mkdir -p $PKG
+
+PKGNAM=imagemagick
+VERSION=${VERSION:-6.4.3_10}
+BUILD=${BUILD:-1}
+
+. /etc/pkghelpers
+pkghelpers_env
 
 # NOTE:  This is to cope with ImageMagick version numbers such as 5.4.7-4,
 # which occur fairly often (but not always).  If these numbers are all the same,
@@ -14,40 +14,10 @@ mkdir -p $PKG
 # This is a bit messy, so we'll explain it well.  :-)
 
 # This is the base version number, which is needed to cd into the source tree
-BASEVER=6.4.2
+BASEVER=6.4.3
 
 # This is the version number used in the source tarball filename
-FILEVER=6.4.2-5
-
-# This is the version number used in the package, where a version number cannot
-# contain a '-'
-PKGVER=6.4.2_5
-
-ARCH=${ARCH:-x86_64}
-BUILD=1
-DISTRO=${DISTRO:-slamd64}
-
-if [ $DISTRO = slackware ]; then
-	PKGARCH=$ARCH
-else
-	PKGARCH=${ARCH}_${DISTRO}
-fi
-
-if [ $DISTRO = slamd64 ]; then
-	LIBSUFFIX=${LIBSUFFIX:-64}
-else
-	LIBSUFFIX=
-fi
-
-if [ "$ARCH" = "i386" ]; then
-  SLKCFLAGS="-O2 -march=i386 -mcpu=i686"
-elif [ "$ARCH" = "i486" ]; then
-  SLKCFLAGS="-O2 -march=i486 -mcpu=i686"
-elif [ "$ARCH" = "s390" ]; then
-  SLKCFLAGS="-O2"
-elif [ "$ARCH" = "x86_64" ]; then
-  SLKCFLAGS="-O2 -fPIC"
-fi
+FILEVER=6.4.3-10
 
 # --with-x or not --with-x, that is the question.  It seems many other
 # distributions don't compile with X support, but it's been traditional
@@ -56,25 +26,26 @@ fi
 # I've heard a few reports of compile failures when this isn't in /usr.
 # Everyone else does it -- time to follow the path of least resistance.
 
+rm -rf $PKG
+mkdir -p $PKG
+
 cd $TMP
 rm -rf ImageMagick-$BASEVER
 tar xjvf $CWD/ImageMagick-$FILEVER.tar.bz2
 cd ImageMagick-$BASEVER
-chown -R root.root .
-find . -perm 664 -exec chmod 644 {} \;
-find . -perm 600 -exec chmod 644 {} \;
-find . -perm 444 -exec chmod 644 {} \;
-find . -perm 400 -exec chmod 644 {} \;
-find . -perm 440 -exec chmod 644 {} \;
-find . -perm 777 -exec chmod 755 {} \;
-find . -perm 775 -exec chmod 755 {} \;
-find . -perm 511 -exec chmod 755 {} \;
-find . -perm 711 -exec chmod 755 {} \;
-find . -perm 555 -exec chmod 755 {} \;
+
+# Make sure ownerships and permissions are sane:
+pkghelpers_permissions
 
 if [ "$ARCH" = "x86_64" ]; then
   zcat $CWD/libpng_mmx_patch_x86_64.patch.gz | patch -p1 --verbose
 fi
+
+# --without-modules seems to avoid a segfault when identifying
+# or converting ps or eps files...
+
+# --disable-openmp seems to keep the perl Image::Magick from
+# eating up all RAM, and may help other script bindings.
 
 CFLAGS="$SLKCFLAGS" \
 CXXFLAGS="$SLKCFLAGS" \
@@ -85,20 +56,18 @@ CXXFLAGS="$SLKCFLAGS" \
   --program-prefix= \
   --with-x \
   --with-frozenpaths=no \
+  --without-modules \
+  --disable-openmp \
   --enable-static=no \
   --enable-shared \
   --with-perl \
   --build=$ARCH-$DISTRO-linux
-make -j4 INSTALLDIRS=vendor || exit 1
-make install INSTALLDIRS=vendor DESTDIR=$PKG
+
+make -j3 INSTALLDIRS=vendor || make INSTALLDIRS=vendor || exit 1
+make install INSTALLDIRS=vendor DESTDIR=$PKG || exit 1
 
 # Lately ImageMagick has been smoking crack:
 rm -f $PKG/usr/lib$LIBSUFFIX/libltdl.*
-
-( cd $PKG
-  # Nothing but a perl upgrade should replace this (and maybe not even that)
-  find . -name perllocal.pod | xargs rm -f
-)
 
 # DESTDIR is still broken about this, but works well enough otherwise:
 chmod 644 $PKG/usr/share/man/man3/*
@@ -111,12 +80,6 @@ rmdir $PKG/usr/share/man
   rmdir * 2> /dev/null
 )
 
-( cd $PKG
-  find . | xargs file | grep "executable" | grep ELF | cut -f 1 -d : | xargs strip --strip-unneeded 2> /dev/null
-  find . | xargs file | grep "shared object" | grep ELF | cut -f 1 -d : | xargs strip --strip-unneeded 2> /dev/null
-)
-gzip -9 $PKG/usr/man/man?/*.?
-
 mkdir -p $PKG/usr
 mv $PKG/usr/share/doc $PKG/usr
 cp -a \
@@ -127,5 +90,5 @@ mkdir -p $PKG/install
 cat $CWD/slack-desc > $PKG/install/slack-desc
 
 cd $PKG
-makepkg -l y -c n ../imagemagick-$PKGVER-$PKGARCH-$BUILD.tgz
-
+pkghelpers_fixup
+pkghelpers_makepkg
