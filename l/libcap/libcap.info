@@ -1,0 +1,8 @@
+PRGNAM="libcap"
+VERSION="2.11"
+HOMEPAGE="http://www.friedhoff.org/posixfilecaps.html"
+DOWNLOAD="http://www.kernel.org/pub/linux/libs/security/linux-privs/libcap2/libcap-2.11.tar.gz"
+MD5SUM="56578c1719424857967676c7584143a3"
+MAINTAINER="Menno E. Duursma"
+EMAIL="druiloor@zonnet.nl"
+APPROVED="rworkman,Erik Hanson"

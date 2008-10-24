@@ -1,0 +1,69 @@
+#!/bin/sh
+
+# Slackware build script for libcap
+
+# Written by Menno Duursma
+
+# This program is free software. It comes without any warranty.
+# Granted WTFPL, Version 2, as published by Sam Hocevar. See
+# http://sam.zoy.org/wtfpl/COPYING for more details.
+
+PKGNAM=libcap
+VERSION=2.11
+BUILD=${BUILD:-1}
+
+. /etc/pkghelpers
+pkghelpers_env
+
+rm -rf $PKG
+mkdir -p $TMP $PKG
+cd $TMP 
+rm -rf $PKGNAM-$VERSION
+tar xvf $CWD/$PKGNAM-$VERSION.tar.gz
+cd $PKGNAM-$VERSION || exit 1
+chown -R root:root .
+find . \
+ \( -perm 777 -o -perm 775 -o -perm 711 -o -perm 555 -o -perm 511 \) \
+ -exec chmod 755 {} \; -o \
+ \( -perm 666 -o -perm 664 -o -perm 600 -o -perm 444 -o -perm 440 -o -perm 400 \) \
+ -exec chmod 644 {} \;
+
+# Fix a recursive include problem
+zcat $CWD/libcap-2.11-include_fix.patch.gz | patch -p1 || exit 1
+
+# The tools shouldn't have to all be static for any reason I'm aware of:
+zcat $CWD/libcap.dynamic.diff.gz | patch -p1 || exit 1
+
+# Set the CFLAGS
+sed -i "s/^\(DEBUG=\).*/\1$SLKCFLAGS/" Make.Rules
+
+make
+make install FAKEROOT=$PKG man_prefix=/usr
+
+find $PKG | xargs file | grep -e "executable" -e "shared object" | grep ELF \
+  | cut -f 1 -d : | xargs strip --strip-unneeded 2> /dev/null
+
+# Add included scripts
+( cd contrib || exit 1
+  for file in pcaps4convenience pcaps4server pcaps4suid0 ; do
+    install -m 0755 -D $file $PKG/usr/sbin/$file
+  done
+)
+
+# glibc already has the capget/capset manpage
+rm -rf $PKG/usr/man/man2
+
+mkdir -p $PKG/usr/doc/$PKGNAM-$VERSION
+cp -a \
+  CHANGELOG License README License pgp.keys.asc doc/capability.notes \
+  progs/quicktest.sh $CWD/capfaq-0.2.txt $CWD/README.SLACKWARE \
+  $PKG/usr/doc/$PKGNAM-$VERSION
+chown -R root:root $PKG/usr/doc
+find $PKG/usr/doc -type f -exec chmod 644 {} \;
+
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+
+cd $PKG
+pkghelpers_fixup
+pkghelpers_makepkg
