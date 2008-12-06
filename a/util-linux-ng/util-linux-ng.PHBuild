@@ -24,7 +24,7 @@
 # Slackware build script for util-linux-ng
 
 PKGNAM=util-linux-ng
-VERSION=${VERSION:-2.13.1}
+VERSION=${VERSION:-2.14.1}
 BUILD=${BUILD:-1}
 
 . /etc/pkghelpers
@@ -103,6 +103,20 @@ CFLAGS="$SLKCFLAGS" \
 make || exit 1
 make install DESTDIR=$PKG
 
+# Moving things around that have been in the same place
+# for 15 years is, IMHO, not a wise idea AT ALL.
+# If this had to be moved, some place out of /usr might
+# have shown a grain of insight...
+if [ -r $PKG/usr/sbin/fdformat ]; then
+  mkdir -p $PKG/usr/bin
+  mv $PKG/usr/sbin/fdformat $PKG/usr/bin/fdformat
+  # Now since stuff will start looking in this new place,
+  # we have no choice but to link these:
+  ( cd $PKG/usr/sbin
+    ln -sf ../bin/fdformat .
+  )
+fi
+
 # Install (probably obsolete) rdev manually:
 cat ./sys-utils/rdev > $PKG/sbin/rdev
 chown root:root $PKG/sbin/rdev
@@ -114,6 +128,7 @@ cd $TMP || exit 1
 rm -rf ziptool-$ZIPTOOLVERS
 tar xvf $CWD/ziptool-$ZIPTOOLVERS.tar.bz2 || exit 1
 cd ziptool-$ZIPTOOLVERS || exit 1
+zcat $CWD/ziptool-llh.diff.gz | patch -p1
 make || exit 1
 strip ziptool
 cat ziptool > $PKG/sbin/ziptool
@@ -225,7 +240,7 @@ cd $TMP/util-linux-ng-$VERSION # Go back home :)
 )
 
 mkdir -p $PKG/usr/doc/util-linux-ng-$VERSION
-cp ABOUT-NLS AUTHORS COPYING DEPRECATED NEWS README* TODO \
+cp ABOUT-NLS AUTHORS COPYING DEPRECATED NEWS README* TODO docs/* \
   $PKG/usr/doc/util-linux-ng-$VERSION
 
 mkdir $PKG/install
