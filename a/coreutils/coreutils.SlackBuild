@@ -6,9 +6,9 @@ if [ "$TMP" = "" ]; then
 fi
 PKG=$TMP/package-coreutils
 
-VERSION=6.9
+VERSION=6.12
 ARCH=${ARCH:-x86_64}
-BUILD=${BUILD:-2}
+BUILD=${BUILD:-1}
 DISTRO=${DISTRO:-slamd64}
 
 if [ $DISTRO = slackware ]; then
@@ -54,10 +54,6 @@ find . -perm 555 -exec chmod 755 {} \;
 # Patch in the uname for Linux enhancements
 zcat $CWD/coreutils.uname.diff.gz | patch -p1 --verbose --backup --suffix=.orig || exit 1
 
-# Fix for futimens conflict between coreutils and glibc
-# Fix taken from http://bugs.archlinux.org/task/7768
-sed -i.bak 's/futimens/gl_&/' src/{copy,touch}.c lib/utimens.{c,h}
-
 # Compilation with glibc version later than 2.3.2 needs the environment
 # variable DEFAULT_POSIX2_VERSION set to 199209.
 # Without the next line, the coreutils will start complaining about 'obsolete'
@@ -65,6 +61,7 @@ sed -i.bak 's/futimens/gl_&/' src/{copy,touch}.c lib/utimens.{c,h}
 # This behaviour breaks many other packages... the 'obsolete' parameters are
 # too commonly used to disregard them.  Better to stick with the older more
 # widely accepted standards until things begin to demand the new way.
+
 CFLAGS="$SLKCFLAGS" \
 DEFAULT_POSIX2_VERSION=199209 \
 CFLAGS=-O2 ./configure \
@@ -74,8 +71,20 @@ CFLAGS=-O2 ./configure \
   --infodir=/usr/info \
   --sysconfdir=/etc \
   --build=$ARCH-$DISTRO-linux
+
 make -j5 || exit 1
 make install DESTDIR=$PKG
+
+# We have had the mktemp from debianutils included with Slackware for quite a
+# long time, and certain options are changed here, like changing -u to mean a
+# dry-run rather than to unlink the tempfile when finished.  Since this could
+# break existing scripts, unless someone can tell me a good reason why we
+# should start using a new version of mktemp, we will continue to use the
+# one we've been using.  If the new one starts to become expected, let me know.
+# We'll figure out what the best options are and go from there.
+mv $PKG/bin/mktemp $PKG/bin/mktemp-gnu
+( cd $PKG/usr/bin ; ln -sf ../../bin/mktemp-gnu mktemp-gnu )
+mv $PKG/usr/man/man1/mktemp.1 $PKG/usr/man/man1/mktemp-gnu.1
 
 # This seems wrong, and it stomps on files in the ksh93 package.  Though, I'm
 # not sure the placement of those is correct, either...
