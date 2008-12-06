@@ -1,0 +1,25 @@
+#!/bin/sh
+CWD=`pwd`
+TMP=${TMP:-/tmp}
+PKG=$TMP/package-kernel-firmware
+
+VERSION=${VERSION:-2.6.27.7}
+ARCH=${ARCH:-noarch}
+BUILD=${BUILD:-1}
+
+if [ ! -d $TMP ]; then
+  mkdir -p $TMP
+fi
+rm -rf $PKG
+mkdir -p $PKG
+echo "Using /usr/src/linux-2.6.27.7/"
+echo "Make sure this is *ready*..."
+mkdir -p $PKG/lib/firmware
+( cd /usr/src/linux-2.6.27.7 && make firmware_install INSTALL_FW_PATH=$PKG/lib/firmware )
+cp -a /usr/src/linux-2.6.27.7/firmware/WHENCE $PKG/lib/firmware
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+
+cd $PKG
+makepkg -l y -c n $TMP/kernel-firmware-${VERSION}-noarch-$BUILD.tgz
+
