@@ -13,13 +13,14 @@ For a 2.6.x kernel (much easier):
    Install a suitable .config, or use make menuconfig, etc.
 
    An example would be to use one of the config files here:
-   # cat config-smp-2.6.21.3-smp > /usr/src/linux-2.6.21.3/.config
+   # cat config-smp-2.6.27.7-smp > /usr/src/linux-2.6.27.7/.config
 
    Then run the build programs:
 
    make oldconfig
    make bzImage
    make clean
+   make prepare
    rm .version
 
 That's it!  You now have a clean Slackware-configured Linux source
@@ -40,11 +41,12 @@ additional kernel modules.  In order to compile outside kernel
 modules and such, you will need to build your kernel once with a
 non-SMP .config.  The process is much the same:
 
-cat config-generic-2.6.21.3 > /usr/src/linux-2.6.21.3/.config
+cat config-generic-2.6.27.7 > /usr/src/linux-2.6.27.7/.config
 
    make oldconfig
    make bzImage
    make clean
+   make prepare
    rm .version
 
 At this point if you are running huge.s or generic.s, you should have
