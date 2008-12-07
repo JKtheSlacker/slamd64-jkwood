@@ -1,0 +1,104 @@
+#!/bin/sh
+
+# Copyright 2008  Patrick J. Volkerding, Sebeka, Minnesota, USA
+# All rights reserved.
+#
+# Redistribution and use of this script, with or without modification, is
+# permitted provided that the following conditions are met:
+#
+# 1. Redistributions of this script must retain the above copyright
+#    notice, this list of conditions and the following disclaimer.
+#
+#  THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR IMPLIED
+#  WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+#  MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.  IN NO
+#  EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+#  SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+#  PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+#  OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+#  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+#  OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+#  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+PKGNAM=module-init-tools
+VERSION=3.5
+BUILD=${BUILD:-1}
+
+NUMJOBS=${NUMJOBS:--j6}
+
+. /etc/pkghelpers
+pkghelpers_env
+
+rm -rf $PKG
+mkdir -p $TMP $PKG
+cd $TMP
+rm -rf module-init-tools-$VERSION
+tar xjf $CWD/module-init-tools-$VERSION.tar.bz2 || exit 1
+cd module-init-tools-$VERSION || exit 1
+
+pkghelpers_permissions
+
+# Look for /etc/modprobe.d/ first rather than bailing on the idea if 
+# /etc/modprobe.conf exists.  IMHO, this is a better default behavior 
+# because it allows /etc/modprobe.conf to remain behind if something 
+# still looks there, and allows a smoother transition towards using 
+# /etc/modprobe.d/ instead.
+zcat $CWD/modprobe.favor.etc.modprobe.d.diff.gz | patch -p1 --verbose || exit 1
+
+# Using --bindir=/sbin to make lsmod go there too
+CFLAGS= \
+./configure \
+  --prefix=/ \
+  --bindir=/sbin \
+  --docdir=/usr/doc/module-init-tools-$VERSION \
+  --mandir=/usr/man \
+  --enable-zlib \
+  --build=$ARCH-$DISTRO-linux
+
+make $NUMJOBS || make || exit 1
+make install DESTDIR=$PKG
+
+# We don't need this
+rm -f $PKG/sbin/generate-modprobe.conf
+
+# Links lsmod into /bin
+mkdir -p $PKG/bin ; ( cd $PKG/bin ; ln -sf /sbin/lsmod . )
+
+# Add manpage symlink for modprobe.d
+( cd $PKG/usr/man/man5 
+  if [ -f modprobe.conf.5 -a ! -e modprobe.d.5 ]; then
+    ln -sf modprobe.conf.5 modprobe.d.5
+  fi
+)
+
+mkdir -p $PKG/etc/modprobe.d/
+cat << EOF > $PKG/etc/modprobe.conf.new
+# /etc/modprobe.conf (old location for Linux 2.6+ config)
+#
+# The use of this config file is deprecated. 
+# Instead, create files in the /etc/modprobe.d/ directory 
+# containing modprobe options.
+#
+# For more information, see "man modprobe.conf".
+EOF
+
+mkdir -p $PKG/usr/doc/module-init-tools-$VERSION
+# Most of these are out of date
+cp -a \
+  AUTHORS CODING COPYING FAQ HACKING INSTALL NEWS README TODO \
+  $PKG/usr/doc/module-init-tools-$VERSION
+
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+zcat $CWD/doinst.sh.gz > $PKG/install/doinst.sh
+
+# Build the package:
+cd $PKG
+pkghelpers_fixup
+pkghelpers_makepkg
+
+# Clean up the extra stuff:
+if [ "$1" = "--cleanup" ]; then
+  rm -rf $TMP/module-init-tools-$VERSION
+  rm -rf $PKG
+fi
