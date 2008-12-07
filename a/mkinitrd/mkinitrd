@@ -200,17 +200,21 @@ if [ -z "$1" ]; then
   fi
 fi # default no-option actions
 
-# Parse options:
-while [ ! -z "$1" ]; do
-  case $1 in
-    -F)
+# Parse for the use config file option first or else the other command
+# line options can not override /etc/mkinitrd.conf. 
+for opt in "$@"; do
+  if [ $opt = "-F" ]; then
       if [ -e /etc/mkinitrd.conf ]; then
         . /etc/mkinitrd.conf || badconf_file
-        shift
       else
         badconf_file
       fi
-      ;;
+  fi
+done
+
+# Parse options:
+while [ ! -z "$1" ]; do
+  case $1 in
     -c)
       CLEAR_TREE=1
       shift
