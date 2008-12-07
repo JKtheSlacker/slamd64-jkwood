@@ -1,8 +1,6 @@
 #!/bin/sh
 
-# Slackware build script for udev
-
-# Copyright 2006, 2008  Patrick J. Volkerding, Sebeka, MN, USA
+# Copyright 2008  Patrick J. Volkerding, Sebeka, Minnesota, USA
 # All rights reserved.
 #
 # Redistribution and use of this script, with or without modification, is
@@ -22,9 +20,8 @@
 #  OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 #  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-
 PKGNAM=udev
-VERSION=${VERSION:-118}
+VERSION=${VERSION:-135}
 BUILD=${BUILD:-1}
 
 . /etc/pkghelpers
@@ -38,58 +35,52 @@ tar xvf $CWD/udev-$VERSION.tar.bz2 || exit 1
 cd udev-$VERSION || exit 1
 pkghelpers_permissions
 
-zcat $CWD/rule_generator.patch.gz | patch -p1 || exit 1
+zcat $CWD/rule_generator.patch.gz | patch -p1 --verbose || exit 1
+zcat $CWD/udev.40-isdn.rules.diff.gz | patch -p1 --verbose || exit 1
 
-make EXTRAS="extras/ata_id extras/cdrom_id \
-		extras/firmware extras/floppy extras/path_id \
-		extras/scsi_id extras/usb_id \
-		extras/rule_generator \
-		extras/edd_id extras/volume_id" || exit 1
+./configure \
+  --prefix=/usr \
+    --with-libdir-name=lib$LIBSUFFIX \
+  --exec-prefix=/ \
+  --sysconfdir=/etc \
+  --mandir=/usr/man \
+  --build=$ARCH-$DISTRO-linux
+
+make
 make install DESTDIR=$PKG
 
-# Copy all helper programs to /lib/udev 
-cp -a extras/firmware/firmware.sh $PKG/lib/udev
-cp -a extras/path_id/path_id $PKG/lib/udev
-cp -a extras/scsi_id/scsi_id $PKG/lib/udev
-cp -a extras/scsi_id/scsi_id.config $PKG/etc
-cp -a extras/ata_id/ata_id $PKG/lib/udev
-cp -a extras/usb_id/usb_id $PKG/lib/udev
-( cd extras/floppy ; make install-bin DESTDIR=$PKG )
-( cd extras/rule_generator ; make install-bin DESTDIR=$PKG ) 
-( cd extras/volume_id ; make install-bin DESTDIR=$PKG usrlibdir=/usr/lib$LIBSUFFIX libdir=/lib$LIBSUFFIX )
-( cd extras/edd_id ; make install-bin DESTDIR=$PKG )
-( cd extras/cdrom_id ; make install-bin DESTDIR=$PKG )
-
-# scsi_id is needed by multipath
+#scsi_id and vol_id are needed by multipath
 mkdir -p $PKG/sbin
-( cd $PKG
-  ln -s ../lib/udev/scsi_id sbin/scsi_id
+( cd $PKG/sbin
+  ln -s ../lib/udev/scsi_id scsi_id
+  ln -s ../lib/udev/vol_id vol_id
 )
 
-# vol_id is needed by multipath, too
-( cd $PKG
-  ln -s ../lib/udev/vol_id sbin/vol_id
-)
-
-mv $PKG/usr/share/man $PKG/usr
-rmdir $PKG/usr/share
-
-mkdir -p $PKG/etc/udev/rules.d \
-	 $PKG/lib/firmware \
-	 $PKG/etc/modprobe.d \
-         $PKG/etc/rc.d
+mkdir -p \
+  $PKG/etc/udev/rules.d \
+  $PKG/lib/firmware \
+  $PKG/etc/modprobe.d \
+  $PKG/etc/rc.d
 
 # Yes, these will clobber existing config files.
 cp -a $CWD/config/udev.conf $PKG/etc/udev/udev.conf
 # Copy Slackware custom rules
 cp -a $CWD/config/rules.d/* $PKG/etc/udev/rules.d/
 # Copy some files from upstream
-cp -a etc/udev/packages/40-alsa.rules $PKG/etc/udev/rules.d/
-
+cp -a rules/packages/40-alsa.rules $PKG/lib/udev/rules.d/
+cp -a rules/packages/40-isdn.rules $PKG/lib/udev/rules.d/
+cp -a rules/packages/40-zaptel.rules $PKG/lib/udev/rules.d/
+cp -a rules/packages/40-infiniband.rules $PKG/lib/udev/rules.d/
+#cp -a rules/packages/40-pilot-links.rules $PKG/etc/udev/rules.d/
+#cp -a rules/packages/64-md-raid.rules $PKG/etc/udev/rules.d/
+# Now the init script and module-init-tools stuff
 cp -a $CWD/config/rc.d/rc.udev.new $PKG/etc/rc.d/rc.udev.new
-cp -a $CWD/config/modprobe.d/blacklist.new $PKG/etc/modprobe.d/blacklist.new
-cp -a $CWD/config/modprobe.d/isapnp.new $PKG/etc/modprobe.d/isapnp.new
-cp -a $CWD/config/modprobe.d/psmouse.new $PKG/etc/modprobe.d/psmouse.new
+cp -a $CWD/config/modprobe.d/* $PKG/etc/modprobe.d
+
+chown -R root:root $PKG/etc
+find $PKG/etc -type f -exec chmod 644 {} \;
+find $PKG/etc -type d -exec chmod 755 {} \;
+chmod 755 $PKG/etc/rc.d/rc.udev.new
 
 # Add extra device nodes to the package that udev doesn't make:
 tar xvf $CWD/udev-fixed-devices.tar.gz -C $PKG/
@@ -98,23 +89,13 @@ tar xvf $CWD/udev-fixed-devices.tar.gz -C $PKG/
 for file in $CWD/config/scripts/* ; do
   cp -a $file $PKG/lib/udev/
 done
+chown -R root:root $PKG/lib/udev
+chmod 755 $PKG/lib/udev/*
 
 mkdir -p $PKG/usr/doc/udev-$VERSION
-cp -a COPYING FAQ README TODO RELEASE-NOTES docs \
+cp -a \
+  COPYING FAQ README TODO RELEASE-NOTES docs \
   $PKG/usr/doc/udev-$VERSION
-
-# Copy manpages of helper applications in /extra
-find extras/ -name "*\.8" -exec cp -a {} $PKG/usr/man/man8 \;
-
-# Fix up permissions and ownership of the package
-chown -R root:root $PKG
-find $PKG/etc -type f -exec chmod 644 {} \;
-find $PKG/etc -type d -exec chmod 755 {} \;
-chmod 755 $PKG/etc/rc.d/rc.udev.new $PKG/lib/udev/*
-chmod -x $PKG/lib/udev/rc.optical-symlinks
-
-# Fix pkgconfig files
-sed -i "s#/lib\$#/lib$LIBSUFFIX#" $PKG/usr/lib$LIBSUFFIX/pkgconfig/*.pc
 
 mkdir -p $PKG/install
 zcat $CWD/doinst.sh.gz > $PKG/install/doinst.sh

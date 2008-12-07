@@ -1,0 +1,72 @@
+#!/bin/sh
+
+# Slackware build script for dev86
+
+# Copyright 2007-2008 Heinz Wiesinger <hmwiesinger@gmx.at>
+# Copyright 2008 Patrick J. Volkerding, Sebeka, MN, USA
+# All rights reserved.
+#
+# Redistribution and use of this script, with or without modification, is
+# permitted provided that the following conditions are met:
+#
+# 1. Redistributions of this script must retain the above copyright
+#    notice, this list of conditions and the following disclaimer.
+#
+# THIS SOFTWARE IS PROVIDED BY THE AUTHOR ''AS IS'' AND ANY EXPRESS OR IMPLIED
+# WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+# MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO
+# EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+# SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+# PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+# OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+# WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+# OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+# ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+PKGNAM=dev86
+SRCNAM=Dev86src
+VERSION=0.16.17
+BUILD=${BUILD:-1}
+
+. /etc/pkghelpers
+pkghelpers_env
+
+set -e
+
+rm -rf $PKG
+mkdir -p $TMP $PKG $OUTPUT
+cd $TMP
+rm -rf $PKGNAM-$VERSION
+tar xvzf $CWD/$SRCNAM-$VERSION.tar.gz
+cd $PKGNAM-$VERSION
+pkghelpers_permissions
+
+if [ $LIBSUFFIX = 64 ]; then
+  zcat $CWD/dev86-0.16.17-x86_64-1.diff | patch -p1 --verbose
+fi
+
+( cd ld
+  zcat $CWD/bin86-x86_64.diff.gz | patch -p0 --verbose
+)
+
+#Does not compile with changed CFLAGS
+#CC="gcc" make CFLAGS="-Wall -Wstrict-prototypes $SLKCFLAGS -g" DIST=$PKG
+CC="gcc" make DIST=$PKG
+make install DIST=$PKG \
+  LIBDIR=/usr/lib$LIBSUFFIX/bcc \
+  INCLDIR=/usr/lib$LIBSUFFIX/bcc
+
+mkdir -p $PKG/usr/doc/$PKGNAM-$VERSION
+cp -a Changes Contributors COPYING README $PKG/usr/doc/$PKGNAM-$VERSION
+for i in bootblocks copt dis88 elksemu unproto ; do
+  cp -a $i/README $PKG/usr/doc/$PKGNAM-$VERSION/README.$i ;
+done
+cat $CWD/$PKGNAM.SlackBuild > $PKG/usr/doc/$PKGNAM-$VERSION/$PKGNAM.PHBuild
+find $PKG/usr/doc -type f -exec chmod 0644 {} \;
+
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+
+cd $PKG
+pkghelpers_fixup
+pkghelpers_makepkg

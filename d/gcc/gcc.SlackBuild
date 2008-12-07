@@ -43,11 +43,14 @@
 # I see no reason to continue 386 support in the latest Slackware (and indeed
 # it's no longer easily possible).
 
-VERSION=4.2.3
+VERSION=4.2.4
 ARCH=${ARCH:-x86_64}
 DISTRO=${DISTRO:-slamd64}
 TARGET=$ARCH-$DISTRO-linux
-BUILD=1
+BUILD=2
+
+# How many jobs to run in parallel:
+NUMJOB=${NUMJOB:-" -j 5 "}
 
 if [ $DISTRO = slackware ]; then
 	PKGARCH=$ARCH
@@ -58,7 +61,7 @@ fi
 if [ $DISTRO == slamd64 ]; then # add your multilib distro here
 	LIBSUFFIX=64
 	# Compile breaks on GCJ's 64 bit midi support (keeps trying to pull in
-	# the 32 bit Alsa library instead), so disable it for now on 4.2.3
+	# the 32 bit Alsa library instead), so disable it for now on 4.2.3+
 	SLKCONF="--disable-alsa"
 else
 	LIBSUFFIX=
@@ -278,7 +281,7 @@ tar xjvf $CWD/gcc-$VERSION.tar.bz2
   # Start the build:
 
   # Include all debugging info (for now):
-  make -j5 bootstrap || exit 1
+  make $NUMJOB bootstrap || exit 1
 
   ( cd gcc
     make -j5 gnatlib GNATLIBCFLAGS="$SLKCFLAGS"
@@ -287,13 +290,13 @@ tar xjvf $CWD/gcc-$VERSION.tar.bz2
     
     CFLAGS="$SLKCFLAGS" \
     CXXFLAGS="$SLKCFLAGS" \
-    make -j5 gnattools
+    make $NUMJOB gnattools
   )
-  make -j5 info || exit 1
+  make $NUMJOB info || exit 1
 
   # Set GCCCHECK=something to run the tests
   if [ ! -z $GCCCHECK ]; then
-    make -j5 check || exit 1
+    make $NUMJOB check || exit 1
   fi
 
   make install DESTDIR=$PKG1 || exit 1

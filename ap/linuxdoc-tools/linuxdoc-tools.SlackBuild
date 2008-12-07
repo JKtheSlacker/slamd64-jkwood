@@ -24,7 +24,7 @@
 # Package info:
 PKGNAM=linuxdoc-tools
 ARCH=${ARCH:-x86_64}
-BUILD=${BUILD:-6}
+BUILD=${BUILD:-7}
 VERSION=0.9.21 # use the version of linuxdoc-tools as the package version.
 DISTRO=${DISTRO:-slamd64}
 
@@ -45,6 +45,7 @@ fi
 CWD=`pwd`
 if [ "$TMP" = "" ]; then
   TMP=/tmp/build-$PKGNAM
+  rm -rf $TMP
 fi
 PKG=$TMP/package-${PKGNAM}
 rm -rf $PKG
@@ -158,6 +159,7 @@ patch -p1 < ../sgml-common-0.6.3-docdir.patch || exit 1
 # Configure:
 aclocal
 automake --add-missing --copy
+autoconf configure.in > configure
 ./configure \
    --prefix=/usr \
    --mandir=/usr/man \
@@ -167,7 +169,7 @@ automake --add-missing --copy
 
 # Temporary workaround until we finish building all the packages - we don't
 # want the catalog spamming the root partition
-sed -i s%/etc/sgml/%$PKG/etc/sgml/%g bin/install-catalog.in
+#sed -i s%/etc/sgml/%$PKG/etc/sgml/%g bin/install-catalog.in
 
 # Build & install:
 make -j4 -e 'mkdir_p=mkdir -p' install DESTDIR=$PKG || exit 1
@@ -178,16 +180,17 @@ make -j4 -e 'mkdir_p=mkdir -p' install DESTDIR=$PKG || exit 1
 )
 
 # Create catalog:
-install-catalog --add /etc/sgml/sgml-ent.cat \
+install-catalog --add $PKG/etc/sgml/sgml-ent.cat \
     /usr/share/sgml/sgml-iso-entities-8879.1986/catalog
+install-catalog --add $PKG/etc/sgml/sgml-docbook.cat \
+    $PKG/etc/sgml/sgml-ent.cat
+
+sed -i s%${PKG}%%g $PKG/etc/sgml/sgml-docbook.cat
 
 ( cd $PKG
   makepkg -l y -c n ../linuxdoc-tools-temp-$VERSION-$PKGARCH-$BUILD.tgz
   installpkg ../linuxdoc-tools-temp-$VERSION-$PKGARCH-$BUILD.tgz
 )
-
-install-catalog --add /etc/sgml/sgml-docbook.cat \
-    /etc/sgml/sgml-ent.cat
 
 # Copy docs:
 mkdir -vpm755 $PKG/usr/doc/sgml-common-$SGMLCOMMONVER

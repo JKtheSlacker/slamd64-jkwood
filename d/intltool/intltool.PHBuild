@@ -1,4 +1,5 @@
 #!/bin/sh
+
 # Copyright 2008  Patrick J. Volkerding, Sebeka, MN, USA
 # All rights reserved.
 #
@@ -19,10 +20,11 @@
 #  OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 #  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-
 PKGNAM=intltool
-VERSION=${VERSION:-$(echo $(basename $(echo $PRGNAM-*.tar.bz2 | cut -f 2 -d -) .tar.bz2) | cut -f 2 -d -)}
+VERSION=${VERSION:-0.40.5}
 BUILD=${BUILD:-1}
+
+NUMJOBS=${NUMJOBS:--j6}
 
 . /etc/pkghelpers
 pkghelpers_env
@@ -43,11 +45,12 @@ CFLAGS="$SLKCFLAGS" \
   --libdir=/usr/lib$LIBSUFFIX \
   --mandir=/usr/man \
   --infodir=/usr/info \
+  --docdir=/usr/doc/${PKGNAM}-$VERSION \
   --disable-static \
   --build=$ARCH-$DISTRO-linux
 
 # Build and install:
-make -j4 || exit 1
+make $NUMJOBS || make || exit 1
 make install DESTDIR=$PKG || exit 1
 
 # Add a documentation directory:

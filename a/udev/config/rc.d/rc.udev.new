@@ -13,7 +13,7 @@ UDEV_ROOT=$(echo "${udev_root}" |sed 's/\/*$//')
 
 case "$1" in
     start)
-	# Sanity check #2, udev requires that the kernel support tmpfs:
+	# Sanity check #1, udev requires that the kernel support tmpfs:
         if ! grep -wq tmpfs /proc/filesystems ; then
           echo "Sorry, but you need tmpfs support in the kernel to use udev."
           echo
@@ -21,7 +21,7 @@ case "$1" in
           exit 1
         fi
 
-        # Sanity check #3, make sure that a 2.6.x kernel is new enough:
+        # Sanity check #2, make sure that a 2.6.x kernel is new enough:
         if [ "$(uname -r | cut -f 1,2 -d .)" = "2.6" ]; then
           if [ "$(uname -r | cut -f 3 -d . | sed 's/[^[:digit:]].*//')" -lt "15" ]; then
             echo "Sorry, but you need a 2.6.15+ kernel to use udev."
@@ -32,7 +32,7 @@ case "$1" in
           fi
         fi
 
-        # Sanity check #4, make sure the udev package was not removed.  If udevd
+        # Sanity check #3, make sure the udev package was not removed.  If udevd
         # is not there, this will also shut off this script to prevent further
         # problems:
         if [ ! -x /sbin/udevd ]; then
@@ -51,10 +51,10 @@ case "$1" in
 	# if udevd is already running, rc.udev start will try to re-run
 	# failed events. Else, it will start udevd.
 	if ps axc | grep -q udevd ; then
-	  OPT="--retry-failed $OPT"
-	  ( cd ${udev_root}/.udev
+	  OPT="--type=failed $OPT"
+	  ( cd ${UDEV_ROOT}/.udev
 	    for TMPFILE in tmp-rules-*.rules ; do
-		mv $TMPFILE ${udev_rules}/${TMPFILE/tmp-rules--/} 2>/dev/null
+		mv $TMPFILE /etc/udev/rules.d/${TMPFILE/tmp-rules--/} 2>/dev/null
 	    done
 	  ) 
 	else
@@ -87,12 +87,18 @@ case "$1" in
 	  echo "Starting udevd:  /sbin/udevd --daemon"
 	  /sbin/udevd --daemon
 
-	  mkdir -p $UDEV_ROOT/.udev/queue
+	  # Create rootdev rules
+	  DEVICENUMBER=$( /bin/stat -c %d / )
+	  MAJORNUMBER=$(($DEVICENUMBER / 256))
+	  MINORNUMBER=$(($DEVICENUMBER % 256))
+
+	  echo 'ACTION=="add", SUBSYSTEM=="block", ENV{MAJOR}=="'$MAJORNUMBER'", ENV{MINOR}=="'$MINORNUMBER'", SYMLINK+="root"' > /dev/.udev/rules.d/61-dev-root-link.rules
+
 	fi
 
-	echo "Triggering udev events:  /sbin/udevtrigger $OPT"	
+	echo "Triggering udev events:  /sbin/udevadm trigger $OPT"	
 	# Call udevtrigger and udevsettle to do the device configuration:
-	/sbin/udevtrigger $OPT && /sbin/udevsettle --timeout=120
+	/sbin/udevadm trigger $OPT && /sbin/udevadm settle --timeout=120
 
 	;;
     stop)
@@ -110,12 +116,12 @@ case "$1" in
 	;;
     reload)
 	echo "Reloading udev rules"
-	udevcontrol reload_rules
+	udevadm control reload_rules
 	cp --preserve=all --recursive --update /lib/udev/devices/* $UDEV_ROOT
 	;;
     force-reload)
 	echo "Updating all available device nodes in $UDEV_ROOT"
-	udevcontrol reload_rules
+	udevadm control reload_rules
 	rm -rf $UDEV_ROOT/.udev $UDEV_ROOT/disk
 	cp --preserve=all --recursive --update /lib/udev/devices/* $UDEV_ROOT
 	;;
