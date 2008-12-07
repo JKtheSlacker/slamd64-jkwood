@@ -1,7 +1,7 @@
 #!/bin/sh
 
 PKGNAM=device-mapper
-VERSION=1.02.24
+VERSION=1.02.28
 BUILD=1
 
 . /etc/pkghelpers
@@ -16,25 +16,30 @@ cd device-mapper.$VERSION
 
 pkghelpers_permissions
 
+# Slamd64 - fix pkgconfig install path
+sed -i "/usrlibdir/s:/lib:&${LIBSUFFIX}:" configure
+
 CFLAGS="$SLKCFLAGS" \
 ./configure \
   --libdir=/lib$LIBSUFFIX \
   --enable-static_link \
+  --enable-pkgconfig \
+  --enable-dmeventd \
   --with-device-uid=0 \
   --with-device-gid=6 \
   --with-device-mode=0660 \
   --mandir=/usr/man \
   --build=$ARCH-$DISTRO-linux
 
-make -j5 || exit 1
+make -j6 || exit 1
 make install DESTDIR=$PKG || exit 1
 
-mkdir -p $PKG/etc/udev/rules.d
+mkdir -p $PKG/lib/udev/rules.d
 cat $CWD/64-device-mapper.rules > $PKG/etc/udev/rules.d/64-device-mapper.rules
 
 mkdir -p $PKG/usr/doc/device-mapper.$VERSION
 cp -a \
-  COPYING COPYING.LIB INSTALL INTRO README VERSION WHATS_NEW \
+  COPYING* INSTALL INTRO README* VERSION WHATS_NEW \
   $PKG/usr/doc/device-mapper.$VERSION
 
 mkdir -p $PKG/install
