@@ -47,7 +47,7 @@ VERSION=4.2.4
 ARCH=${ARCH:-x86_64}
 DISTRO=${DISTRO:-slamd64}
 TARGET=$ARCH-$DISTRO-linux
-BUILD=1
+BUILD=2
 
 # How many jobs to run in parallel:
 NUMJOB=${NUMJOB:-" -j 5 "}
@@ -136,6 +136,8 @@ tar xjvf $CWD/gcc-$VERSION.tar.bz2
 
 # install docs
 ( cd gcc-$VERSION
+  # Smite the fixincludes:
+  zcat $CWD/gcc-no_fixincludes.diff.gz | patch -p1 || exit 1
   # Fix perms/owners
   chown -R root:root .
   find . -perm 777 -exec chmod 755 {} \;
