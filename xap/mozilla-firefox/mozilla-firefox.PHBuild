@@ -9,7 +9,7 @@
 # XXX XXX XXX XXX
 
 PKGNAM=mozilla-firefox
-VERSION=${VERSION:-3.0.3}
+VERSION=${VERSION:-3.0.4}
 BUILD=${BUILD:-1}
 
 . /etc/pkghelpers
@@ -96,6 +96,8 @@ cat $CWD/firefox.png > $PKG/usr/share/pixmaps/firefox.png
 mkdir -p chrome/icons/default
 cp icons/mozicon50.xpm chrome/icons/default/main-window.xpm
 )
+
+rm -rf $PKG/usr/lib64/firefox-devel-$VERSION
 
 mkdir $PKG/install
 cat $CWD/slack-desc > $PKG/install/slack-desc

@@ -22,9 +22,9 @@
 . /etc/pkghelpers
 
 PKGNAM=alpine
-VERSION=${VERSION:-1.10}
-ALPINEBUILD=${ALPINEBUILD:-2}
-IMAPDBUILD=${IMAPDBUILD:-2}
+VERSION=${VERSION:-2.00}
+ALPINEBUILD=${ALPINEBUILD:-1}
+IMAPDBUILD=${IMAPDBUILD:-1}
 PINEPGP=${PINEPGP:-0.18.0}
 
 pkghelpers_env
@@ -49,6 +49,7 @@ zcat $CWD/alpine.manpage.diff.gz | patch -p1 --verbose || exit 1
 
 # Configure:
 CFLAGS="$SLKCFLAGS" \
+C_CLIENT_CFLAGS="EXTRACFLAGS='$SLKCFLAGS'" \
 ./configure \
   --prefix=/usr \
   --libdir=/usr/lib$LIBSUFFIX \

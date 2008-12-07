@@ -4,7 +4,7 @@ CWD=`pwd`
 PKGNAM=xmms
 VERSION=1.2.11
 ARTSPLUG=0.7.1
-BUILD=${BUILD:-1}
+BUILD=${BUILD:-2}
 
 . /etc/pkghelpers
 pkghelpers_env
@@ -28,7 +28,6 @@ CXXFLAGS="$SLKCFLAGS" \
   --libdir=/usr/lib$LIBSUFFIX \
   --localstatedir=/var/lib \
   --disable-static \
-  --enable-simd \
   --with-ipv6 \
   $ARCH-$DISTRO-linux
 make -j5 || exit 1

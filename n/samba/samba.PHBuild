@@ -1,8 +1,8 @@
 #!/bin/sh
 # Build samba for Slamd64
 PKGNAM=samba
-VERSION=3.2.3
-BUILD=${BUILD:-2}
+VERSION=3.2.5
+BUILD=${BUILD:-1}
 
 . /etc/pkghelpers
 pkghelpers_env

@@ -1,6 +1,6 @@
 #!/bin/sh
 PKGNAM=ruby
-VERSION=1.8.6-p230
+VERSION=1.8.7-p72
 BUILD=${BUILD:-1}
 
 . /etc/pkghelpers
@@ -17,6 +17,8 @@ rm -rf ruby-$VERSION
 tar xjvf $CWD/ruby-$VERSION.tar.bz2 || exit 1
 cd ruby-$VERSION
 pkghelpers_permissions
+
+zcat $CWD/ruby.short.name.constants.diff.gz | patch -p1 --verbose || exit 1
 
 if [ "x$LIBSUFFIX" = "x64" ]; then
 	zcat $CWD/ruby-multilib.patch.gz | patch -p1 --verbose || exit 1

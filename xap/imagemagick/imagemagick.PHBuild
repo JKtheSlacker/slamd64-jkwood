@@ -2,7 +2,7 @@
 
 PKGNAM=imagemagick
 VERSION=${VERSION:-6.4.3_10}
-BUILD=${BUILD:-1}
+BUILD=${BUILD:-2}
 
 . /etc/pkghelpers
 pkghelpers_env

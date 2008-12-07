@@ -1,6 +1,6 @@
 #!/bin/sh
 PKGNAM=libxml2
-VERSION=2.6.31
+VERSION=2.6.32
 BUILD=1
 
 . /etc/pkghelpers
@@ -13,6 +13,10 @@ rm -rf libxml2-$VERSION
 tar xjvf $CWD/libxml2-$VERSION.tar.bz2
 cd libxml2-$VERSION
 pkghelpers_permissions
+
+zcat $CWD/CVE-2008-4225.patch.gz | patch -p0 --verbose || exit 1
+zcat $CWD/CVE-2008-4226.patch.gz | patch -p0 --verbose || exit 1
+
 CFLAGS="$SLKCFLAGS" \
 ./configure \
   --prefix=/usr \
