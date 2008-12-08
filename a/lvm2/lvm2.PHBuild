@@ -1,7 +1,7 @@
 #!/bin/sh
 # Set initial variables:
 PKGNAM=lvm2
-VERSION=2.02.33
+VERSION=2.02.40
 ARCH=${ARCH:-x86_64}
 BUILD=1
 
@@ -20,17 +20,20 @@ pkghelpers_permissions
 CFLAGS="$SLKCFLAGS" \
 ./configure \
   --libdir=/lib$LIBSUFFIX \
+  --disable-readline \
+  --enable-cmdlib \
+  --enable-dmeventd \
   --enable-static_link \
   --mandir=/usr/man \
   --with-lvm1=internal
 
-make -j5 || exit 1
+make -j6 || exit 1
 make install DESTDIR=$PKG || exit 1
 mv $PKG/etc/lvm/lvm.conf $PKG/etc/lvm/lvm.conf.new
 
 mkdir -p $PKG/usr/doc/LVM2.$VERSION
 cp -a \
-  COPYING COPYING.LIB INSTALL README VERSION WHATS_NEW \
+  COPYING* INSTALL README* VERSION WHATS_NEW \
   $PKG/usr/doc/LVM2.$VERSION
 
 mkdir -p $PKG/install

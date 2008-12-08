@@ -5,7 +5,7 @@ PKG=$TMP/package-lilo
 
 VERSION=${VERSION:-22.8}
 ARCH=${ARCH:-x86_64}
-BUILD=${BUILD:-6}
+BUILD=${BUILD:-7}
 
 rm -rf $PKG
 mkdir -p $PKG
@@ -16,7 +16,7 @@ cd lilo-$VERSION
 chown -R root:root .
 make || exit 1
 make install ROOT=$PKG
-# Add a Slackware logo boot menu (sorry, couldn't resist):
+# Add a Slamd64 logo boot menu (sorry, couldn't resist):
 cp -a $CWD/slamd64.bmp $PKG/boot
 chmod 644 $PKG/boot/slamd64.bmp
 # We don't need to add this empty directory:

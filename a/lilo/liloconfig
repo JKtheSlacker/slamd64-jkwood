@@ -216,7 +216,7 @@ fi
 
 # A function to ask for append= parameters. 
 ask_append() {
- dialog --title "OPTIONAL LILO append=\"<kernel perameters>\" LINE" --inputbox \
+ dialog --title "OPTIONAL LILO append=\"<kernel parameters>\" LINE" --inputbox \
 "Some systems might require extra parameters to be passed to the kernel. \
 If you needed to pass parameters to the kernel when you booted the Slackware \
 bootdisk, you'll probably want to enter the same ones here.  Most \
