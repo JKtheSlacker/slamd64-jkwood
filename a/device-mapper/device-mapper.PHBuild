@@ -31,11 +31,11 @@ CFLAGS="$SLKCFLAGS" \
   --mandir=/usr/man \
   --build=$ARCH-$DISTRO-linux
 
-make -j6 || exit 1
+make || exit 1
 make install DESTDIR=$PKG || exit 1
 
 mkdir -p $PKG/lib/udev/rules.d
-cat $CWD/64-device-mapper.rules > $PKG/etc/udev/rules.d/64-device-mapper.rules
+cat $CWD/64-device-mapper.rules > $PKG/lib/udev/rules.d/64-device-mapper.rules
 
 mkdir -p $PKG/usr/doc/device-mapper.$VERSION
 cp -a \
