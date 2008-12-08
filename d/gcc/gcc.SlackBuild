@@ -47,10 +47,10 @@ VERSION=4.2.4
 ARCH=${ARCH:-x86_64}
 DISTRO=${DISTRO:-slamd64}
 TARGET=$ARCH-$DISTRO-linux
-BUILD=2
+BUILD=1
 
 # How many jobs to run in parallel:
-NUMJOB=${NUMJOB:-" -j 5 "}
+NUMJOB=${NUMJOB:-" -j5 "}
 
 if [ $DISTRO = slackware ]; then
 	PKGARCH=$ARCH
