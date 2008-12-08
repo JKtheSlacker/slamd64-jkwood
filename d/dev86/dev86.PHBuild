@@ -61,7 +61,7 @@ cp -a Changes Contributors COPYING README $PKG/usr/doc/$PKGNAM-$VERSION
 for i in bootblocks copt dis88 elksemu unproto ; do
   cp -a $i/README $PKG/usr/doc/$PKGNAM-$VERSION/README.$i ;
 done
-cat $CWD/$PKGNAM.SlackBuild > $PKG/usr/doc/$PKGNAM-$VERSION/$PKGNAM.PHBuild
+cat $CWD/$PKGNAM.PHBuild > $PKG/usr/doc/$PKGNAM-$VERSION/$PKGNAM.PHBuild
 find $PKG/usr/doc -type f -exec chmod 0644 {} \;
 
 mkdir -p $PKG/install
