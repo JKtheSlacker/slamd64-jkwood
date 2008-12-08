@@ -205,7 +205,9 @@ if [ "$COLOR" = "on" -o -r $TMP/SeTcolor -o "$T_PX" = "/" ]; then
 "America/Argentina/La_Rioja" " " \
 "America/Argentina/Mendoza" " " \
 "America/Argentina/Rio_Gallegos" " " \
+"America/Argentina/Salta" " " \
 "America/Argentina/San_Juan" " " \
+"America/Argentina/San_Luis" " " \
 "America/Argentina/Tucuman" " " \
 "America/Argentina/Ushuaia" " " \
 "America/Aruba" " " \
@@ -319,6 +321,7 @@ if [ "$COLOR" = "on" -o -r $TMP/SeTcolor -o "$T_PX" = "/" ]; then
 "America/Resolute" " " \
 "America/Rio_Branco" " " \
 "America/Rosario" " " \
+"America/Santarem" " " \
 "America/Santiago" " " \
 "America/Santo_Domingo" " " \
 "America/Sao_Paulo" " " \
@@ -382,6 +385,7 @@ if [ "$COLOR" = "on" -o -r $TMP/SeTcolor -o "$T_PX" = "/" ]; then
 "Asia/Dushanbe" " " \
 "Asia/Gaza" " " \
 "Asia/Harbin" " " \
+"Asia/Ho_Chi_Minh" " " \
 "Asia/Hong_Kong" " " \
 "Asia/Hovd" " " \
 "Asia/Irkutsk" " " \
@@ -394,6 +398,7 @@ if [ "$COLOR" = "on" -o -r $TMP/SeTcolor -o "$T_PX" = "/" ]; then
 "Asia/Karachi" " " \
 "Asia/Kashgar" " " \
 "Asia/Katmandu" " " \
+"Asia/Kolkata" " " \
 "Asia/Krasnoyarsk" " " \
 "Asia/Kuala_Lumpur" " " \
 "Asia/Kuching" " " \
@@ -752,7 +757,9 @@ if [ "$COLOR" = "on" -o -r $TMP/SeTcolor -o "$T_PX" = "/" ]; then
 "posix/America/Argentina/La_Rioja" " " \
 "posix/America/Argentina/Mendoza" " " \
 "posix/America/Argentina/Rio_Gallegos" " " \
+"posix/America/Argentina/Salta" " " \
 "posix/America/Argentina/San_Juan" " " \
+"posix/America/Argentina/San_Luis" " " \
 "posix/America/Argentina/Tucuman" " " \
 "posix/America/Argentina/Ushuaia" " " \
 "posix/America/Aruba" " " \
@@ -866,6 +873,7 @@ if [ "$COLOR" = "on" -o -r $TMP/SeTcolor -o "$T_PX" = "/" ]; then
 "posix/America/Resolute" " " \
 "posix/America/Rio_Branco" " " \
 "posix/America/Rosario" " " \
+"posix/America/Santarem" " " \
 "posix/America/Santiago" " " \
 "posix/America/Santo_Domingo" " " \
 "posix/America/Sao_Paulo" " " \
@@ -929,6 +937,7 @@ if [ "$COLOR" = "on" -o -r $TMP/SeTcolor -o "$T_PX" = "/" ]; then
 "posix/Asia/Dushanbe" " " \
 "posix/Asia/Gaza" " " \
 "posix/Asia/Harbin" " " \
+"posix/Asia/Ho_Chi_Minh" " " \
 "posix/Asia/Hong_Kong" " " \
 "posix/Asia/Hovd" " " \
 "posix/Asia/Irkutsk" " " \
@@ -941,6 +950,7 @@ if [ "$COLOR" = "on" -o -r $TMP/SeTcolor -o "$T_PX" = "/" ]; then
 "posix/Asia/Karachi" " " \
 "posix/Asia/Kashgar" " " \
 "posix/Asia/Katmandu" " " \
+"posix/Asia/Kolkata" " " \
 "posix/Asia/Krasnoyarsk" " " \
 "posix/Asia/Kuala_Lumpur" " " \
 "posix/Asia/Kuching" " " \
@@ -1312,7 +1322,9 @@ if [ "$COLOR" = "on" -o -r $TMP/SeTcolor -o "$T_PX" = "/" ]; then
 "right/America/Argentina/La_Rioja" " " \
 "right/America/Argentina/Mendoza" " " \
 "right/America/Argentina/Rio_Gallegos" " " \
+"right/America/Argentina/Salta" " " \
 "right/America/Argentina/San_Juan" " " \
+"right/America/Argentina/San_Luis" " " \
 "right/America/Argentina/Tucuman" " " \
 "right/America/Argentina/Ushuaia" " " \
 "right/America/Aruba" " " \
@@ -1426,6 +1438,7 @@ if [ "$COLOR" = "on" -o -r $TMP/SeTcolor -o "$T_PX" = "/" ]; then
 "right/America/Resolute" " " \
 "right/America/Rio_Branco" " " \
 "right/America/Rosario" " " \
+"right/America/Santarem" " " \
 "right/America/Santiago" " " \
 "right/America/Santo_Domingo" " " \
 "right/America/Sao_Paulo" " " \
@@ -1489,6 +1502,7 @@ if [ "$COLOR" = "on" -o -r $TMP/SeTcolor -o "$T_PX" = "/" ]; then
 "right/Asia/Dushanbe" " " \
 "right/Asia/Gaza" " " \
 "right/Asia/Harbin" " " \
+"right/Asia/Ho_Chi_Minh" " " \
 "right/Asia/Hong_Kong" " " \
 "right/Asia/Hovd" " " \
 "right/Asia/Irkutsk" " " \
@@ -1501,6 +1515,7 @@ if [ "$COLOR" = "on" -o -r $TMP/SeTcolor -o "$T_PX" = "/" ]; then
 "right/Asia/Karachi" " " \
 "right/Asia/Kashgar" " " \
 "right/Asia/Katmandu" " " \
+"right/Asia/Kolkata" " " \
 "right/Asia/Krasnoyarsk" " " \
 "right/Asia/Kuala_Lumpur" " " \
 "right/Asia/Kuching" " " \
@@ -1911,7 +1926,9 @@ America/Argentina/Jujuy
 America/Argentina/La_Rioja
 America/Argentina/Mendoza
 America/Argentina/Rio_Gallegos
+America/Argentina/Salta
 America/Argentina/San_Juan
+America/Argentina/San_Luis
 America/Argentina/Tucuman
 America/Argentina/Ushuaia
 America/Aruba
@@ -2025,6 +2042,7 @@ America/Regina
 America/Resolute
 America/Rio_Branco
 America/Rosario
+America/Santarem
 America/Santiago
 America/Santo_Domingo
 America/Sao_Paulo
@@ -2088,6 +2106,7 @@ Asia/Dubai
 Asia/Dushanbe
 Asia/Gaza
 Asia/Harbin
+Asia/Ho_Chi_Minh
 Asia/Hong_Kong
 Asia/Hovd
 Asia/Irkutsk
@@ -2100,6 +2119,7 @@ Asia/Kamchatka
 Asia/Karachi
 Asia/Kashgar
 Asia/Katmandu
+Asia/Kolkata
 Asia/Krasnoyarsk
 Asia/Kuala_Lumpur
 Asia/Kuching
@@ -2458,7 +2478,9 @@ posix/America/Argentina/Jujuy
 posix/America/Argentina/La_Rioja
 posix/America/Argentina/Mendoza
 posix/America/Argentina/Rio_Gallegos
+posix/America/Argentina/Salta
 posix/America/Argentina/San_Juan
+posix/America/Argentina/San_Luis
 posix/America/Argentina/Tucuman
 posix/America/Argentina/Ushuaia
 posix/America/Aruba
@@ -2572,6 +2594,7 @@ posix/America/Regina
 posix/America/Resolute
 posix/America/Rio_Branco
 posix/America/Rosario
+posix/America/Santarem
 posix/America/Santiago
 posix/America/Santo_Domingo
 posix/America/Sao_Paulo
@@ -2635,6 +2658,7 @@ posix/Asia/Dubai
 posix/Asia/Dushanbe
 posix/Asia/Gaza
 posix/Asia/Harbin
+posix/Asia/Ho_Chi_Minh
 posix/Asia/Hong_Kong
 posix/Asia/Hovd
 posix/Asia/Irkutsk
@@ -2647,6 +2671,7 @@ posix/Asia/Kamchatka
 posix/Asia/Karachi
 posix/Asia/Kashgar
 posix/Asia/Katmandu
+posix/Asia/Kolkata
 posix/Asia/Krasnoyarsk
 posix/Asia/Kuala_Lumpur
 posix/Asia/Kuching
@@ -3018,7 +3043,9 @@ right/America/Argentina/Jujuy
 right/America/Argentina/La_Rioja
 right/America/Argentina/Mendoza
 right/America/Argentina/Rio_Gallegos
+right/America/Argentina/Salta
 right/America/Argentina/San_Juan
+right/America/Argentina/San_Luis
 right/America/Argentina/Tucuman
 right/America/Argentina/Ushuaia
 right/America/Aruba
@@ -3132,6 +3159,7 @@ right/America/Regina
 right/America/Resolute
 right/America/Rio_Branco
 right/America/Rosario
+right/America/Santarem
 right/America/Santiago
 right/America/Santo_Domingo
 right/America/Sao_Paulo
@@ -3195,6 +3223,7 @@ right/Asia/Dubai
 right/Asia/Dushanbe
 right/Asia/Gaza
 right/Asia/Harbin
+right/Asia/Ho_Chi_Minh
 right/Asia/Hong_Kong
 right/Asia/Hovd
 right/Asia/Irkutsk
@@ -3207,6 +3236,7 @@ right/Asia/Kamchatka
 right/Asia/Karachi
 right/Asia/Kashgar
 right/Asia/Katmandu
+right/Asia/Kolkata
 right/Asia/Krasnoyarsk
 right/Asia/Kuala_Lumpur
 right/Asia/Kuching
