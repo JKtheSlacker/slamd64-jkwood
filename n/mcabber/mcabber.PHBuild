@@ -22,7 +22,7 @@
 
 
 PKGNAM=mcabber
-VERSION=${VERSION:-0.9.7}
+VERSION=${VERSION:-0.9.9}
 BUILD=${BUILD:-1}
 
 . /etc/pkghelpers
@@ -55,7 +55,7 @@ make install DESTDIR=$PKG || exit 1
 # Add a documentation directory:
 mkdir -p $PKG/usr/doc/${PKGNAM}-$VERSION
 cp -a \
-  AUTHORS COPYING ChangeLog NEWS README TODO mcabberrc.example \
+  AUTHORS COPYING* ChangeLog NEWS README* TODO mcabberrc.example \
   $PKG/usr/doc/${PKGNAM}-$VERSION
 
 mkdir -p $PKG/install
