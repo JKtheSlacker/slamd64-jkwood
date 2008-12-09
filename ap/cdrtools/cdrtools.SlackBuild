@@ -6,7 +6,7 @@ if [ "$TMP" = "" ]; then
 fi
 PKG=$TMP/package-cdrtools
 
-VERSION=2.01.01a38
+VERSION=2.01.01a53
 ZISOFSTOOLS=1.0.8
 ARCH=${ARCH:-x86_64}
 BUILD=${BUILD:-1}
@@ -35,7 +35,7 @@ chown -R root:root .
 find . -perm 775 -exec chmod 755 {} \;
 find . -perm 664 -exec chmod 644 {} \;
 zcat $CWD/cdrtools.ins_base.diff.gz | patch -p1 -E --backup --verbose || exit 1
-make -j4 || exit
+make -j6 || make || exit 1
 make install
 
 # Remove dupes:
@@ -53,21 +53,27 @@ for file in $PKG/etc/default/cdrecord $PKG/etc/default/rscsi ; do
 done
 
 mkdir -p $PKG/usr/doc/cdrtools-$VERSION
-cp -a AN-* BUILD COMPILE COPYING INSTALL README* $PKG/usr/doc/cdrtools-$VERSION
+  cp -a \
+  ABOUT AN-* BUILD CDDL* COMPILE CONTRIBUTING COPYING* Changelog \
+  *GPL* INSTALL README* START \
+  $PKG/usr/doc/cdrtools-$VERSION
 chown -R root:root $PKG/usr/doc/cdrtools-$VERSION/*
 find $PKG/usr/doc/cdrtools-$VERSION -type f -exec chmod 644 {} \;
 (
    cd mkisofs
    mkdir -p $PKG/usr/doc/cdrtools-$VERSION/mkisofs
-   cp -a COPYING ChangeLog README* TODO $PKG/usr/doc/cdrtools-$VERSION/mkisofs
+   cp -a \
+   COPYING* ChangeLog* README* RELEASE TODO \
+   $PKG/usr/doc/cdrtools-$VERSION/mkisofs
    chown root:root $PKG/usr/doc/cdrtools-$VERSION/mkisofs/*
    chmod 644 $PKG/usr/doc/cdrtools-$VERSION/mkisofs/*
 )
 (
    cd cdda2wav
    mkdir -p $PKG/usr/doc/cdrtools-$VERSION/cdda2wav
-   cp -a FAQ Frontends GPL HOWTOUSE NEEDED OtherProgs README THANKS TODO \
-      Changelog $PKG/usr/doc/cdrtools-$VERSION/cdda2wav
+   cp -a \
+   Changelog FAQ Frontends HOWTOUSE NEEDED OtherProgs README THANKS TODO \
+   $PKG/usr/doc/cdrtools-$VERSION/cdda2wav
    chown root:root $PKG/usr/doc/cdrtools-$VERSION/cdda2wav/*
    chmod 644 $PKG/usr/doc/cdrtools-$VERSION/cdda2wav/*
 )
@@ -100,7 +106,7 @@ chown -R root:root .
 find . -perm 775 -exec chmod 755 {} \;
 find . -perm 664 -exec chmod 644 {} \;
 ./configure --prefix=/usr
-make
+make -j6 || make || exit 1
 cat mkzftree > $PKG/usr/bin/mkzftree
 chmod 755 $PKG/usr/bin/mkzftree
 cat mkzftree.1 | gzip -9c > $PKG/usr/man/man1/mkzftree.1.gz
