@@ -31,7 +31,7 @@
 PKGNAM=hal
 VERSION=0.5.11
 PKG_VERSION=0.5.11
-BUILD=${BUILD:-2}
+BUILD=${BUILD:-3}
 
 . /etc/pkghelpers
 pkghelpers_env
@@ -69,6 +69,7 @@ CXXFLAGS="$SLKCFLAGS" \
   --disable-console-kit \
   --disable-acl-management \
   --enable-umount-helper \
+  --enable-sonypic \
   --build=$ARCH-$DISTRO-linux \
   --host=$ARCH-$DISTRO-linux \
   || exit 1
