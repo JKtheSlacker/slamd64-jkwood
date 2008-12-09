@@ -1,6 +1,6 @@
 #!/bin/sh
 PKGNAM=librsvg
-VERSION=2.22.2
+VERSION=2.22.3
 BUILD=1
 
 . /etc/pkghelpers
@@ -17,6 +17,7 @@ pkghelpers_permissions
 # Patch configure to detect seamonkey-config or mozilla-config
 zcat $CWD/librsvg_seamonkey-config.diff.gz | patch -p1 --verbose || exit 1
 
+LDFLAGS="-L/usr/lib$LIBSUFFIX" \
 CFLAGS="$SLKCFLAGS" \
 ./configure \
   --prefix=/usr \
@@ -24,6 +25,7 @@ CFLAGS="$SLKCFLAGS" \
   --mandir=/usr/man \
   --sysconfdir=/etc \
   --localstatedir=/var/lib \
+  --mandir=/usr/man \
   --enable-static=no \
   --build=$ARCH-$DISTRO-linux \
   --host=$ARCH-$DISTRO-linux
