@@ -4,7 +4,7 @@
 
 # Package version number:
 PKGNAM=links
-VERSION=2.1
+VERSION=2.2
 BUILD=${BUILD:-1}
 
 . /etc/pkghelpers
@@ -31,20 +31,23 @@ CFLAGS="$SLKCFLAGS" \
   --without-x \
   --without-sdl \
   $ARCH-$DISTRO-linux
-make -j4 || exit
+
+make -j6 || make || exit
+
 mkdir -p $PKG/usr/bin
 cat links > $PKG/usr/bin/links
-chmod 755 $PKG/usr/bin/links
+chmod 0755 $PKG/usr/bin/links
+
 mkdir -p $PKG/usr/man/man1
 cat links.1 | gzip -9c > $PKG/usr/man/man1/links.1.gz
+
 mkdir -p $PKG/usr/doc/links-$VERSION
 cp -a \
-  AUTHORS BUGS COPYING INSTALL NEWS README SITES TODO doc/links_cal \
+  AUTHORS BUGS COPYING* INSTALL NEWS README* SITES TODO doc/links_cal mailcap.pl \
   $PKG/usr/doc/links-$VERSION
-cp -a mailcap.pl $PKG/usr/doc/links-$VERSION
 find $PKG/usr/doc/links-$VERSION -type f -exec chmod 644 {} \;
 find $PKG/usr/doc/links-$VERSION -type d -exec chmod 755 {} \;
-chmod 755 $PKG/usr/doc/links-$VERSION/mailcap.pl
+chmod 0755 $PKG/usr/doc/links-$VERSION/mailcap.pl
 
 mkdir -p $PKG/install
 cat $CWD/slack-desc > $PKG/install/slack-desc
