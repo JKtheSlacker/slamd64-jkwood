@@ -23,7 +23,7 @@
 
 PRGNAM=dbus
 PKGNAM=$PRGNAM
-VERSION=1.1.20
+VERSION=1.2.6
 ARCH=${ARCH:-x86_64}
 BUILD=${BUILD:-1}
 
@@ -34,7 +34,7 @@ rm -rf $PKG
 mkdir -p $TMP $PKG
 cd $TMP
 rm -rf $PRGNAM-$VERSION
-tar xjvf $CWD/$PRGNAM-$VERSION.tar.bz2 || exit 1
+tar xvf $CWD/$PRGNAM-$VERSION.tar.* || exit 1
 cd $PRGNAM-$VERSION
 
 pkghelpers_permissions
@@ -65,7 +65,7 @@ make install DESTDIR=$PKG || exit 1
 # Install a custom init script for dbus - the included one is bad
 rm $PKG/etc/rc.d/*
 mkdir -p $PKG/etc/rc.d/
-cat $CWD/rc.messagebus.new > $PKG/etc/rc.d/rc.messagebus.new
+zcat $CWD/rc.messagebus.gz > $PKG/etc/rc.d/rc.messagebus.new
 chmod 0755 $PKG/etc/rc.d/rc.messagebus.new
 
 # Let's not clobber existing config files
