@@ -28,7 +28,7 @@
 # Set initial variables:
 PRGNAM=hplip
 PKGNAM=$PRGNAM
-VERSION=${VERSION:-2.8.7}
+VERSION=${VERSION:-2.8.10}
 BUILD=${BUILD:-1}
 
 . /etc/pkghelpers
@@ -52,9 +52,14 @@ CXXFLAGS="$SLKCFLAGS" \
 	--with-cupsfilterdir=/usr/lib$LIBSUFFIX/cups/filter \
   --sysconfdir=/etc \
   --localstatedir=/var \
+  --docdir=/usr/doc/hplip-$VERSION \
+  --with-docdir=/usr/doc/hplip-$VERSION \
   --disable-xml-install \
   --enable-foomatic-ppd-install \
   --with-hpppddir=/usr/share/cups/model/HP \
+  --enable-foomatic-drv-install \
+  --with-drvdir=/usr/share/cups/drv/hp \
+  --enable-foomatic-rip-hplip-install \
   --enable-network-build=yes \
   --build=$ARCH-$DISTRO-linux \
   --host=$ARCH-$DISTRO-linux \
@@ -63,12 +68,14 @@ CXXFLAGS="$SLKCFLAGS" \
 make -j4 || exit 1
 make install DESTDIR=$PKG || exit 1
 
-# Fix group and permissions in udev rules file
-sed -i -e 's/\(OWNER=\)"lp".*\(GROUP="lp",\).\(MODE=\).*/\1"root", \2 \3"0660"/' \
-	$PKG/etc/udev/rules.d/55-hpmud.rules
-
-# Fix udev rules for current versions of udev
-sed -i 's/SYSFS/ATTR/g' $PKG/etc/udev/rules.d/55-hpmud.rules
+# Move udev rules to /lib/udev/rules.d
+mkdir -p $PKG/lib
+mv $PKG/etc/udev $PKG/lib
+# Fix udev rules for current versions of udev:
+sed -i 's/SYSFS/ATTR/g' $PKG/lib/udev/rules.d/55-hpmud.rules
+# Fix permissions in udev rules file
+# Ownership is already root:lp
+sed -i 's/MODE="0666"/MODE="0660"/g' $PKG/lib/udev/rules.d/55-hpmud.rules
 
 # No thanks, we don't replace/add files which are part of other packages
 rm -rf $PKG/etc/sane.d
