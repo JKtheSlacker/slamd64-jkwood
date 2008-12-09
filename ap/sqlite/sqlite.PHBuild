@@ -23,9 +23,9 @@
 # ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 PKGNAM=sqlite
-VERSION=3.6.2
+VERSION=3.6.6.2
 BUILD=${BUILD:-1}
-NUMJOBS=${NUMJOBS:--j6}
+NUMJOBS=${NUMJOBS:-"-j6"}
 
 . /etc/pkghelpers
 pkghelpers_env
@@ -34,7 +34,7 @@ rm -rf $PKG
 mkdir -p $TMP $PKG
 cd $TMP
 rm -rf $PKGNAM-$VERSION
-tar xvf $CWD/$PKGNAM-$VERSION.tar.bz2 || exit 1
+tar xvf $CWD/$PKGNAM-$VERSION.tar.* || exit 1
 cd $PKGNAM-$VERSION
 pkghelpers_permissions
 
@@ -59,8 +59,14 @@ make install DESTDIR=$PKG || exit 1
 install -D -m 0644 sqlite3.1 $PKG/usr/man/man1/sqlite3.1
 gzip -9 $PKG/usr/man/man1/sqlite3.1
 
+# Fix up the pkgconfig file
+sed -i 's|Libs: -L${libdir} -lsqlite3|Libs: -L${libdir} -lsqlite3 -ldl|g' \
+  $PKG/usr/lib/pkgconfig/sqlite3.pc
+
 mkdir -p $PKG/usr/doc/$PKGNAM-$VERSION
-cp -a README VERSION $PKG/usr/doc/$PKGNAM-$VERSION
+cp -a \
+  README* VERSION \
+  $PKG/usr/doc/$PKGNAM-$VERSION
 # Add a COPYRIGHT file -- http://www.sqlite.org/copyright.html
 zcat $CWD/COPYRIGHT.gz > $PKG/usr/doc/$PKGNAM-$VERSION/COPYRIGHT
 rm -rf $PKG/usr/doc/$PKGNAM-$VERSION/CVS
