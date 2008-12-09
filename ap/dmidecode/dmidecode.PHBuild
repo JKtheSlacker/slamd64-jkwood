@@ -22,7 +22,7 @@
 
 
 PKGNAM=dmidecode
-VERSION=${VERSION:-2.9}
+VERSION=${VERSION:-2.10}
 BUILD=${BUILD:-1}
 
 . /etc/pkghelpers
