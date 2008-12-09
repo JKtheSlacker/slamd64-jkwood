@@ -1,7 +1,7 @@
 #!/bin/sh
 # OpenLDAP (clients/libraries only!)
 PKGNAM=openldap-client
-VERSION=2.3.38
+VERSION=2.3.43
 BUILD=1
 
 . /etc/pkghelpers
@@ -11,7 +11,7 @@ rm -rf $PKG
 mkdir -p $PKG
 cd $TMP
 rm -rf openldap-$VERSION
-tar xjvf $CWD/openldap-$VERSION.tar.bz2
+tar xjvf $CWD/openldap-$VERSION.tar.bz2 || exit 1
 cd openldap-$VERSION
 chown -R root:root .
 find . -perm 777 -exec chmod 755 {} \;
@@ -37,7 +37,7 @@ CFLAGS="$SLKCFLAGS" \
   --disable-slurpd
 
 make depend || exit 1
-make -j5 || exit 1
+make -j4 || exit 1
 make test || exit 1
 make install DESTDIR=$PKG || exit 1
 
@@ -62,20 +62,6 @@ cp -a \
 find $PKG/usr/man -name slap* -exec rm -f {} \;
 find $PKG/usr/man -name slurp* -exec rm -f {} \;
 find $PKG/usr/man -type d -empty -exec rmdir {} \;
-
-# Compress and if needed symlink the man pages:
-if [ -d $PKG/usr/man ]; then
-  ( cd $PKG/usr/man
-    for manpagedir in $(find . -type d -name "man*") ; do
-      ( cd $manpagedir
-        for eachpage in $( find . -type l -maxdepth 1) ; do
-          ln -s $( readlink $eachpage ).gz $eachpage.gz
-          rm $eachpage
-        done
-			)
-    done
-  )
-fi
 
 ( cd $PKG/usr/lib$LIBSUFFIX ; chmod 755 *.{so,la} )
 
