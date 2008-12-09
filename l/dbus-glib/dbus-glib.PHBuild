@@ -22,8 +22,8 @@
 # ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 PKGNAM=dbus-glib
-VERSION=0.74
-BUILD=${BUILD:-2}
+VERSION=0.78
+BUILD=${BUILD:-1}
 
 . /etc/pkghelpers
 pkghelpers_env
@@ -32,7 +32,7 @@ rm -rf $PKG
 mkdir -p $TMP $PKG
 cd $TMP
 rm -rf $PKGNAM-$VERSION
-tar xjvf $CWD/$PKGNAM-$VERSION.tar.bz2 || exit 1
+tar xvf $CWD/$PKGNAM-$VERSION.tar.* || exit 1
 cd $PKGNAM-$VERSION
 pkghelpers_permissions
 
