@@ -1,6 +1,6 @@
 #!/bin/sh
 PKGNAM=libpng
-VERSION=1.2.27
+VERSION=1.2.32
 BUILD=1
 
 . /etc/pkghelpers
@@ -20,6 +20,10 @@ pkghelpers_permissions
 # to be doing it that way now...  finally.  That'll prevent
 # a couple of emails a week.  :-)
 zcat $CWD/libpng.libs.diff.gz | patch -p1 --verbose || exit 1
+
+# Need this to substitute macros, but we'll keep using the
+# pre-built Makefile for now anyway...
+./configure --prefix=/usr
 
 # Link the custom makefile:
 ln -sf scripts/makefile.linux ./Makefile
