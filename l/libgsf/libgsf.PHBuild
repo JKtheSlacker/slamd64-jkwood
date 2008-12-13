@@ -1,6 +1,6 @@
 #!/bin/sh
 PKGNAM=libgsf
-VERSION=1.14.8
+VERSION=1.14.10
 BUILD=1
 
 . /etc/pkghelpers
@@ -23,8 +23,12 @@ CFLAGS="$SLKCFLAGS" \
   --with-html-dir=/usr/share/gtk-doc/html \
   --mandir=/usr/man \
   --disable-static \
-  $ARCH-$DISTRO-linux
-make -j5 || exit 1
+  --disable-static \
+  --without-gnome-vfs \
+  --without-gio \
+  --without-bonobo \
+  --build=$ARCH-$DISTRO-linux
+make -j $NUMJOBS || exit 1
 make install DESTDIR=$PKG
 
 # This is useless, describing a command that's not installed:
