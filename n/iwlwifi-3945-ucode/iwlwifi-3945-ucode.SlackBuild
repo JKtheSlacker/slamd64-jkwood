@@ -30,9 +30,8 @@ CWD=$(pwd)
 TMP=${TMP:-/tmp}
 PKG=$TMP/package-${PKGNAM}
 
-PKG=$TMP/package-${PKGNAM}
 rm -rf $PKG
-mkdir -p $PKG
+mkdir -p $TMP $PKG
 
 cd $TMP
 for file in $CWD/${PKGNAM}-*.tar.?z* ; do
