@@ -21,8 +21,8 @@ NAME=bluez-utils
 PKGNAM=$NAME
 
 # Some useful variables about the package
-VERSION=${VERSION:-3.26}
-BUILD=${BUILD:-2}
+VERSION=${VERSION:-3.36}
+BUILD=${BUILD:-1}
 
 . /etc/pkghelpers
 pkghelpers_env
@@ -46,10 +46,19 @@ CXXFLAGS="$SLKCFLAGS" \
 --sysconfdir=/etc \
 --mandir=/usr/man \
 --localstatedir=/var \
---enable-all \
+--enable-tools\
+--enable-bccmd \
+--enable-hid2hci \
+--enable-dfutool \
+--enable-hidd \
+--enable-pand \
+--enable-dund \
+--enable-cups \
+--enable-manpages \
+--enable-configfiles \
 --build=$ARCH-$DISTRO-linux
 
-make -j4 || exit 1
+make -j $NUMJOBS || exit 1
 make install DESTDIR=$PKG
 
 mkdir -p $PKG/lib/udev
@@ -57,21 +66,18 @@ mv $PKG/usr/libexec/udev/bluetooth_serial $PKG/lib/udev/bluetooth_serial
 rmdir $PKG/usr/libexec/udev
 rmdir $PKG/usr/libexec
 
-mkdir -p $PKG/etc/udev/rules.d
-mv $PKG/etc/udev/bluetooth.rules $PKG/etc/udev/rules.d/60-bluetooth.rules
+mkdir -p $PKG/lib/udev/rules.d
+cp -a scripts/bluetooth.rules $PKG/lib/udev/rules.d/60-bluetooth.rules || exit 1
+chmod 644 $PKG/lib/udev/rules.d/60-bluetooth.rules
 
-if grep -q ATTR $PKG/etc/udev/rules.d/60-bluetooth.rules ; then
-  # Use fixed rules file for now:
-  cat $CWD/60-bluetooth.rules > $PKG/etc/udev/rules.d/60-bluetooth.rules
-fi
-
-if [ ! -e $PKG/etc/bluetooth/transfer.service ]; then
-  cat transfer/transfer.service > $PKG/etc/bluetooth/transfer.service
-fi
-if [ ! -e $PKG/usr/lib/bluetooth/bluetoothd-service-transfer -a -e transfer/bluetoothd-service-transfer ]; then
-  cat transfer/bluetoothd-service-transfer > $PKG/usr/lib/bluetooth/bluetoothd-service-transfer
-  chmod 755 $PKG/usr/lib/bluetooth/bluetoothd-service-transfer
-fi
+# This appears to be gone/obsolete:
+#if [ ! -e $PKG/etc/bluetooth/transfer.service ]; then
+#  cat transfer/transfer.service > $PKG/etc/bluetooth/transfer.service
+#fi
+#if [ ! -e $PKG/usr/lib/bluetooth/bluetoothd-service-transfer -a -e transfer/bluetoothd-service-transfer ]; then
+#  cat transfer/bluetoothd-service-transfer > $PKG/usr/lib/bluetooth/bluetoothd-service-transfer
+#  chmod 755 $PKG/usr/lib/bluetooth/bluetoothd-service-transfer
+#fi
 
 # Install Debian's add-passkey program:
 DEBDEST=/usr/lib$LIBSUFFIX/bluetooth
@@ -86,32 +92,48 @@ touch $PKG/etc/bluetooth/passkeys/default
 
 mkdir -p $PKG/usr/doc/$NAME-$VERSION
 install -m 644 -o root -g root \
-  AUTHORS ChangeLog COPYING INSTALL NEWS README $CWD/README.SLACKWARE \
+  AUTHORS ChangeLog COPYING* INSTALL NEWS README $CWD/README.SLACKWARE \
   $PKG/usr/doc/$NAME-$VERSION/
 ( cd $PKG/etc/bluetooth
   ln -sf /usr/doc/$NAME-$VERSION/README.SLACKWARE .
 )
 
-# Arrange init scripts
+# Arrange init scripts and config files:
 CONF=/etc/rc.d/rc.bluetooth.conf
-#mv $PKG/etc/init.d/bluetooth $PKG/etc/rc.d/rc.bluetooth
+mkdir -p $PKG/etc/rc.d
 cp $CWD/rc.bluetooth $PKG/etc/rc.d/rc.bluetooth
-mv $PKG/etc/default/bluetooth $PKG/etc/rc.d/rc.bluetooth.conf
+cp -a $CWD/rc.bluetooth.conf $PKG/etc/rc.d/rc.bluetooth.conf
 sed -i "s:\(HIDD_ENABLE=\).*:\1false:" $PKG/$CONF || exit 1
 sed -i "s:\(HID2HCI_ENABLE=\).*:\1false:" $PKG/$CONF || exit 1
-rm -rf $PKG/etc/{init.d,default}
+
+mkdir -p $PKG/etc/bluetooth
+cp -a audio/audio.conf $PKG/etc/bluetooth
+cp -a audio/asound.conf $PKG/etc/bluetooth
+cp -a input/input.conf $PKG/etc/bluetooth
+cp -a hcid/hcid.conf $PKG/etc/bluetooth
+cp -a network/network.conf $PKG/etc/bluetooth
+cp -a rfcomm/rfcomm.conf $PKG/etc/bluetooth
+chmod 644 $PKG/etc/bluetooth/*.conf
 
 # Do not overwrite configuration
 ( cd $PKG
-  for file in etc/bluetooth/rfcomm.conf \
+  for file in \
+    etc/bluetooth/audio.conf \
+    etc/asound.conf \
+    etc/bluetooth/asound.conf \
+    etc/bluetooth/input.conf \
     etc/bluetooth/hcid.conf \
+    etc/bluetooth/network.conf \
+    etc/bluetooth/rfcomm.conf \
     etc/bluetooth/passkeys/default \
+    etc/dbus-1/system.d/bluetooth.conf \
     etc/rc.d/rc.bluetooth \
     etc/rc.d/rc.bluetooth.conf ; do
       mv ${file} ${file}.new
   done
 )
 
+chown -R root:root $PKG/etc
 mkdir -p $PKG/install
 cat $CWD/slack-desc > $PKG/install/slack-desc
 zcat $CWD/doinst.sh.gz > $PKG/install/doinst.sh
