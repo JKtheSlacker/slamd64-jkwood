@@ -49,7 +49,7 @@ CXXFLAGS="$SLKCFLAGS" \
   --bindir=/bin \
   --sbindir=/sbin \
   --docdir=/usr/doc/$PRGNAM-$VERSION \
-  --with-fuse=external \
+  --with-fuse=internal \
   --disable-ldconfig \
   --enable-static=no \
   --build=${ARCH}-$DISTRO-linux \
@@ -70,7 +70,8 @@ cat $CWD/10-ntfs-3g-policy.fdi > $PKG/usr/share/hal/fdi/policy/10osvendor/10-ntf
 
 rm -rf $PKG/usr/share/doc
 mkdir -p $PKG/usr/doc/$PRGNAM-$VERSION
-cp -a AUTHORS COPYING CREDITS INSTALL NEWS README \
+cp -a \
+  AUTHORS COPYING* CREDITS INSTALL NEWS README* \
   $PKG/usr/doc/$PRGNAM-$VERSION
 
 mkdir -p $PKG/install
