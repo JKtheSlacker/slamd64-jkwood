@@ -1,36 +1,79 @@
 #!/bin/sh
-# Set initial variables:
+
+# Copyright 2008  Patrick J. Volkerding, Sebeka, MN, USA
+# All rights reserved.
+#
+# Redistribution and use of this script, with or without modification, is
+# permitted provided that the following conditions are met:
+#
+# 1. Redistributions of this script must retain the above copyright
+#    notice, this list of conditions and the following disclaimer.
+#
+#  THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR IMPLIED
+#  WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+#  MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.  IN NO
+#  EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+#  SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+#  PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+#  OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+#  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+#  OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+#  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
 PKGNAM=reiserfsprogs
-VERSION=3.6.19
-BUILD=${BUILD:-2}
+VERSION=3.6.20
+BUILD=${BUILD:-1}
+
+NUMJOBS=${NUMJOBS:--j12}
 
 . /etc/pkghelpers
 pkghelpers_env
 
 rm -rf $PKG
-mkdir -p $PKG # place for the package to be built
-
+mkdir -p $TMP $PKG
 cd $TMP
 rm -rf reiserfsprogs-$VERSION
-tar xzvf $CWD/reiserfsprogs-$VERSION.tar.gz
-cd reiserfsprogs-$VERSION
-chown -R root.root .
+tar xvf $CWD/reiserfsprogs-$VERSION.tar.?z* || exit 1
+cd reiserfsprogs-$VERSION || exit 1
+pkghelpers_permissions
+
 CFLAGS="$SLKCFLAGS" \
 ./configure \
   --prefix=/usr \
-  $ARCH-$DISTRO-linux
-make -j12 || exit 1
+  --sbindir=/sbin \
+  --mandir=/usr/man \
+  --build=$ARCH-$DISTRO-linux
+
+make $NUMJOBS || make || exit 1
 make install DESTDIR=$PKG
 
-mv $PKG/usr/sbin $PKG
+# Add a couple of useful symlinks
 ( cd $PKG/sbin
   ln -sf mkreiserfs mkfs.reiserfs
   ln -sf reiserfsck fsck.reiserfs
 )
-chown -R root:root $PKG/sbin
+
+# These were renamed, it seems
+#  --> Deleting /usr/man/man8/debugreiserfs.8.gz
+#  --> Deleting /usr/man/man8/mkreiserfs.8.gz
+#  --> Deleting /usr/man/man8/reiserfsck.8.gz
+#  --> Deleting /usr/man/man8/reiserfstune.8.gz
+#  --> Deleting /usr/man/man8/resize_reiserfs.8.gz
+# Do we want symlinks for backwards compatibility?  If so...
+#( cd $PKG/usr/man/man8
+#  ln -s mkfs.reiserfs.8 mkreiserfs.8
+#  ln -s debugfs.reiserfs.8 debugreiserfs.8
+#  ln -s fsck.reiserfs.8 reiserfsck.8
+#  ln -s tunefs.reiserfs.8 reiserfstune.8
+#  ln -s resizefs.reiserfs.8 resize_reiserfs.8
+#)
+
 mkdir -p $PKG/usr/doc/reiserfsprogs-$VERSION
-cp -a AUTHORS COPYING INSTALL NEWS README $PKG/usr/doc/reiserfsprogs-$VERSION
+cp -a \
+  AUTHORS COPYING* CREDITS INSTALL NEWS README* \
+  $PKG/usr/doc/reiserfsprogs-$VERSION
 chmod 644 $PKG/usr/doc/reiserfsprogs-$VERSION/*
+
 mkdir -p $PKG/install
 cat $CWD/slack-desc > $PKG/install/slack-desc
 
