@@ -1,12 +1,33 @@
 #!/bin/sh
+
+# Slackware build script for shared-mime-info
+
+# Copyright 2008  Patrick J. Volkerding, Sebeka, MN, USA
+# All rights reserved.
+#
+# Redistribution and use of this script, with or without modification, is
+# permitted provided that the following conditions are met:
+#
+# 1. Redistributions of this script must retain the above copyright
+#    notice, this list of conditions and the following disclaimer.
+#
+#  THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR IMPLIED
+#  WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+#  MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.  IN NO
+#  EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+#  SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+#  PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+#  OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+#  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+#  OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+#  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
 PKGNAM=shared-mime-info
-VERSION=0.23
+VERSION=0.51
 BUILD=1
 
 . /etc/pkghelpers
 pkghelpers_env
-
-set -e
 
 rm -rf $PKG
 mkdir -p $PKG
@@ -15,12 +36,16 @@ rm -rf shared-mime-info-$VERSION
 tar xjvf $CWD/shared-mime-info-$VERSION.tar.bz2 || exit 1
 cd shared-mime-info-$VERSION
 pkghelpers_permissions
+
+CFLAGS="$SLKCFLAGS" \
 ./configure \
   --prefix=/usr \
   --mandir=/usr/man \
+  --docdir=/usr/doc/shared-mime-info-$VERSION \
+  --disable-update-mimedb \
   --build=$ARCH-$DISTRO-linux
 
-make -j4
+make -j $NUMJOBS || amek || exit 1
 make install DESTDIR=$PKG
 
 mkdir -p $PKG/usr/lib$LIBSUFFIX
@@ -35,7 +60,7 @@ chmod 755 $PKG/var/log/setup/setup.07.update-mime-database
 
 mkdir -p $PKG/usr/doc/shared-mime-info-$VERSION
 cp -a \
-  COPYING NEWS README \
+  COPYING NEWS README* \
   $PKG/usr/doc/shared-mime-info-$VERSION
 chmod 644 $PKG/usr/doc/shared-mime-info-$VERSION/*
 
