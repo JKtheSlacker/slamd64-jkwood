@@ -43,7 +43,6 @@ CFLAGS="$SLKCFLAGS" \
 CXXFLAGS="$SLKCFLAGS" \
 ./configure \
   --prefix=/usr \
-  --libdir=/usr/lib$LIBSUFFIX \
   --bindir=/bin \
   --sbindir=/sbin \
   --libdir=/lib$LIBSUFFIX \
@@ -59,7 +58,7 @@ CXXFLAGS="$SLKCFLAGS" \
   --build=${ARCH}-$DISTRO-linux \
   || exit 1
 
-make -j$NUMJOBS || exit 1
+make -j$NUMJOBS || make || exit 1
 make install DESTDIR=$PKG
 
 # Move the start|stop script of fuse to the right place.
