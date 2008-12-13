@@ -52,7 +52,7 @@ CXXFLAGS="$SLKCFLAGS" \
   --enable-static=no \
   --build=$ARCH-$DISTRO-linux
 
-make -j $NUMJOBS || exit 1
+make -j$NUMJOBS || exit 1
 make install DESTDIR=$PKG || exit 1
 
 # Add missed man page:
