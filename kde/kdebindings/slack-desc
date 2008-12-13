@@ -6,7 +6,7 @@
 # leave one space after the ':'.
 
            |-----handy-ruler------------------------------------------------------|
-kdebindings: kdebindings
+kdebindings: kdebindings (bindings for other languages)
 kdebindings:
 kdebindings: KDE and most KDE applications are implemented using the C++
 kdebindings: programming language, but that doesn't mean you don't have a choice.
