@@ -8,12 +8,12 @@
                   |-----handy-ruler------------------------------------------------------|
 iwlwifi-4965-ucode: iwlwifi-4965-ucode (Intel 4965 wireless microcode)
 iwlwifi-4965-ucode:
-iwlwifi-4965-ucode: The file iwlwifi-4965-1.ucode provided in this package is required to
-iwlwifi-4965-ucode: be present on your system in order for the Intel PRO/Wireless
-iwlwifi-4965-ucode: 4965ABG/BG Network Connection Adapter driver for Linux (iwlwifi-4965)
-iwlwifi-4965-ucode: to be able to operate on your system.
+iwlwifi-4965-ucode: The microcode provided in this package is required for the Intel
+iwlwifi-4965-ucode: PRO/Wireless 4965ABG/BG Network Connection Adapter driver for Linux
+iwlwifi-4965-ucode: (iwlwifi-4965) to operate.
 iwlwifi-4965-ucode:
 iwlwifi-4965-ucode: Visit Intel's Linux wireless website at this address:
 iwlwifi-4965-ucode:   http://intellinuxwireless.org/
+iwlwifi-4965-ucode:
 iwlwifi-4965-ucode:
 iwlwifi-4965-ucode:
