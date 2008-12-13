@@ -22,7 +22,7 @@
 
 PKGNAM=udev
 VERSION=${VERSION:-135}
-BUILD=${BUILD:-1}
+BUILD=${BUILD:-2}
 
 . /etc/pkghelpers
 pkghelpers_env
@@ -65,7 +65,7 @@ mkdir -p \
 # Yes, these will clobber existing config files.
 cp -a $CWD/config/udev.conf $PKG/etc/udev/udev.conf
 # Copy Slackware custom rules
-cp -a $CWD/config/rules.d/* $PKG/etc/udev/rules.d/
+cp -a $CWD/config/rules.d/* $PKG/lib/udev/rules.d/
 # Copy some files from upstream
 cp -a rules/packages/40-alsa.rules $PKG/lib/udev/rules.d/
 cp -a rules/packages/40-isdn.rules $PKG/lib/udev/rules.d/
