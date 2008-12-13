@@ -39,5 +39,5 @@ fi
 # Build the package:
 cd $PKG
 
-ARCH=noarch
+export PKGARCH=noarch_${DISTRO}
 pkghelpers_makepkg
