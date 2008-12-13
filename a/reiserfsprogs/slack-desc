@@ -6,7 +6,7 @@
 # customary to leave one space after the ':'.
 
              |-----handy-ruler------------------------------------------------------|
-reiserfsprogs: reiserfsprogs
+reiserfsprogs: reiserfsprogs (Reiserfs filesystem utilities)
 reiserfsprogs:
 reiserfsprogs: These utilities are used for Reiserfs.  Reiserfs is a file system
 reiserfsprogs: based on balanced tree algorithms.  Learn more at the home site:
