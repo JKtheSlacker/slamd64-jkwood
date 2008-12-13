@@ -1,31 +1,8 @@
 #!/bin/sh
 
-# Slackware build script for pcmciautils
-
-# Copyright 2008  Patrick J. Volkerding, Sebeka, MN, USA
-# All rights reserved.
-#
-# Redistribution and use of this script, with or without modification, is
-# permitted provided that the following conditions are met:
-#
-# 1. Redistributions of this script must retain the above copyright
-#    notice, this list of conditions and the following disclaimer.
-#
-#  THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR IMPLIED
-#  WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
-#  MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.  IN NO
-#  EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
-#  SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
-#  PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
-#  OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
-#  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
-#  OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
-#  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
-
 PKGNAM=pcmciautils
-VERSION=${VERSION:-014}
-BUILD=${BUILD:-5}
+VERSION=${VERSION:-015}
+BUILD=${BUILD:-1}
 
 . /etc/pkghelpers
 pkghelpers_env
@@ -39,6 +16,7 @@ cd pcmciautils-$VERSION
 
 pkghelpers_permissions
 
+make -j6
 make || exit 1
 make install DESTDIR=$PKG
 
@@ -49,7 +27,7 @@ make install DESTDIR=$PKG
 )
 
 rm -rf $PKG/etc/*
-mkdir -p $PKG/etc/pcmcia $PKG/etc/rc.d $PKG/etc/udev/rules.d
+mkdir -p $PKG/etc/pcmcia $PKG/etc/rc.d $PKG/lib/udev/rules.d
 
 cp -a $CWD/config/rc.pcmcia $PKG/etc/rc.d/rc.pcmcia.new
 chown root:root $PKG/etc/rc.d/rc.pcmcia.new
@@ -59,9 +37,9 @@ cp -a $CWD/config/config.opts $PKG/etc/pcmcia/config.opts.new
 chown root:root $PKG/etc/pcmcia/config.opts.new
 chmod 0644 $PKG/etc/pcmcia/config.opts.new
 
-cp -a $CWD/config/60-pcmcia.rules $PKG/etc/udev/rules.d/60-pcmcia.rules.new
-chown root:root $PKG/etc/udev/rules.d/60-pcmcia.rules.new
-chmod 0644 $PKG/etc/udev/rules.d/60-pcmcia.rules.new
+cp -a $CWD/config/60-pcmcia.rules $PKG/lib/udev/rules.d/60-pcmcia.rules
+chown root:root $PKG/lib/udev/rules.d/60-pcmcia.rules
+chmod 0644 $PKG/lib/udev/rules.d/60-pcmcia.rules
 
 mv $PKG/usr/share/man $PKG/usr
 rmdir $PKG/usr/share
@@ -70,7 +48,7 @@ mkdir -p $PKG/usr/doc/pcmciautils-$VERSION
 cp COPYING $PKG/usr/doc/pcmciautils-$VERSION
 
 mkdir $PKG/install
-zcat $CWD/doinst.sh > $PKG/install/doinst.sh
+cat $CWD/doinst.sh > $PKG/install/doinst.sh
 cat $CWD/slack-desc > $PKG/install/slack-desc
 
 cd $PKG
