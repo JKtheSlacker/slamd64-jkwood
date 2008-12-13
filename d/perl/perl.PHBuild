@@ -8,10 +8,9 @@ PKGNAM=perl
 VERSION=5.10.0
 # IMPORTANT: also update -Dinc_version_list in ./configure below!
 
-BUILD=1
+BUILD=2
 
 # Additional required modules:
-URI=1.35
 DBI=1.607
 DBDMYSQL=4.008
 XMLPARSER=2.36
@@ -78,14 +77,14 @@ echo 'installstyle="lib64/perl5"' >>hints/linux.sh
   -Dinc_version_list='5.8.8 5.8.7 5.8.6 5.8.5 5.8.4 5.8.3 5.8.2 5.8.1 5.8.0' \
   -Darchname=$ARCH-linux
 
-# Kludge for gcc-4.2.3's needlessly changed output:
+# Kludge for gcc-4.2.4's needlessly changed output:
 cat makefile | grep -v '\<command-line\>' > foo
 mv foo makefile
 cat x2p/makefile | grep -v '\<command-line\>' > foo
 mv foo x2p/makefile
 
 # Build perl
-make -j6 || exit 1
+make -j $NUMJOBS || exit 1
 make test
 
 # Install perl (needed to build modules):
