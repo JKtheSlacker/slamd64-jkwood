@@ -1,7 +1,7 @@
 #!/bin/sh
 # Set initial variables:
 PKGNAM=apr
-VERSION=1.2.12
+VERSION=1.3.3
 BUILD=${BUILD:-1}
 
 . /etc/pkghelpers
