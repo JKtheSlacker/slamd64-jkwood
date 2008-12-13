@@ -1,4 +1,5 @@
 #!/bin/sh
+
 # Copyright 2006, 2008  Patrick J. Volkerding, Sebeka, MN, USA
 # All rights reserved.
 #
@@ -21,35 +22,34 @@
 
 
 PKGNAM=iwlwifi-3945-ucode
-VERSION=${VERSION:-2.14.1.5}
+#VERSION will be determined automatically, and the package will use the last version found.
 ARCH=${ARCH:-fw}
 BUILD=${BUILD:-1}
 
+CWD=$(pwd)
+TMP=${TMP:-/tmp}
+PKG=$TMP/package-${PKGNAM}
 
-CWD=`pwd`
-if [ "$TMP" = "" ]; then
-  TMP=/tmp
-fi
 PKG=$TMP/package-${PKGNAM}
 rm -rf $PKG
 mkdir -p $PKG
 
 cd $TMP
-rm -rf ${PKGNAM}-${VERSION}
-tar xzvf $CWD/${PKGNAM}-$VERSION.tar.gz
-cd ${PKGNAM}-$VERSION
-
-# Make sure ownerships and permissions are sane:
-chown -R root:root .
-chmod 644 *
-
-# install:
-mkdir -p $PKG/lib/firmware
-cp -a iwlwifi-*.ucode $PKG/lib/firmware
-
-# Add a documentation directory:
-mkdir -p $PKG/usr/doc/${PKGNAM}-${VERSION}
-cp -a LICENSE* README* $PKG/usr/doc/${PKGNAM}-${VERSION}
+for file in $CWD/${PKGNAM}-*.tar.?z* ; do
+  VERSION=$(echo $file | rev | cut -f 3- -d . | cut -f 1 -d / | rev | cut -f 4- -d - )
+  rm -rf ${PKGNAM}-${VERSION}
+  tar xvf $file || exit 1
+  cd ${PKGNAM}-$VERSION || exit 1
+  # Make sure ownerships and permissions are sane:
+  chown -R root:root .
+  chmod 644 *
+  # install:
+  mkdir -p $PKG/lib/firmware
+  cp -a iwlwifi-*.ucode $PKG/lib/firmware
+  # Add a documentation directory:
+  mkdir -p $PKG/usr/doc/${PKGNAM}-${VERSION}
+  cp -a LICENSE* README* $PKG/usr/doc/${PKGNAM}-${VERSION}
+done
 
 mkdir -p $PKG/install
 cat $CWD/slack-desc > $PKG/install/slack-desc
