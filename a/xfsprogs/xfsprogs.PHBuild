@@ -58,7 +58,7 @@ CFLAGS="$SLKCFLAGS" \
   --enable-shared-uuid=yes \
   --build=$ARCH-$DISTRO-linux
 
-make -j5 || exit 1
+make -j15 || make || exit 1
 make install DIST_ROOT=$PKG
 make install-dev DIST_ROOT=$PKG
 
