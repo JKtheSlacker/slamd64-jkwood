@@ -3,6 +3,7 @@
 # Slackware build script for sqlite
 
 # Copyright 2006  Martin Lefebvre <dadexter@gmail.com>
+# Copyright 2008  Patrick J. Volkerding, Sebeka, MN, USA
 # All rights reserved.
 #
 # Redistribution and use of this script, with or without modification, is
@@ -25,7 +26,6 @@
 PKGNAM=sqlite
 VERSION=3.6.6.2
 BUILD=${BUILD:-1}
-NUMJOBS=${NUMJOBS:-"-j6"}
 
 . /etc/pkghelpers
 pkghelpers_env
@@ -52,7 +52,7 @@ CXXFLAGS="$SLKCFLAGS" \
   --enable-static=no \
   --build=$ARCH-$DISTRO-linux
 
-make $NUMJOBS || exit 1
+make -j $NUMJOBS || exit 1
 make install DESTDIR=$PKG || exit 1
 
 # Add missed man page:
@@ -61,7 +61,7 @@ gzip -9 $PKG/usr/man/man1/sqlite3.1
 
 # Fix up the pkgconfig file
 sed -i 's|Libs: -L${libdir} -lsqlite3|Libs: -L${libdir} -lsqlite3 -ldl|g' \
-  $PKG/usr/lib/pkgconfig/sqlite3.pc
+  $PKG/usr/lib$LIBSUFFIX/pkgconfig/sqlite3.pc
 
 mkdir -p $PKG/usr/doc/$PKGNAM-$VERSION
 cp -a \
