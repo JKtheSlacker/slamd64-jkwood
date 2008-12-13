@@ -1,6 +1,6 @@
 #!/bin/sh
 PKGNAM=alsa-oss
-VERSION=1.0.15
+VERSION=1.0.17
 BUILD=1
 
 . /etc/pkghelpers
@@ -21,7 +21,8 @@ CFLAGS="$SLKCFLAGS" \
   --sysconfdir=/etc \
   --disable-static \
   --build=$ARCH-$DISTRO-linux
-make -j5 || exit 1
+
+make -j $NUMJOBS || exit 1
 make install DESTDIR=$PKG
 
 mkdir -p $PKG/usr/doc/alsa-oss-$VERSION
