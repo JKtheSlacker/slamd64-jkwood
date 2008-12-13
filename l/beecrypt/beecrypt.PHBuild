@@ -46,15 +46,16 @@ CXXFLAGS="$SLKCFLAGS" \
   --libdir=/usr/lib$LIBSUFFIX \
   --enable-shared=yes \
   --enable-static=yes \
-  --with-cpu=x86_64 \
-  --with-arch=x86_64 \
+  --with-cpu=$ARCH \
+  --with-arch=$ARCH \
   --with-pic \
   --build=$ARCH-$DISTRO-linux
 
+make -j6
 make || exit 1
 make install DESTDIR=$PKG
 
-strip -g $PKG/usr/lib/*.a
+strip -g $PKG/usr/lib$LIBSUFFIX/*.a
 
 mkdir $PKG/usr/doc/beecrypt-$VERSION
 cp -a \
