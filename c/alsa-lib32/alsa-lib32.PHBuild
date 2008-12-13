@@ -1,6 +1,6 @@
 #!/bin/sh
 PKGNAM=alsa-lib32
-VERSION=1.0.15
+VERSION=1.0.17a
 BUILD=1
 
 . /etc/pkghelpers
@@ -23,7 +23,8 @@ CFLAGS="$SLKCFLAGS" \
  	--libdir=/usr/lib \
  	--disable-python \
   --build=$ARCH-$DISTRO-linux
-make -j5 || exit 1
+
+make -j $NUMJOBS || exit 1
 make install DESTDIR=$PKG
 
 ( cd $PKG
