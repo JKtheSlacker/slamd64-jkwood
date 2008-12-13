@@ -1,7 +1,28 @@
 #!/bin/sh
+
+# Copyright 2008  Patrick J. Volkerding, Sebeka, MN, USA
+# All rights reserved.
+#
+# Redistribution and use of this script, with or without modification, is
+# permitted provided that the following conditions are met:
+#
+# 1. Redistributions of this script must retain the above copyright
+#    notice, this list of conditions and the following disclaimer.
+#
+#  THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR IMPLIED
+#  WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+#  MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.  IN NO
+#  EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+#  SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+#  PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+#  OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+#  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+#  OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+#  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
 PKGNAM=pilot-link
 VERSION=0.12.3
-BUILD=${BUILD:-2}
+BUILD=${BUILD:-3}
 
 . /etc/pkghelpers
 pkghelpers_env
@@ -25,6 +46,7 @@ CFLAGS="$SLKCFLAGS" \
   --libdir=/usr/lib$LIBSUFFIX \
   --localstatedir=/var/lib \
   --mandir=/usr/man \
+  --docdir=/usr/doc/pilot-link-$VERSION \
   --enable-static=no \
   --enable-conduits \
   --enable-threads \
@@ -36,20 +58,30 @@ CFLAGS="$SLKCFLAGS" \
   --program-suffix="" \
   --build=$ARCH-$DISTRO-linux
 
-make -i -j4 || exit 1
+make -i -j $NUMJOBS || make -i || exit 1
 make -i install DESTDIR=$PKG
 
 # Get rid of perllocal.pod:
 rm -rf $PKG/usr/lib$LIBSUFFIX/perl5/site_perl/$(perl -v | head -2 | tail -1 | cut -f 2 -d v | cut -f 1 -d ' ')
 
 # Right.
-mkdir -p $PKG/etc/udev/rules.d
-mv $PKG/usr/share/pilot-link/udev/60-libpisock.rules $PKG/etc/udev/rules.d/80-libpisock.rules
+mkdir -p $PKG/lib/udev/rules.d
+mv $PKG/usr/share/pilot-link/udev/60-libpisock.rules \
+  $PKG/lib/udev/rules.d/80-libpisock.rules
 rmdir $PKG/usr/share/pilot-link/udev
+
+# Dropped one.
+if [ -d $PKG/usr/share/man/man3 ]; then
+  mkdir -p $PKG/usr/man/man3
+  mv $PKG/usr/share/man/man3/* $PKG/usr/man/man3
+  rmdir $PKG/usr/share/man/man3 2> /dev/null
+  rmdir $PKG/usr/share/man 2> /dev/null
+  rmdir $PKG/usr/share 2> /dev/null
+fi
 
 mkdir -p $PKG/usr/doc/pilot-link-$VERSION
 cp -a \
-  AUTHORS COPYING COPYING.LIB INSTALL NEWS README \
+  AUTHORS COPYING* INSTALL NEWS README \
   $PKG/usr/doc/pilot-link-$VERSION
 
 # Install man pages:
