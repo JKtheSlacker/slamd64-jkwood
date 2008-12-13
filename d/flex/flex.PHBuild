@@ -43,13 +43,13 @@ pkghelpers_permissions
 CFLAGS="$SLKCFLAGS" \
 ./configure \
   --prefix=/usr \
-	--libdir=/usr/lib$LIBSUFFIX \
+  --libdir=/usr/lib$LIBSUFFIX \
   --mandir=/usr/man \
   --infodir=/usr/info \
   $ARCH-$DISTRO-linux
 
 # Build and install:
-make -j10 || exit 1
+make -j15 || exit 1
 make install DESTDIR=$PKG || exit 1
 
 # A symlink to harken back to the Goodle days:
