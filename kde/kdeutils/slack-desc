@@ -6,7 +6,7 @@
 # customary to leave one space after the ':'.
 
         |-----handy-ruler------------------------------------------------------|
-kdeutils: kdeutils
+kdeutils: kdeutils (various KDE utilities)
 kdeutils:
 kdeutils: This package includes various utilities for KDE.
 kdeutils:
