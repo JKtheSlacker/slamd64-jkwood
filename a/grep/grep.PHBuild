@@ -53,7 +53,7 @@ CFLAGS="$SLKCFLAGS" \
   --infodir=/usr/info \
   --build=$ARCH-$DISTRO-linux
 
-make -j12
+make -j15
 make || exit 1
 make install DESTDIR=$PKG || exit 1
 

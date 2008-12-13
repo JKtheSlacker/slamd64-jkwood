@@ -14,7 +14,7 @@ rm -rf hdparm-$VERSION
 tar xjvf $CWD/hdparm-$VERSION.tar.bz2
 cd hdparm-$VERSION
 pkghelpers_permissions
-make -j5 || exit 1
+make -j15 || exit 1
 mkdir -p $PKG/sbin
 cat hdparm > $PKG/sbin/hdparm
 chmod 755 $PKG/sbin/hdparm
@@ -28,10 +28,11 @@ mkdir -p $PKG/usr/doc/hdparm-$VERSION
 cp -a \
   LICENSE.TXT README.acoustic hdparm.lsm contrib \
   $PKG/usr/doc/hdparm-$VERSION
-mkdir -p $PKG/install
-cat $CWD/slack-desc > $PKG/install/slack-desc
 # I'm also not sure why I'm putting a binary in the docs, but...
 rm -f $PKG/usr/doc/hdparm-$VERSION/contrib/fix_standby.c
+
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
 
 # Build the package:
 cd $PKG

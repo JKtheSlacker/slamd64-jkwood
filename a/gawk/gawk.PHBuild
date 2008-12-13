@@ -29,7 +29,7 @@ CFLAGS="$SLKCFLAGS" \
   --infodir=/usr/info \
   $ARCH-$DISTRO-linux
 
-make -j12 || exit 1
+make -j15 || exit 1
 make install DESTDIR=$PKG || exit 1
 
 ( cd $PKG/usr/bin
