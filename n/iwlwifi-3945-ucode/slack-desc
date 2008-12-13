@@ -8,12 +8,12 @@
                   |-----handy-ruler------------------------------------------------------|
 iwlwifi-3945-ucode: iwlwifi-3945-ucode (Intel 3945 wireless microcode)
 iwlwifi-3945-ucode:
-iwlwifi-3945-ucode: The file iwlwifi-3945-1.ucode provided in this package is required to
-iwlwifi-3945-ucode: be present on your system in order for the Intel PRO/Wireless
-iwlwifi-3945-ucode: 3945ABG/BG Network Connection Adapter driver for Linux (iwlwifi-3945)
-iwlwifi-3945-ucode: to be able to operate on your system.
+iwlwifi-3945-ucode: The microcode provided in this package is required for the Intel
+iwlwifi-3945-ucode: PRO/Wireless 3945ABG/BG Network Connection Adapter driver for Linux
+iwlwifi-3945-ucode: (iwlwifi-3945) to operate.
 iwlwifi-3945-ucode:
 iwlwifi-3945-ucode: Visit Intel's Linux wireless website at this address:
 iwlwifi-3945-ucode:   http://intellinuxwireless.org/
+iwlwifi-3945-ucode:
 iwlwifi-3945-ucode:
 iwlwifi-3945-ucode:
