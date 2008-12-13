@@ -1,12 +1,13 @@
 #!/bin/sh
 PKGNAM=git
-VERSION=1.6.0.2
-BUILD=${BUILD:-2}
+VERSION=1.6.0.3
+BUILD=${BUILD:-1}
 
 . /etc/pkghelpers
 pkghelpers_env
 
-PERLDIR="usr/lib$LIBSUFFIX/perl5/vendor_perl/5.10.0/$ARCH-linux-thread-multi/auto"
+eval `perl '-V:installsitelib'`
+PERLDIR=$installsitelib/$ARCH-linux-thread-multi/auto
 
 rm -rf $PKG
 mkdir -p $PKG
