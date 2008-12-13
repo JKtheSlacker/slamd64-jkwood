@@ -5,10 +5,10 @@
 # caching icons is a good one -- the use of gtk-update-icon-cache
 # could disappear from future install scripts.
 
-for icondir in usr/share/icons/hicolor usr/share/icons ; do
-  if [ -d $icondir ]; then
-    if [ -x usr/bin/gtk-update-icon-cache ]; then
-      chroot . /usr/bin/gtk-update-icon-cache -f -t $icondir 1> /dev/null 2> /dev/null
-    fi
+# Update hicolor theme cache:
+if [ -d usr/share/icons/hicolor ]; then
+  if [ -x /usr/bin/gtk-update-icon-cache ]; then
+    chroot . /usr/bin/gtk-update-icon-cache -f -t usr/share/icons/hicolor 1> /dev/null 2> /dev/null
   fi
-done
+fi
+
