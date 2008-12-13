@@ -29,7 +29,7 @@
 
 PRGNAM=pycairo
 PKGNAM=$PRGNAM
-VERSION=1.4.12
+VERSION=1.6.4
 BUILD=${BUILD:-1}
 
 . /etc/pkghelpers
@@ -54,7 +54,7 @@ CXXFLAGS="$SLKCFLAGS" \
   --program-suffix=""
   --build=$ARCH-$DISTRO-linux
 
-make -j4 || exit 1
+make -j$NUMJOBS || exit 1
 make install DESTDIR=$PKG || exit 1
 
 mkdir -p $PKG/usr/doc/$PRGNAM-$VERSION
