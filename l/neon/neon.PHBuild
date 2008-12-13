@@ -1,5 +1,5 @@
 #!/bin/sh
-# Copyright 2006  Patrick J. Volkerding, Sebeka, MN, USA
+# Copyright 2006, 2008  Patrick J. Volkerding, Sebeka, MN, USA
 # Copyright 2007  Frederick Emmott
 # All rights reserved.
 #
@@ -22,7 +22,7 @@
 
 
 PKGNAM=neon
-VERSION=${VERSION:-0.26.4}
+VERSION=${VERSION:-0.28.3}
 BUILD=${BUILD:-1}
 
 . /etc/pkghelpers
@@ -47,6 +47,7 @@ CFLAGS="$SLKCFLAGS" \
 ./configure \
   --prefix=/usr \
   --libdir=/usr/lib$LIBSUFFIX \
+  --mandir=/usr/man \
   --enable-shared \
   --disable-static \
   --with-ssl=openssl \
