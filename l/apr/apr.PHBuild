@@ -20,13 +20,13 @@ pkghelpers_permissions
 CFLAGS="$SLKCFLAGS" \
 ./configure \
   --prefix=/usr \
-	--libdir=/usr/lib$LIBSUFFIX \
   --with-installbuilddir=/usr/lib$LIBSUFFIX/apr-${VERSION}/build-1 \
+  --libdir=/usr/lib$LIBSUFFIX \
   --disable-static \
   --with-devrandom=/dev/urandom \
   $ARCH-$DISTRO-linux
 
-make -j6 || exit 1
+make -j15 || make || exit 1
 make dox || exit 1
 make install DESTDIR=$PKG || exit 1
 
