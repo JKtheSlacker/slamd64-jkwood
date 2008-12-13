@@ -5,7 +5,7 @@
 # environment variables.
 
 if [ -z $VERSION ]; then
-  export VERSION=3.5.9
+  export VERSION=3.5.10
 fi
 
 if [ -z $ARCH ]; then
@@ -57,5 +57,5 @@ fi
 
 # Number of jobs to compile at once:
 if [ -z "$NUMJOBS" ]; then
-  export NUMJOBS=-j5
+  export NUMJOBS=-j15
 fi
