@@ -1,0 +1,47 @@
+#!/bin/sh
+PKGNAM=alsa-utils
+VERSION=1.0.17
+BUILD=1
+
+. /etc/pkghelpers
+pkghelpers_env
+
+rm -rf $PKG
+mkdir -p $PKG
+
+cd $TMP
+rm -rf alsa-utils-$VERSION
+tar xjvf $CWD/alsa-utils-$VERSION.tar.bz2 || exit 1
+cd alsa-utils-$VERSION
+zcat $CWD/alsa-utils.alsaconf.diff.gz | patch -p1 --verbose --backup --suffix=.orig || exit
+
+pkghelpers_permissions
+
+CFLAGS="$SLKCFLAGS" \
+ ./configure \
+ --prefix=/usr \
+ --libdir=/usr/lib$LIBSUFFIX \
+ --mandir=/usr/man \
+ --sysconfdir=/etc \
+ --build=$ARCH-slackware-linux
+
+make -j $NUMJOBS || exit 1
+make install DESTDIR=$PKG
+mkdir -p $PKG/etc/rc.d
+zcat $CWD/rc.alsa.gz > $PKG/etc/rc.d/rc.alsa
+
+mkdir -p $PKG/usr/doc/alsa-utils-$VERSION
+cp -a \
+  COPYING ChangeLog INSTALL TODO \
+  seq/aconnect/README.aconnect \
+  seq/aseqnet/README.aseqnet \
+  $PKG/usr/doc/alsa-utils-$VERSION
+cp -a alsamixer/README $PKG/usr/doc/alsa-utils-$VERSION/README.alsamixer
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+
+cd $PKG
+pkghelpers_fixup
+pkghelpers_makepkg
+
+
