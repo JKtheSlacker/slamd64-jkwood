@@ -40,4 +40,4 @@ fi
 cd $PKG
 
 export PKGARCH=noarch_${DISTRO}
-pkghelpers_makepkg
+makepkg -l n -c n $TMP/$PKGNAM-$VERSION-$PKGARCH-$BUILD.tgz
