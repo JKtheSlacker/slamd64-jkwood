@@ -84,7 +84,7 @@ CFLAGS="$SLKCFLAGS" \
   --without-sqlite2 \
   $ARCH-$DISTRO-linux
 
-make -j6 || exit 1
+make -j15 || make || exit 1
 make dox || exit 1
 make install DESTDIR=$PKG
 
