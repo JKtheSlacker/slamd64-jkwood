@@ -1,5 +1,5 @@
 #!/bin/sh
-# Copyright 2006, 2007  Patrick J. Volkerding, Sebeka, MN, USA
+# Copyright 2006, 2007, 2008  Patrick J. Volkerding, Sebeka, MN, USA
 # All rights reserved.
 #
 # Redistribution and use of this script, with or without modification, is
@@ -21,8 +21,7 @@
 
 
 PKGNAM=libmtp
-
-VERSION=${VERSION:-0.3.1}
+VERSION=${VERSION:-0.3.3}
 BUILD=${BUILD:-1}
 
 . /etc/pkghelpers
@@ -55,47 +54,24 @@ CFLAGS="$SLKCFLAGS" \
   --prefix=/usr \
   --libdir=/usr/lib$LIBSUFFIX \
   --mandir=/usr/man \
+  --docdir=/usr/doc/${PKGNAM}-$VERSION \
   --disable-static \
   --build=$ARCH-$DISTRO-linux
 
-#  --enable-hotplugging 
-
 # Build and install:
-make -j5 || exit 1
+make -j $NUMJOBS || exit 1
 make install DESTDIR=$PKG || exit 1
 
 # Add udev rules:
-mkdir -p $PKG/etc/udev/rules.d
-cat libmtp.rules | sed -e 's/MODE="666"/GROUP="audio", MODE="0660"/' > $PKG/etc/udev/rules.d/90-libmtp.rules
+mkdir -p $PKG/lib/udev/rules.d
+sed -e 's/MODE="666"/GROUP="audio", MODE="0660"/' libmtp.rules \
+  > $PKG/lib/udev/rules.d/90-libmtp.rules
 # Add device information for HAL:
 mkdir -p $PKG/usr/share/hal/fdi/information/20thirdparty/
 cat libmtp.fdi > $PKG/usr/share/hal/fdi/information/20thirdparty/10-libmtp.fdi
 
-## Add hotplug files:
-#zcat $CWD/libmtp.sh.diff.gz | patch -p1 --verbose --backup --suffix=.orig || exit 1
-#mkdir -p $PKG/etc/hotplug/usb
-#cat libmtp.usermap > $PKG/etc/hotplug/usb/libmtp.usermap
-#cat libmtp.sh > $PKG/etc/hotplug/usb/libmtp.sh
-#chmod 755 $PKG/etc/hotplug/usb/libmtp.sh
-
-## Blank lines are not liked by hotplug's "parser":
-#( cd $PKG/etc/hotplug/usb
-#  cat libmtp.usermap | while read line ; do
-#    if [ ! "$line" = "" ]; then
-#      echo $line >> libmtp.usermap.new
-#    fi
-#  done
-#  mv libmtp.usermap.new libmtp.usermap
-#)
-
-mkdir -p $PKG/usr/doc
-mv $PKG/usr/share/doc/* $PKG/usr/doc
-rmdir $PKG/usr/share/doc
-rmdir $PKG/usr/share
-# at least 1/2 of what's here is because i don't know what it's for
-cp -a \
-  AUTHORS COPYING ChangeLog INSTALL README TODO hotplug.sh libmtp.rules libmtp.sh libmtp.usermap \
-  $PKG/usr/doc/${PKGNAM}-$VERSION
+# The --docdir flag catches docs properly, but we don't need these here
+rm -f $PKG/usr/doc/${PKGNAM}-$VERSION/libmtp.{rules,sh,usermap}
 
 mkdir -p $PKG/install
 cat $CWD/slack-desc > $PKG/install/slack-desc
