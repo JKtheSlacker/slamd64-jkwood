@@ -1,5 +1,5 @@
 #!/bin/sh
-# Copyright 2006, 2007  Patrick J. Volkerding, Sebeka, MN, USA
+# Copyright 2006, 2007, 2008  Patrick J. Volkerding, Sebeka, MN, USA
 # Copyright 2007  Frederick Emmott
 # All rights reserved.
 #
@@ -61,6 +61,7 @@ find . -name "*.h" -exec chmod 644 {} \;
 
 zcat $CWD/svgalib.prefix.diff.gz | patch -p1 --verbose || exit 1
 zcat $CWD/svgalib_helper-linux_2.6.23.diff.gz | patch -p1 --verbose || exit 1
+zcat $CWD/svgalib_helper.2.6.27.diff.gz | patch -p1 --verbose || exit 1
 
 cd kernel/svgalib_helper
 KERNELRELEASE=$KERNEL make -j 12 || exit 1
