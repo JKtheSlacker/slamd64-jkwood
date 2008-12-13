@@ -1,9 +1,30 @@
 #!/bin/sh
+
+# Copyright 2008  Patrick J. Volkerding, Sebeka, MN, USA
+# All rights reserved.
+#
+# Redistribution and use of this script, with or without modification, is
+# permitted provided that the following conditions are met:
+#
+# 1. Redistributions of this script must retain the above copyright
+#    notice, this list of conditions and the following disclaimer.
+#
+#  THIS SOFTWARE IS PROVIDED BY THE AUTHOR ''AS IS'' AND ANY EXPRESS OR IMPLIED
+#  WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+#  MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.  IN NO
+#  EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+#  SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+#  PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+#  OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+#  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+#  OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+#  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
 # Set initial variables:
 PKGNAM=grep
-VERSION=${VERSION:-2.5}
+VERSION=${VERSION:-2.5.3}
 ARCH=${ARCH:-x86_64}
-BUILD=${BUILD:-4}
+BUILD=${BUILD:-1}
 
 . /etc/pkghelpers
 pkghelpers_env
@@ -22,39 +43,30 @@ rm -rf grep-$VERSION
 tar xjvf $CWD/grep-$VERSION.tar.bz2
 cd grep-$VERSION
 
-chown -R root:root .
-find . -perm 666 -exec chmod 644 {} \;
-find . -perm 664 -exec chmod 644 {} \;
-find . -perm 600 -exec chmod 644 {} \;
-find . -perm 444 -exec chmod 644 {} \;
-find . -perm 400 -exec chmod 644 {} \;
-find . -perm 440 -exec chmod 644 {} \;
-find . -perm 777 -exec chmod 755 {} \;
-find . -perm 775 -exec chmod 755 {} \;
-find . -perm 511 -exec chmod 755 {} \;
-find . -perm 711 -exec chmod 755 {} \;
-find . -perm 555 -exec chmod 755 {} \;
+pkghelpers_permissions
 
-# Static to avoid dependency on libgcc_s.so - check this is needed
-CFLAGS="$SLKCFLAGS -static" \
+CFLAGS="$SLKCFLAGS" \
 ./configure \
   --prefix=/usr \
   --bindir=/bin \
   --mandir=/usr/man \
-  --infodir=/usr/info
+  --infodir=/usr/info \
+  --build=$ARCH-$DISTRO-linux
 
-make -j12 || exit 1
+make -j12
+make || exit 1
+make install DESTDIR=$PKG || exit 1
 
-# Install the binary:
-mkdir -p $PKG/bin
-cat src/grep > $PKG/bin/grep
-chmod 755 $PKG/bin/grep
-
-# Make symlinks in /bin:
-( cd $PKG/bin
-  ln -sf grep egrep
-  ln -sf grep fgrep
-)
+# ****************************************************************************
+# READ THIS !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+# Oh, and remove all this extraneous crap   ;-)
+# Makefile installs different binaries for each of grep, egrep, and fgrep
+# I'm commenting the old way, but leaving it here in case it's what you want
+#( cd $PKG/bin
+#  rm -f egrep ; ln -sf grep egrep
+#  rm -f fgrep ; ln -sf grep fgrep
+#)
+# ****************************************************************************
 
 # Make symlinks in /usr/bin:
 mkdir -p $PKG/usr/bin
@@ -64,30 +76,9 @@ mkdir -p $PKG/usr/bin
   ln -sf ../../bin/fgrep .
 )
 
-# Install man and info pages:
-mkdir -p $PKG/usr/man/man1
-( cd doc
-  cat grep.1 | gzip -9c > $PKG/usr/man/man1/grep.1.gz
-  cat egrep.1 | gzip -9c > $PKG/usr/man/man1/egrep.1.gz
-  cat fgrep.1 | gzip -9c > $PKG/usr/man/man1/fgrep.1.gz
-  mkdir -p $PKG/usr/info
-  for file in *.info* ; do
-    cat $file | gzip -9c > $PKG/usr/info/$file.gz
-  done
-)
-
-# Install NLS files:
-( cd po
-  for file in *.gmo ; do
-    LOC=`basename $file .gmo`
-    mkdir -p $PKG/usr/share/locale/$LOC/LC_MESSAGES
-    cat $file > $PKG/usr/share/locale/$LOC/LC_MESSAGES/grep.mo
-  done
-)
-
 mkdir -p $PKG/usr/doc/grep-$VERSION
 cp -a \
-  ABOUT-NLS AUTHORS COPYING ChangeLog INSTALL NEWS README README-alpha README.DOS THANKS TODO \
+  ABOUT-NLS AUTHORS COPYING* INSTALL NEWS README* THANKS TODO \
   $PKG/usr/doc/grep-$VERSION
 
 mkdir -p $PKG/install
