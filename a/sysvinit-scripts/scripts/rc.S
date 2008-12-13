@@ -295,7 +295,11 @@ fi
 # Mount usbfs:
 if grep -wq usbfs /proc/filesystems; then
   if ! grep -wq usbfs /proc/mounts ; then
-    /sbin/mount -v usbfs /proc/bus/usb -t usbfs
+    if ! grep -wq usbfs /etc/fstab; then
+      /sbin/mount -v usbfs /proc/bus/usb -t usbfs
+    else
+      /sbin/mount -v /proc/bus/usb
+    fi
   fi
 fi
 
@@ -320,11 +324,12 @@ fi
 /sbin/swapon -a
 
 # Clean up some temporary files:
-rm -f /var/run/utmp /var/run/*pid /var/run/*/*pid /etc/nologin \
-  /var/run/lpd* /var/run/ppp* /etc/dhcpc/*.pid /etc/forcefsck \
-  /etc/fastboot /var/state/saslauthd/saslauthd.pid /tmp/.Xauth*
-( cd /var/log/setup/tmp && rm -rf * )
-( cd /tmp && rm -rf kde-[a-zA-Z]* ksocket-[a-zA-Z]* hsperfdata_[a-zA-Z]* plugtmp* )
+rm -f /var/run/* /var/run/*/* /var/run/*/*/* /etc/nologin \
+  /etc/dhcpc/*.pid /etc/forcefsck /etc/fastboot \
+  /var/state/saslauthd/saslauthd.pid \
+  /tmp/.Xauth* 1> /dev/null 2> /dev/null
+  ( cd /var/log/setup/tmp && rm -rf * )
+  ( cd /tmp && rm -rf kde-[a-zA-Z]* ksocket-[a-zA-Z]* hsperfdata_[a-zA-Z]* plugtmp* )
 
 # Create /tmp/{.ICE-unix,.X11-unix} if they are not present:
 if [ ! -e /tmp/.ICE-unix ]; then

@@ -166,6 +166,11 @@ if [ -x /etc/rc.d/rc.bluetooth ]; then
   sh /etc/rc.d/rc.bluetooth start
 fi
 
+# Start wicd:
+if [ -x /etc/rc.d/rc.wicd ]; then
+  sh /etc/rc.d/rc.wicd start
+fi
+
 # SCIM and other GTK+ input methods like this file kept updated:
 if [ -x /usr/bin/gtk-query-immodules-2.0 ]; then
   echo "Updating gtk.immodules:  gtk-query-immodules-2.0 > /etc/gtk-2.0/gtk.immodules"
@@ -177,14 +182,13 @@ if [ -x /etc/rc.d/rc.dnsmasq ]; then
   /etc/rc.d/rc.dnsmasq start
 fi
 
+# Start snmpd:
+if [ -x /etc/rc.d/rc.snmpd ]; then
+  /etc/rc.d/rc.snmpd start
+fi
+
 # Start the print spooling system.  This will usually be LPRng (lpd) or CUPS.
 if [ -x /etc/rc.d/rc.cups ]; then
-  # If HPLIP (HP's complete print/scan/fax system) is installed,
-  # then it should be run first:
-  if [ -x /etc/rc.d/rc.hplip ]; then
-    # Start HPLIP:
-    /etc/rc.d/rc.hplip start
-  fi
   # Start CUPS:
   /etc/rc.d/rc.cups start
 elif [ -x /etc/rc.d/rc.lprng ]; then
@@ -219,7 +223,7 @@ fi
 # To use this, uncomment this section and edit your settings in
 # /etc/genpowerd.conf (serial device, UPS type, etc).  For more information,
 # see "man genpowerd" or the extensive documentation in the
-# /usr/doc/genpower-1.0.3 directory.
+# /usr/doc/genpower-*/ directory.
 # You'll also need to configure a similar block in /etc/rc.d/rc.6 if you want
 # support for stopping the UPS's inverter after the machine halts.
 #if [ -x /sbin/genpowerd ]; then
@@ -233,9 +237,8 @@ fi
 # accounting is not enabled (since /var/log/pacct does not exist).  This is
 # because the log file can get VERY large.
 if [ -x /sbin/accton -a -r /var/log/pacct ]; then
-  /sbin/accton /var/log/pacct
   chmod 640 /var/log/pacct
-  echo "Process accounting turned on."
+  /sbin/accton /var/log/pacct
 fi
 
 # Start crond (Dillon's crond):

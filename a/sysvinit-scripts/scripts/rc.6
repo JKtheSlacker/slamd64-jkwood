@@ -136,10 +136,10 @@ fi
 
 # Turn off process accounting:
 if [ -x /sbin/accton -a -r /var/log/pacct ]; then
-  echo "Turning off process accounting."
-  /sbin/accton
+  /sbin/accton off
 fi
 
+# Terminate acpid before syslog:
 if [ -x /etc/rc.d/rc.acpid -a -r /var/run/acpid.pid ]; then # quit
   . /etc/rc.d/rc.acpid stop
 fi

@@ -34,8 +34,7 @@ fi
 
 # Try to turn off accounting:
 if [ -x /sbin/accton -a -r /var/log/pacct ]; then
-  echo "Turning off accounting."
-  /sbin/accton
+  /sbin/accton off
 fi
 
 # Run any local shutdown scripts:
@@ -70,8 +69,8 @@ if [ -x /etc/rc.d/rc.pcmcia ] ; then
 fi
 
 # Terminate acpid before syslog:
-if ps axc | grep -q bin/acpid ; then
-  killall -SIGQUIT acpid
+if [ -x /etc/rc.d/rc.acpid -a -r /var/run/acpid.pid ]; then # quit
+  . /etc/rc.d/rc.acpid stop
 fi
 
 # Kill all processes.
