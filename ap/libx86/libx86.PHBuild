@@ -44,7 +44,7 @@ pkghelpers_permissions
 zcat $CWD/lrmi.c.diff.gz | patch -p1 || exit 1
 
 BACKEND=x86emu make || exit 1
-LIBDIR="/usr/lib64" make install DESTDIR=$PKG
+LIBDIR="/usr/lib$LIBSUFFIX" make install DESTDIR=$PKG
 
 # Kill the static library; we shouldn't need it
 rm -f $PKG/usr/lib64/libx86.a
