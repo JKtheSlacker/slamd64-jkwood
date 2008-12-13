@@ -43,7 +43,7 @@ CXXFLAGS=$CPUOPT \
 make $NUMJOBS || exit 1
 make install DESTDIR=$PKG
 mkdir -p $PKG/usr/doc/kdetoys-$VERSION
-cp -a AUTHORS COPYING ChangeLog INSTALL README $PKG/usr/doc/kdetoys-$VERSION
+cp -a AUTHORS COPYING* ChangeLog INSTALL README $PKG/usr/doc/kdetoys-$VERSION
 mkdir -p $PKG/install
 cat $CWD/slack-desc > $PKG/install/slack-desc
 

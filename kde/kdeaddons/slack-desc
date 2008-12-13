@@ -6,7 +6,7 @@
 # leave one space after the ':'.
 
          |-----handy-ruler------------------------------------------------------|
-kdeaddons: kdeaddons
+kdeaddons: kdeaddons (additional plugins and scripts)
 kdeaddons:
 kdeaddons: Additional plugins and scripts for some KDE applications.
 kdeaddons:

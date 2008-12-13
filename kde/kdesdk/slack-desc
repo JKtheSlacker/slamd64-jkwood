@@ -6,7 +6,7 @@
 # customary to leave one space after the ':'.
 
       |-----handy-ruler------------------------------------------------------|
-kdesdk: kdesdk
+kdesdk: kdesdk (KDE software development kit)
 kdesdk:
 kdesdk: KDE Software Development Kit.  This is a collection of applications
 kdesdk: and tools used by KDE developers.  It also has example code for use in

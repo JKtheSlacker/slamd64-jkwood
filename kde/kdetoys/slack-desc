@@ -9,7 +9,7 @@
 kdetoys: kdetoys (toys for KDE)
 kdetoys:
 kdetoys: Some toys for use with KDE such as kmoon (displays various phases of
-kdetoys: the moon), kworldwatch (displays where in the world it is light and
+kdetoys: the moon), kworldclock (displays where in the world it is light and
 kdetoys: dark depending on time), kodo (a mouse odometer which shows how far
 kdetoys: your mouse has traveled), and kteatime (alerts you when your tea is
 kdetoys: ready).
