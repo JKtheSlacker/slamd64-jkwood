@@ -2,9 +2,9 @@
 # Set initial variables:
 
 PKGNAM=etc
-VERSION=12.1
-ARCH=noarch
-BUILD=3
+VERSION=12.2
+ARCH=x86_64 # Slamd64 - This gets reset to noarch later
+BUILD=1
 
 . /etc/pkghelpers
 pkghelpers_env
@@ -24,7 +24,20 @@ zcat $CWD/nsswitch.conf.gz > $PKG/etc/nsswitch.conf.new
 mkdir -p $PKG/install
 cat $CWD/slack-desc > $PKG/install/slack-desc
 
+if [ $ARCH != "i486" ]; then
+  sed -i s/i486/$ARCH/ $PKG/etc/ld.so.conf.new
+fi
+
+if [ $DISTRO != "slackware" ]; then
+  sed -i s/slackware/$DISTRO/ $PKG/etc/ld.so.conf.new
+fi
+
+if [ $LIBSUFFIX != "" ]; then
+  sed -i s%local/lib%local/lib$LIBSUFFIX% $PKG/etc/ld.so.conf.new
+fi
+
 # Build the package:
 cd $PKG
 
+ARCH=noarch
 pkghelpers_makepkg
