@@ -24,7 +24,7 @@ mkdir -p $PKG/usr/doc/tk$VERSION
 cp -a README license.terms $PKG/usr/doc/tk$VERSION
 cd unix
 make clean
-CFLAGS="$SLKCFLAGS -I/usr/include/tcl-private/generic" \
+CFLAGS="$SLKCFLAGS" \
 ./configure \
   --prefix=/usr \
   --libdir=/usr/lib$LIBSUFFIX \
@@ -32,21 +32,8 @@ CFLAGS="$SLKCFLAGS -I/usr/include/tcl-private/generic" \
   --enable-64bit \
   --enable-man-symlinks \
   --enable-man-compression=gzip
-make -j5 || exit 1
+make -j15 || exit 1
 make install DESTDIR=$PKG
-
-# Some sources require Tk's private headers, which might not be the
-# best thing but we'll include them where we've seen other teams
-# doing the same thing:
-mkdir -p $PKG/usr/include/tk-private/{generic,unix}
-cp -a ../generic/*.h $PKG/usr/include/tk-private/generic
-cp -a ../unix/*.h $PKG/usr/include/tk-private/unix
-( cd $PKG/usr/include/tk-private/generic
-  rm -f tk.h tkDecls.h tkPlatDecls.h
-  ln -sf ../../tk.h .
-  ln -sf ../../tkDecls.h .
-  ln -sf ../../tkPlatDecls.h
-)
 
 ( cd $PKG/usr/bin
   rm -f wish

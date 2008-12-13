@@ -30,7 +30,7 @@ CFLAGS="$SLKCFLAGS" \
   --enable-man-compression=gzip \
   --enable-64bit \
   --build=$ARCH-$DISTRO-linux
-make -j5 || exit 1
+make -j15 || make || exit 1
 make install DESTDIR=$PKG
 
 # Some sources require Tcl's private headers, which might not be the

@@ -43,18 +43,17 @@ CFLAGS="$SLKCFLAGS" \
   --prefix=/usr \
   --libdir=/usr/lib$LIBSUFFIX \
   --with-tclconfig=/usr/lib$LIBSUFFIX \
-  --with-tclinclude=/usr/include/tcl-private/generic \
   --mandir=/usr/man \
   --infodir=/usr/info \
   --disable-static \
   --build=$ARCH-$DISTRO-linux
 
 # Build and install:
-make -j5 || make || exit 1
+make -j15 || make || exit 1
 make install DESTDIR=$PKG || exit 1
 
 # Add a documentation directory:
-mkdir -p $PKG/usr/doc/expect-$VERSION
+mkdir -p $PKG/usr/doc/${PKGNAM}-$VERSION
 cp -a \
   FAQ HISTORY INSTALL NEWS README* \
   $PKG/usr/doc/expect-$VERSION
