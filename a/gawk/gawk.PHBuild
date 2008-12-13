@@ -1,8 +1,8 @@
 #!/bin/sh
 # Set initial variables:
 PKGNAM=gawk
-VERSION=3.1.5
-BUILD=${BUILD:-4}
+VERSION=3.1.6
+BUILD=${BUILD:-1}
 
 . /etc/pkghelpers
 pkghelpers_env
@@ -21,13 +21,12 @@ rm -rf gawk-$VERSION
 tar xjvf $CWD/gawk-$VERSION.tar.bz2
 cd gawk-$VERSION
 
-zcat $CWD/gawk.glibc.free.diff.gz | patch -p2 -l --verbose || exit 1
-zcat $CWD/gawk-3.1.5.fieldwidths.diff.gz | patch -p1 -l --verbose || exit 1
-
-chown -R root:root .
+pkghelpers_permissions
 CFLAGS="$SLKCFLAGS" \
 ./configure \
   --prefix=/usr \
+  --mandir=/usr/man \
+  --infodir=/usr/info \
   $ARCH-$DISTRO-linux
 
 make -j12 || exit 1
