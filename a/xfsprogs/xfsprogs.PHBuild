@@ -1,12 +1,33 @@
 #!/bin/sh
-PKGNAM=xfsprogs
-VERSION=2.9.7-1
-BUILD=1
 
-PKGVER=$(echo $VERSION | tr - _)
+# Copyright 2008  Patrick J. Volkerding, Sebeka, MN, USA
+# All rights reserved.
+#
+# Redistribution and use of this script, with or without modification, is
+# permitted provided that the following conditions are met:
+#
+# 1. Redistributions of this script must retain the above copyright
+#    notice, this list of conditions and the following disclaimer.
+#
+#  THIS SOFTWARE IS PROVIDED BY THE AUTHOR ''AS IS'' AND ANY EXPRESS OR IMPLIED
+#  WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+#  MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.  IN NO
+#  EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+#  SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+#  PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+#  OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+#  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+#  OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+#  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+PKGNAM=xfsprogs
+VERSION=2.10.1-1
+BUILD=1
 
 . /etc/pkghelpers
 pkghelpers_env
+
+PKGVER=$(echo $VERSION | tr - _)
 
 rm -rf $PKG
 mkdir -p $PKG
@@ -16,46 +37,35 @@ rm -rf xfsprogs-$(echo $VERSION | cut -f 1 -d '-')
 tar xzvf $CWD/xfsprogs_$VERSION.tar.gz
 cd xfsprogs-$(echo $VERSION | cut -f 1 -d '-')
 
-chown -R root:root .
-find . -perm 666 -exec chmod 644 {} \;
-find . -perm 664 -exec chmod 644 {} \;
-find . -perm 600 -exec chmod 644 {} \;
-find . -perm 444 -exec chmod 644 {} \;
-find . -perm 400 -exec chmod 644 {} \;
-find . -perm 440 -exec chmod 644 {} \;
-find . -perm 777 -exec chmod 755 {} \;
-find . -perm 775 -exec chmod 755 {} \;
-find . -perm 511 -exec chmod 755 {} \;
-find . -perm 711 -exec chmod 755 {} \;
-find . -perm 555 -exec chmod 755 {} \;
+pkghelpers_permissions
 
 # Make sure you have the same version of autoconf as the
 # developers did...  ;-)
 autoconf
 
+CFLAGS="$SLKCFLAGS" \
 ./configure \
   --prefix=/usr \
   --libdir=/lib$LIBSUFFIX \
   --libexecdir=/usr/lib$LIBSUFFIX \
   --sbindir=/sbin \
   --bindir=/usr/sbin \
+  --datadir=/usr/share \
+  --mandir=/usr/man \
+  --docdir=/usr/doc/xfsprogs-$PKGVER \
   --enable-shared=yes \
   --enable-gettext=yes \
   --enable-shared-uuid=yes \
-  --mandir=/usr/man \
-  --datadir=/usr/share
+  --build=$ARCH-$DISTRO-linux
 
 make -j5 || exit 1
 make install DIST_ROOT=$PKG
 make install-dev DIST_ROOT=$PKG
-make install-lib DIST_ROOT=$PKG
 
 mv $PKG/usr/share/doc $PKG/usr
-mv $PKG/usr/doc/xfsprogs $PKG/usr/doc/xfsprogs-$VERSION
-# It would be nice to keep the same timestamps that the files have in the source:
-cp -a \
-  README doc/COPYING doc/CREDITS doc/PORTING \
-  $PKG/usr/doc/xfsprogs-$VERSION
+mv $PKG/usr/doc/xfsprogs $PKG/usr/doc/xfsprogs-$PKGVER
+cp -a README doc/COPYING doc/CREDITS doc/PORTING \
+  $PKG/usr/doc/xfsprogs-$PKGVER
 
 # Remove bogus files:
 rm -f $PKG/lib$LIBSUFFIX/*.a $PKG/lib$LIBSUFFIX/*.so $PKG/lib$LIBSUFFIX/*.la $PKG/usr/lib$LIBSUFFIX/*.la
