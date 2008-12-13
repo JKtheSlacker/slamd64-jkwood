@@ -23,7 +23,7 @@
 # http://dbus.freedesktop.org/releases/dbus-python/
 
 PKGNAM=dbus-python
-VERSION=${VERSION:-0.82.4}
+VERSION=${VERSION:-0.83.0}
 BUILD=${BUILD:-1}
 
 . /etc/pkghelpers
@@ -33,7 +33,7 @@ rm -rf $PKG
 mkdir -p $TMP $PKG
 cd $TMP || exit 1
 rm -rf $PKGNAM-$VERSION
-tar xvf $CWD/$PKGNAM-$VERSION.tar.gz || exit 1
+tar xvf $CWD/$PKGNAM-$VERSION.tar.?z* || exit 1
 cd $PKGNAM-$VERSION || exit 1
 pkghelpers_permissions
 
@@ -51,6 +51,7 @@ CXXFLAGS="$SLKCFLAGS" \
   --host=$ARCH-$DISTRO-linux \
   || exit 1
 
+make $NUMJOBS
 make || exit 1
 make install DESTDIR=$PKG || exit 1
 
