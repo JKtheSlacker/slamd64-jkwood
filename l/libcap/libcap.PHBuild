@@ -9,7 +9,7 @@
 # http://sam.zoy.org/wtfpl/COPYING for more details.
 
 PKGNAM=libcap
-VERSION=2.11
+VERSION=2.14
 BUILD=${BUILD:-1}
 
 . /etc/pkghelpers
@@ -21,27 +21,13 @@ cd $TMP
 rm -rf $PKGNAM-$VERSION
 tar xvf $CWD/$PKGNAM-$VERSION.tar.gz
 cd $PKGNAM-$VERSION || exit 1
-chown -R root:root .
-find . \
- \( -perm 777 -o -perm 775 -o -perm 711 -o -perm 555 -o -perm 511 \) \
- -exec chmod 755 {} \; -o \
- \( -perm 666 -o -perm 664 -o -perm 600 -o -perm 444 -o -perm 440 -o -perm 400 \) \
- -exec chmod 644 {} \;
-
-# Fix a recursive include problem
-zcat $CWD/libcap-2.11-include_fix.patch.gz | patch -p1 || exit 1
-
-# The tools shouldn't have to all be static for any reason I'm aware of:
-zcat $CWD/libcap.dynamic.diff.gz | patch -p1 || exit 1
+pkghelpers_permissions
 
 # Set the CFLAGS
 sed -i "s/^\(DEBUG=\).*/\1$SLKCFLAGS/" Make.Rules
 
-make
+make DYNAMIC=yes
 make install FAKEROOT=$PKG man_prefix=/usr
-
-find $PKG | xargs file | grep -e "executable" -e "shared object" | grep ELF \
-  | cut -f 1 -d : | xargs strip --strip-unneeded 2> /dev/null
 
 # Add included scripts
 ( cd contrib || exit 1

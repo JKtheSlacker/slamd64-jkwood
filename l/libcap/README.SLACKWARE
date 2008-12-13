@@ -1,24 +1,5 @@
-(this is info retained from slackbuilds.org and may or may not
-apply entirely to the package as shipped by newer Slackware
-releases)
-
-libcap v2 implements support for filesystem capabilities; however,
-the kernel shipped with Slackware 12.1 does not support this.
-
-	# grep CAPABILITIES /boot/config
-	CONFIG_SECURITY_CAPABILITIES=y
-	# CONFIG_SECURITY_FILE_CAPABILITIES is not set
-
-To enable this support, recompile the kernel with this option set:
-
-	Security options  --->
-		Enable different security models
-			Default Linux Capabilities
-		File POSIX Capabilities (EXPERIMENTAL)
-
-Even if you don't use this, the actual lib should still be compatible
-with libcap v1 in the 12.0 repo. If, however, this happens to not actually
-be the case, the SlackBuild there should still work fine on 12.1.
+This file contains some links to additional sources of documentation
+available on libcap usage.
 
 POSIX 1e and 2c drafts:  
 http://wt.xpilot.org/publications/posix.1e/download.html
