@@ -1,6 +1,6 @@
 #!/bin/sh
 PKGNAM=hdparm
-VERSION=${VERSION:-8.9}
+VERSION=${VERSION:-9.3}
 BUILD=${BUILD:-1}
 
 . /etc/pkghelpers
@@ -15,9 +15,10 @@ tar xjvf $CWD/hdparm-$VERSION.tar.bz2
 cd hdparm-$VERSION
 pkghelpers_permissions
 make -j5 || exit 1
-strip hdparm
-mkdir -p $PKG/sbin $PKG/usr/sbin
-install -oroot -groot -m755 hdparm $PKG/sbin/hdparm
+mkdir -p $PKG/sbin
+cat hdparm > $PKG/sbin/hdparm
+chmod 755 $PKG/sbin/hdparm
+mkdir -p $PKG/usr/sbin
 ( cd $PKG/usr/sbin
   ln -sf ../../sbin/hdparm .
 )
