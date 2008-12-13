@@ -4,8 +4,8 @@ PKG=/tmp/package-jdk
 rm -rf $PKG
 mkdir -p $PKG
 
-VERSION=6u7
-DVER=1.6.0_07
+VERSION=6u11
+DVER=1.6.0_11
 ARCH=x86_64
 JARCH=x64
 BUILD=1

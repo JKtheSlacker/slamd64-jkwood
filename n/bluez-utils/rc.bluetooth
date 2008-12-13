@@ -12,10 +12,9 @@ PATH=/sbin:/bin:/usr/sbin:/usr/bin
 DESC="Bluetooth subsystem"
 
 # The register-passkeys script was originally written by Debian:
-REGISTER_PASSKEYS=/usr/lib64/bluetooth/register-passkeys
+REGISTER_PASSKEYS=/usr/lib/bluetooth/register-passkeys
 
 HCID_NAME=hcid
-SDPD_NAME=sdpd
 HIDD_NAME=hidd
 HID2HCI_NAME=hid2hci
 RFCOMM_NAME=rfcomm
@@ -23,42 +22,35 @@ PAND_NAME=pand
 DUND_NAME=dund
 
 HCID_EXEC="`which $HCID_NAME || true`"
-SDPD_EXEC="`which $SDPD_NAME || true`"
 HIDD_EXEC="`which $HIDD_NAME || true`"
 HID2HCI_EXEC="`which $HID2HCI_NAME || true`"
 RFCOMM_EXEC="`which $RFCOMM_NAME || true`"
 PAND_EXEC="`which $PAND_NAME || true`"
 DUND_EXEC="`which $DUND_NAME || true`"
 
-HCID_ENABLE=true
-SDPD_ENABLE=true
-HIDD_ENABLE=false
-HID2HCI_ENABLE=false
-RFCOMM_ENABLE=true
-DUND_ENABLE=false
-PAND_ENABLE=false
-
 HCID_CONFIG="/etc/bluetooth/hcid.conf"
 RFCOMM_CONFIG="/etc/bluetooth/rfcomm.conf"
 
-HIDD_OPTIONS=""
-DUND_OPTIONS=""
-PAND_OPTIONS=""
-
-[ -e /etc/rc.d/rc.bluetooth.conf ] && . /etc/rc.d/rc.bluetooth.conf
+# Source rc.bluetooth.conf
+. /etc/rc.d/rc.bluetooth.conf
 
 bluetooth_start() {
         echo -n "Starting $DESC: "
-        if $HCID_ENABLE && [ -x "$HCID_EXEC" -a -f "$HCID_CONFIG" ] ; then
-                $HCID_EXEC -f $HCID_CONFIG
-                echo -n " $HCID_NAME"
+        if [ -x "$HCID_EXEC" ] ; then
+                # Separate sdp daemon is depreciated, now internal function.
+		if $SDPD_ENABLE ; then
+                        $HCID_EXEC -s -f $HCID_CONFIG
+                        echo -n " $HCID_NAME sdp"
+                else
+                        $HCID_EXEC -f $HCID_CONFIG
+                        echo -n " $HCID_NAME"
+                fi
+        else
+                echo "BlueZ does not appear to be installed!"
+		exit
         fi
-        if $SDPD_ENABLE && [ -x "$SDPD_EXEC" ] ; then
-                $SDPD_EXEC
-                echo -n " $SDPD_NAME"
-        fi
-        if $HIDD_ENABLE && [ -x "$HIDD_EXEC" ] ; then
-                $HIDD_EXEC $HIDD_OPTIONS --server || true
+        if $HIDD_ENABLE && [ -x "$HIDD_EXEC" -a -n "$HIDD_OPTIONS" ] ; then
+                $HIDD_EXEC $HIDD_OPTIONS || true
                 echo -n " $HIDD_NAME"
         fi
         if $HID2HCI_ENABLE && [ -x "$HID2HCI_EXEC" ] ; then
@@ -96,8 +88,6 @@ bluetooth_stop() {
         fi
         killall $HIDD_NAME > /dev/null 2>&1 || true
         echo -n " $HIDD_NAME"
-        killall $SDPD_NAME > /dev/null 2>&1 || true
-        echo -n " $SDPD_NAME"
         killall $HCID_NAME > /dev/null 2>&1 || true
         echo -n " $HCID_NAME"
         echo "."

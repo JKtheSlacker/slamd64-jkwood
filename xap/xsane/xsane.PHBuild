@@ -1,7 +1,6 @@
 #!/bin/sh
 
-# Copyright 2006-2008  Patrick J. Volkerding, Sebeka, MN, USA
-# Copyright 2007  Frederick Emmott
+# Copyright 2008  Patrick J. Volkerding, Sebeka, MN, USA
 # All rights reserved.
 #
 # Redistribution and use of this script, with or without modification, is
@@ -21,60 +20,41 @@
 #  OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 #  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-
-PKGNAM=desktop-file-utils
-VERSION=${VERSION:-0.15}
+PKGNAM=xsane
+VERSION=0.996
 BUILD=${BUILD:-1}
 
 . /etc/pkghelpers
 pkghelpers_env
 
 rm -rf $PKG
-mkdir -p $PKG
-
+mkdir -p $PKG/usr
 cd $TMP
-rm -rf ${PKGNAM}-${VERSION}
-tar xvf $CWD/${PKGNAM}-$VERSION.tar.?z* || exit 1
-cd ${PKGNAM}-$VERSION
-
-# Make sure ownerships and permissions are sane:
+rm -rf xsane-$VERSION
+tar xjvf $CWD/xsane-$VERSION.tar.bz2
+cd xsane-$VERSION
 pkghelpers_permissions
 
-# Configure:
 CFLAGS="$SLKCFLAGS" \
 ./configure \
   --prefix=/usr \
   --mandir=/usr/man \
-  --docdir=/usr/doc/$PKGNAM-$VERSION \
-  --disable-static \
-  --build=$ARCH-$DISTRO-linux \
-  --host=$ARCH-$DISTRO-linux
+  --build=$ARCH-$DISTRO-linux
 
-# Build and install:
 make -j $NUMJOBS || make || exit 1
-make install DESTDIR=$PKG || exit 1
+make install prefix=$PKG/usr
 
-mkdir -p $PKG/var/log/setup
-cat << EOF > $PKG/var/log/setup/setup.07.update-desktop-database
-#BLURB="Run update-desktop-database."
-chroot . /usr/bin/update-desktop-database /usr/share/applications 1> /dev/null 2> /dev/null
-EOF
-chmod 755 $PKG/var/log/setup/setup.07.update-desktop-database
+rmdir $PKG/usr/sbin
 
-# Add a documentation directory:
-mkdir -p $PKG/usr/doc/${PKGNAM}-$VERSION
+mkdir -p $PKG/usr/doc/xsane-$VERSION
 cp -a \
-  AUTHORS COPYING* INSTALL NEWS README* \
-  $PKG/usr/doc/${PKGNAM}-$VERSION
+  xsane.* \
+  $PKG/usr/doc/xsane-$VERSION
+  rm -f $PKG/usr/doc/xsane-$VERSION/xsane.spec*
+( cd $PKG/usr/doc/xsane-$VERSION ; ln -s /usr/share/sane/xsane/doc html )
 
 mkdir -p $PKG/install
 cat $CWD/slack-desc > $PKG/install/slack-desc
-cat << EOF > $PKG/install/doinst.sh
-#!/bin/sh
-if [ -x /usr/bin/update-desktop-database ]; then
-  chroot . /usr/bin/update-desktop-database /usr/share/applications 1> /dev/null 2>/dev/null
-fi
-EOF
 
 cd $PKG
 pkghelpers_fixup

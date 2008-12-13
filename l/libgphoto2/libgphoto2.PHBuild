@@ -23,9 +23,8 @@
 # ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 PKGNAM=libgphoto2
-VERSION=2.4.2
+VERSION=2.4.3
 BUILD=${BUILD:-1}
-NUMJOBS=${NUMJOBS:--j6}
 
 . /etc/pkghelpers
 pkghelpers_env
@@ -38,6 +37,10 @@ tar xvf $CWD/$PKGNAM-$VERSION.tar.bz2 || exit 1
 cd $PKGNAM-$VERSION
 pkghelpers_permissions
 
+# Fix the usage of deprecated PHYSDEVPATH in favor of DEVPATH in the
+# check-ptp-camera script called by udev
+zcat $CWD/check-ptp-camera.diff.gz | patch -p1 || exit 1
+
 CFLAGS="$SLKCFLAGS" \
 CXXFLAGS="$SLKCFLAGS" \
 ./configure \
@@ -49,10 +52,17 @@ CXXFLAGS="$SLKCFLAGS" \
   --with-doc-dir=/usr/doc/$PKGNAM-$VERSION \
   --build=$ARCH-$DISTRO-linux
 
-make $NUMJOBS || exit 1
+make -j $NUMJOBS || exit 1
 
 # Make sure udev helper scripts are put in the right place and
 # install the other utilities to /usr/bin instead of /usr/lib/libgphoto2/
+make -j $NUMJOBS \
+  udevscriptdir=/lib/udev \
+  utilsdir=/usr/bin \
+  || make \
+  udevscriptdir=/lib/udev \
+  utilsdir=/usr/bin \
+  || exit 1
 make \
   udevscriptdir=/lib/udev \
   utilsdir=/usr/bin \
@@ -60,24 +70,42 @@ make \
 
 # Generate udev rules and hal device information files
 # First, we'll have to set (and export) some important variables
-LD_LIBRARY_PATH=/$PKG/usr/lib$LIBSUFFIX
-CAMLIBS=$PKG/usr/lib$LIBSUFFIX/$PKGNAM/$VERSION 
-LIBDIR=$PKG/usr/lib$LIBSUFFIX
+LD_LIBRARY_PATH=/$PKG/usr/lib
+CAMLIBS=$PKG/usr/lib/$PKGNAM/$VERSION 
+LIBDIR=$PKG/usr/lib
 export LD_LIBRARY_PATH CAMLIBS LIBDIR
-mkdir -p $PKG/etc/udev/rules.d $PKG/usr/share/hal/fdi/information/20thirdparty
+# Generate udev rules
+mkdir -p $PKG/lib/udev/rules.d 
 $PKG/usr/bin/print-camera-list udev-rules mode 0660 owner root group plugdev \
-  > $PKG/etc/udev/rules.d/90-libgphoto2.rules
+  > $PKG/lib/udev/rules.d/90-libgphoto2.rules
+# Generate fdi files
+mkdir -p $PKG/usr/share/hal/fdi/information/20thirdparty
 $PKG/usr/bin/print-camera-list hal-fdi \
   > $PKG/usr/share/hal/fdi/information/20thirdparty/10-camera-libgphoto2.fdi
 $PKG/usr/bin/print-camera-list hal-fdi-device \
   > $PKG/usr/share/hal/fdi/information/20thirdparty/10-camera-libgphoto2-device.fdi
-unset LD_LIBRARY_PATH CAMLIBS LIBDIR
+unset LD_LIBRARY_PATH CAMLIBS LIBDIR	# Unset these just in case
 
 mkdir -p $PKG/usr/doc/$PKGNAM-$VERSION
-cp -a ABOUT-NLS AUTHORS COPYING* HACKING INSTALL MAINTAINERS NEWS \
-  README TESTERS $PKG/usr/doc/$PKGNAM-$VERSION
-# We don't need these
-rm -rf $PKG/usr/doc/$PKGNAM-$VERSION/{apidocs.html,camlibs,linux-hotplug,README.apidocs}
+cp -a \
+  AUTHORS COPYING* HACKING INSTALL MAINTAINERS \
+  NEWS README README.packaging TESTERS \
+  $PKG/usr/doc/$PKGNAM-$VERSION
+# The entire ChangeLog is excessive for most users:
+cat $PKG/usr/doc/$PKGNAM-$VERSION/ChangeLog | head -n 1000 > $PKG/usr/doc/$PKGNAM-$VERSION/CL
+mv $PKG/usr/doc/$PKGNAM-$VERSION/CL $PKG/usr/doc/$PKGNAM-$VERSION/ChangeLog
+# The apidocs are huge, and probably only of interest to developers who will
+# very likely use the source code as a reference:
+rm -r $PKG/usr/doc/$PKGNAM-$VERSION/apidocs.html
+cat << EOF > $PKG/usr/doc/$PKGNAM-$VERSION/apidocs.html/README
+The complete API documentation may be found in the
+libgphoto2 source code archive.
+EOF
+
+# This library is not built, but it is useful for users to know why that is:
+cp -a camlibs/jl2005a/README.jl2005a $PKG/usr/doc/$PKGNAM-$VERSION/camlibs
+chmod 644 $PKG/usr/doc/$PKGNAM-$VERSION/camlibs/README.jl2005a
+chown root:root $PKG/usr/doc/$PKGNAM-$VERSION/camlibs/README.jl2005a
 
 mkdir -p $PKG/install
 cat $CWD/slack-desc > $PKG/install/slack-desc
