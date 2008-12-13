@@ -48,7 +48,7 @@ CFLAGS="$SLKCFLAGS" \
   $ARCH-$DISTRO-linux
 
 # Build and install:
-make || exit 1
+make -j4 || exit 1
 make install DESTDIR=$PKG || exit 1
 
 # Add a documentation directory:
