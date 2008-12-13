@@ -26,7 +26,7 @@
 
 PKGNAM=pm-utils
 VERSION=${VERSION:-1.2.3}
-BUILD=${BUILD:-2}
+BUILD=${BUILD:-1}
 
 . /etc/pkghelpers
 pkghelpers_env
@@ -43,16 +43,16 @@ cd $PKGNAM-$VERSION
 pkghelpers_permissions
 
 CFLAGS="$SLKCFLAGS" \
-LDFLAGS="-L/usr/lib64" \
+LDFLAGS="-L/usr/lib$LIBSUFFIX" \
 ./configure \
   --prefix=/usr \
-  --libdir=/usr/lib64 \
+  --libdir=/usr/lib$LIBSUFFIX \
   --sysconfdir=/etc \
   --docdir=/usr/doc/$PKGNAM-$VERSION \
   --mandir=/usr/man \
   --build=$ARCH-$DISTRO-linux
 
-make
+make || exit 1
 make install DESTDIR=$PKG
 
 mkdir -p $PKG/usr/doc/$PKGNAM-$VERSION
