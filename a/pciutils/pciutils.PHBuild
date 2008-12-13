@@ -21,7 +21,7 @@ pkghelpers_permissions
 # Change prefix from /usr/local to /usr:
 zcat $CWD/pciutils.prefix.diff.gz | patch -p1 --verbose || exit 1
 
-make -j6 OPT="$SLKCFLAGS" || exit 1
+make -j15 OPT="$SLKCFLAGS" || exit 1
 
 mkdir -p $PKG/sbin
 cat lspci > $PKG/sbin/lspci
