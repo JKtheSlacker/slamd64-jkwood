@@ -18,7 +18,7 @@ pkghelpers_permissions
 
 make -j6
 make || exit 1
-make install DESTDIR=$PKG
+make install DESTDIR=$PKG || exit 1
 
 # Add some firmware:
 ( cd $PKG
@@ -31,21 +31,21 @@ mkdir -p $PKG/etc/pcmcia $PKG/etc/rc.d $PKG/lib/udev/rules.d
 
 cp -a $CWD/config/rc.pcmcia $PKG/etc/rc.d/rc.pcmcia.new
 chown root:root $PKG/etc/rc.d/rc.pcmcia.new
-chmod 0755 $PKG/etc/rc.d/rc.pcmcia.new
+chmod 755 $PKG/etc/rc.d/rc.pcmcia.new
 
 cp -a $CWD/config/config.opts $PKG/etc/pcmcia/config.opts.new
 chown root:root $PKG/etc/pcmcia/config.opts.new
-chmod 0644 $PKG/etc/pcmcia/config.opts.new
+chmod 644 $PKG/etc/pcmcia/config.opts.new
 
-cp -a $CWD/config/60-pcmcia.rules $PKG/lib/udev/rules.d/60-pcmcia.rules
+cp -a udev/60-pcmcia.rules $PKG/lib/udev/rules.d/60-pcmcia.rules
 chown root:root $PKG/lib/udev/rules.d/60-pcmcia.rules
-chmod 0644 $PKG/lib/udev/rules.d/60-pcmcia.rules
+chmod 644 $PKG/lib/udev/rules.d/60-pcmcia.rules
 
 mv $PKG/usr/share/man $PKG/usr
 rmdir $PKG/usr/share
 
 mkdir -p $PKG/usr/doc/pcmciautils-$VERSION
-cp COPYING $PKG/usr/doc/pcmciautils-$VERSION
+cp COPYING* $PKG/usr/doc/pcmciautils-$VERSION
 
 mkdir $PKG/install
 cat $CWD/doinst.sh > $PKG/install/doinst.sh
