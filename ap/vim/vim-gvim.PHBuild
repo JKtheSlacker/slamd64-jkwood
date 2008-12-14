@@ -57,11 +57,13 @@ chown -R root:root .
 for file in $CWD/patches/* ; do
   ( zcat $file 2> /dev/null | patch -p0 --verbose --batch )
   done
-zcat $CWD/sh.vim.diff.gz | patch -p0 --verbose || exit 1
 
 config_vim --with-x --enable-gui=gtk2
 make -j $NUMJOBS || exit 1
 make install DESTDIR=$PKG
+
+rsync -lprvt $PKG/usr/share/man/ $PKG/usr/man/
+rm -r $PKG/usr/share/man
 
 # Legacy binary links:
 ( cd $PKG/usr/bin ; rm -rf ex )
