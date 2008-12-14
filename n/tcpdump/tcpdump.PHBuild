@@ -40,7 +40,7 @@ tar xzvf $CWD/libpcap-$LIBVER.tar.gz
 cd libpcap-$LIBVER
 find . -type d -name CVS -exec rm -rf {} \;
 pkghelpers_permissions
-CFLAGS="`getconf LFS_CFLAGS`" \
+CFLAGS="$(getconf LFS_CFLAGS)" \
 ./configure \
   --prefix=/usr \
 	--libdir=/usr/lib$LIBSUFFIX \
