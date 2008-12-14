@@ -4,7 +4,7 @@ TMP=/tmp
 PKG=$TMP/package-devel32
 mkdir -p $PKG/usr
 
-VERSION=1.2.27
+VERSION=1.2.32
 ARCH=${ARCH:-x86_64}
 BUILD=1
 
