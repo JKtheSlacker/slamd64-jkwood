@@ -1,25 +1,12 @@
 #!/bin/sh
 # Set initial variables:
-CWD=`pwd`
-if [ "$TMP" = "" ]; then
-  TMP=/tmp
-fi
-PKG=$TMP/package-ethtool
-
-VERSION=5
-ARCH=${ARCH:-x86_64}
+PKGNAM=ethtool
+VERSION=6
 BUILD=1
-DISTRO=${DISTRO:-slamd64}
 
-if [ $DISTRO = slackware ]; then
-	PKGARCH=$ARCH
-else
-	PKGARCH=${ARCH}_${DISTRO}
-fi
+. /etc/pkghelpers
+pkghelpers_env
 
-if [ ! -d $TMP ]; then
-  mkdir -p $TMP # location to build the source
-fi
 rm -rf $PKG
 mkdir -p $PKG
 
@@ -27,12 +14,10 @@ cd $TMP
 rm -rf ethtool-$VERSION
 tar xzf $CWD/ethtool-$VERSION.tar.gz
 cd ethtool-$VERSION
-chown -R root:root .
+pkghelpers_permissions
 ./configure --prefix=/usr
 make || exit 1
 make install DESTDIR=$PKG
-strip $PKG/usr/sbin/ethtool
-gzip -9 $PKG/usr/man/man8/ethtool.8
 mkdir -p $PKG/usr/doc/ethtool-$VERSION
 cp -a \
   AUTHORS COPYING ChangeLog NEWS README \
@@ -45,5 +30,5 @@ cat $CWD/slack-desc > $PKG/install/slack-desc
 
 # Build the package:
 cd $PKG
-makepkg -l y -c n $TMP/ethtool-$VERSION-$PKGARCH-$BUILD.tgz
-
+pkghelpers_fixup
+pkghelpers_makepkg
