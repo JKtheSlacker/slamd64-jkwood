@@ -23,7 +23,6 @@ CFLAGS="$SLKCFLAGS" \
   --with-html-dir=/usr/share/gtk-doc/html \
   --mandir=/usr/man \
   --disable-static \
-  --disable-static \
   --without-gnome-vfs \
   --without-gio \
   --without-bonobo \
