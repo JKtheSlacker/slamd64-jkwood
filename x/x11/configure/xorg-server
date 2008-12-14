@@ -2,7 +2,7 @@
 BUILD_SERVERS="--enable-xorg --enable-xvfb --enable-xnest"
 SKIP_SERVERS="--disable-xprint --disable-dmx"
 
-MESA_VERSION=${MESA_VERSION:-7.0.2}
+MESA_VERSION=${MESA_VERSION:-7.0.3}
 
 # For now, trying to compile with HAL/D-BUS leads to a compile failure
 # with a ton of undefined symbols.  Until this is rectified, we will be
