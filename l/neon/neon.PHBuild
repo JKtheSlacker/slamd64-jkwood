@@ -54,7 +54,7 @@ CFLAGS="$SLKCFLAGS" \
   $ARCH-$DISTRO-linux
 
 # Build and install:
-make -j15 || exit 1
+make -j15 || make || exit 1
 make install DESTDIR=$PKG || exit 1
 
 # Relocate docs:
