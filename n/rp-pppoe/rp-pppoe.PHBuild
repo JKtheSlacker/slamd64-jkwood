@@ -18,8 +18,8 @@ CFLAGS=$SLKCFLAGS \
   --enable-plugin=/ppp-2.4.4 \
   --prefix=/usr \
   --mandir=/usr/man
-make -j $NUMJOBS || exit 1
-make install docdir=/usr/doc/rp-pppoe-$VERSION DESTDIR=$PKG install
+make -j $NUMJOBS || make || exit 1
+make install docdir=/usr/doc/rp-pppoe-$VERSION DESTDIR=$PKG install || exit 1
 ( cd $PKG/etc/ppp
   for config in firewall-masq firewall-standalone pppoe-server-options pppoe.conf ; do
     mv $config ${config}.new
