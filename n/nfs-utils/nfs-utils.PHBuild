@@ -76,7 +76,7 @@ make install DESTDIR=$PKG
 rm -f $PKG/sbin/*nfs4
 
 # Why were we doing this?
-mkdir $PKG/sbin
+mkdir -p $PKG/sbin
 mv $PKG/usr/sbin/rpc.statd $PKG/sbin
 ( cd $PKG/usr/sbin ; ln -sf ../../sbin/rpc.statd . )
 
