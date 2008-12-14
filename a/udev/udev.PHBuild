@@ -51,7 +51,7 @@ make install DESTDIR=$PKG
 
 #scsi_id and vol_id are needed by multipath
 mkdir -p $PKG/sbin
-( cd $PKG/sbin
+( cd $PKG/sbin 
   ln -s ../lib/udev/scsi_id scsi_id
   ln -s ../lib/udev/vol_id vol_id
 )
@@ -83,7 +83,7 @@ find $PKG/etc -type d -exec chmod 755 {} \;
 chmod 755 $PKG/etc/rc.d/rc.udev.new
 
 # Add extra device nodes to the package that udev doesn't make:
-tar xvf $CWD/udev-fixed-devices.tar.gz -C $PKG/
+tar xvf $CWD/udev-fixed-devices.tar.gz -C $PKG
 
 # Add various helper scripts:
 for file in $CWD/config/scripts/* ; do
