@@ -32,11 +32,11 @@ SRCNAM=svgalib
 KERNEL=${KERNEL:-$(uname -r)}
 
 VERSION=${VERSION:-1.9.25}
-PKGVER=${VERSION}_$(echo ${KERNEL} | tr - _)
 BUILD=${BUILD:-1}
 
 . /etc/pkghelpers
 pkghelpers_env
+PKGVER=${VERSION}_$(echo ${KERNEL} | tr - _)
 
 rm -rf $PKG
 cd $TMP
