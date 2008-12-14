@@ -1,4 +1,3 @@
-zcat $SRCDIR/libxcb/libxcb-no-assert-on-lock.diff.gz | patch -p0 --verbose || exit 1
 CFLAGS=$SLKCFLAGS \
 CXXFLAGS=$SLKCFLAGS \
 ./configure \
