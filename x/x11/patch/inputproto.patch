@@ -1,1 +1,0 @@
-zcat $CWD/patch/inputproto/inputproto.xi.h.diff.gz | patch -p1 --verbose || sleep 3000

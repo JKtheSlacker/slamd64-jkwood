@@ -23,8 +23,8 @@
 #  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 PKGNAM=iptables
-VERSION=1.4.1.1
-BUILD=${BUILD:-2}
+VERSION=1.4.2
+BUILD=${BUILD:-1}
 
 . /etc/pkghelpers
 pkghelpers_env
@@ -48,7 +48,7 @@ CFLAGS="$SLKCFLAGS" \
   --disable-static \
   --build=$ARCH-$DISTRO-linux
 
-make -j5
+make -j $NUMJOBS || make || exit 1
 make install DESTDIR=$PKG
 
 mkdir -p $PKG/usr/doc/iptables-$VERSION

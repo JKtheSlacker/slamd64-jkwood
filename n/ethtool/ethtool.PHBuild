@@ -1,0 +1,34 @@
+#!/bin/sh
+# Set initial variables:
+PKGNAM=ethtool
+VERSION=6
+BUILD=1
+
+. /etc/pkghelpers
+pkghelpers_env
+
+rm -rf $PKG
+mkdir -p $PKG
+
+cd $TMP
+rm -rf ethtool-$VERSION
+tar xzf $CWD/ethtool-$VERSION.tar.gz
+cd ethtool-$VERSION
+pkghelpers_permissions
+./configure --prefix=/usr
+make || exit 1
+make install DESTDIR=$PKG
+mkdir -p $PKG/usr/doc/ethtool-$VERSION
+cp -a \
+  AUTHORS COPYING ChangeLog NEWS README \
+  $PKG/usr/doc/ethtool-$VERSION
+chmod 644 $PKG/usr/doc/ethtool-$VERSION/*
+
+# Finish up the package:
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+
+# Build the package:
+cd $PKG
+pkghelpers_fixup
+pkghelpers_makepkg

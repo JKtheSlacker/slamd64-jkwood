@@ -10,3 +10,4 @@
   --enable-compat-rules \
   --with-xkb-base=/etc/X11/xkb \
   --with-xkb-rules-symlink=xfree86,xorg \
+  --build=$ARCH-$DISTRO-linux

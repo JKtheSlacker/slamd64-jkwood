@@ -1,6 +1,6 @@
 #!/bin/sh
 PKGNAM=getmail
-VERSION=4.7.4
+VERSION=4.8.2
 ARCH=noarch
 BUILD=1
 
@@ -10,8 +10,8 @@ pkghelpers_env
 cd $TMP
 rm -rf getmail-$VERSION
 tar xzvf $CWD/getmail-$VERSION.tar.gz
-chown -R root:root getmail-$VERSION
 cd getmail-$VERSION
+pkghelpers_permissions
 python setup.py build
 python setup.py install --root=$PKG
 

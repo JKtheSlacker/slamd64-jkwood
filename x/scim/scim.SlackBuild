@@ -54,7 +54,7 @@
 PRGNAM=scim
 VERSION=${VERSION:-1.4.7}
 ARCH=${ARCH:-x86_64}
-BUILD=${BUILD:-5}
+BUILD=${BUILD:-6}
 TAG=${TAG:-}
 
 DOCS="ABOUT-NLS AUTHORS COPYING ChangeLog INSTALL NEWS README THANKS TODO"
@@ -148,7 +148,7 @@ CXXFLAGS="$SLKCFLAGS" \
             --disable-static \
             --program-prefix="" \
             --program-suffix="" \
-            --build=$ARCH-slackware-linux 2>&1 | tee $OUTPUT/configure-${PRGNAM}.log
+            --build=$ARCH-slamd64-linux 2>&1 | tee $OUTPUT/configure-${PRGNAM}.log
 make 2>&1 | tee $OUTPUT/make-${PRGNAM}.log
 
 # Install all the needed stuff to the package dir

@@ -1,0 +1,13 @@
+CFLAGS=$SLKCFLAGS \
+CXXFLAGS=$SLKCFLAGS \
+./configure \
+  --prefix=/usr \
+    --libdir=/usr/lib$LIBSUFFIX \
+  --sysconfdir=/etc \
+  --localstatedir=/var \
+  --infodir=/usr/info \
+  --mandir=/usr/man \
+  --disable-static \
+  --disable-sse2 \
+  --disable-vmx \
+  --build=$ARCH-$DISTRO-linux

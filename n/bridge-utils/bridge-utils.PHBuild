@@ -1,0 +1,52 @@
+#!/bin/sh
+# Set initial variables:
+PKGNAM=bridge-utils
+VERSION=1.2
+BUILD=2
+
+. /etc/pkghelpers
+pkghelpers_env
+
+rm -rf $PKG
+mkdir -p $PKG
+
+cd $TMP
+rm -rf bridge-utils-$VERSION
+tar xzf $CWD/bridge-utils-$VERSION.tar.gz || exit 1
+cd bridge-utils-$VERSION
+
+zcat $CWD/bridge-utils.isbridge.diff.gz | patch -p1 --verbose || exit 1
+
+# This is bad form, but what can you do...
+autoconf
+
+./configure \
+  --prefix=/usr \
+	--libdir=/usr/lib$LIBSUFFIX \
+  --mandir=/usr/man
+
+make || exit 1
+make install DESTDIR=$PKG
+mkdir -p $PKG/sbin
+mv $PKG/usr/sbin/brctl $PKG/sbin/brctl
+( cd $PKG/usr/sbin ; ln -sf ../../sbin/brctl brctl )
+rmdir $PKG/usr/sbin
+
+mkdir -p $PKG/usr/doc/bridge-utils-$VERSION
+cp -a \
+  AUTHORS COPYING ChangeLog README THANKS TODO  \
+  doc \
+  $PKG/usr/doc/bridge-utils-$VERSION
+( cd $PKG/usr/doc/bridge-utils-$VERSION/doc
+  rm -f Makefile Makefile.in RPM-GPG-KEY brctl.8
+)
+
+# Finish up the package:
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+
+# Build the package:
+cd $PKG
+pkghelpers_fixup
+pkghelpers_makepkg
+

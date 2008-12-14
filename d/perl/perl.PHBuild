@@ -11,7 +11,6 @@ VERSION=5.10.0
 BUILD=2
 
 # Additional required modules:
-URI=1.35
 DBI=1.607
 DBDMYSQL=4.008
 XMLPARSER=2.36
@@ -85,7 +84,7 @@ cat x2p/makefile | grep -v '\<command-line\>' > foo
 mv foo x2p/makefile
 
 # Build perl
-make -j6 || exit 1
+make -j $NUMJOBS || exit 1
 make test
 
 # Install perl (needed to build modules):

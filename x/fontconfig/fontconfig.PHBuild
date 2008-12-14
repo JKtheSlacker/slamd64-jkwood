@@ -1,0 +1,106 @@
+#!/bin/sh
+PKGNAM=fontconfig
+VERSION=2.6.0
+BUILD=${BUILD:-1}
+
+. /etc/pkghelpers
+pkghelpers_env
+
+rm -rf $PKG
+mkdir -p $PKG
+
+cd $TMP
+rm -rf fontconfig-$VERSION
+tar xjvf $CWD/fontconfig-$VERSION.tar.bz2
+cd fontconfig-$VERSION
+pkghelpers_permissions
+
+FCPREFIX=/usr
+
+# The wonderful extended version of the font so generously
+# opened up for free modification and distribution by one
+# for the previously proprietary font founderies, and that
+# Stepan Roh did such a marvelous job on getting the ball
+# rolling with should clearly (IMHO) be the default font:
+zcat $CWD/fontconfig.dejavu.diff.gz | patch -p1 --verbose || exit 1
+
+# Hardcode the default font search path rather than having
+# fontconfig figure it out (and possibly follow symlinks, or
+# index ugly bitmapped fonts):
+zcat $CWD/fontconfig.font.dir.list.diff.gz | patch -p1 --verbose --backup --suffix=.orig || exit 1
+
+CFLAGS=$SLKCFLAGS \
+./configure \
+  --prefix=$FCPREFIX \
+	--libdir=$FCPREFIX/lib$LIBSUFFIX \
+  --mandir=/usr/man \
+  --sysconfdir=/etc \
+  --localstatedir=/var
+
+# Uses a currently non-functional sgml tool, thus '-i':
+make -j $NUMJOBS || exit 1
+make install DESTDIR=$PKG
+
+# This ought to be easily found here, but it's still safer to move it:
+if [ ! -d $PKG/usr/lib$LIBSUFFIX/pkgconfig ]; then
+  mkdir -p $PKG/usr/lib$LIBSUFFIX/pkgconfig
+  mv ${PKG}${FCPREFIX}/lib$LIBSUFFIX/pkgconfig/* $PKG/usr/lib$LIBSUFFIX/pkgconfig
+  rmdir ${PKG}${FCPREFIX}/lib$LIBSUFFIX/pkgconfig
+fi
+
+mkdir -p $PKG/usr/doc/fontconfig-$VERSION
+cp -a \
+  AUTHORS COPYING INSTALL NEWS README \
+  $PKG/usr/doc/fontconfig-$VERSION
+# You can shop for this kind of stuff in the source tarball.
+rm -rf ${PKG}${FCPREFIX}/share/doc
+rmdir ${PKG}${FCPREFIX}/share
+
+mkdir -p $PKG/var/log/setup
+cat $CWD/setup.05.fontconfig > $PKG/var/log/setup/setup.05.fontconfig
+chmod 755 $PKG/var/log/setup/setup.05.fontconfig
+
+# Set up the default options in /etc/fonts/conf.d:
+(  cd $PKG/etc/fonts/conf.d
+   for fontconf in \
+        20-fix-globaladvance.conf \
+        20-unhint-small-vera.conf \
+        30-urw-aliases.conf \
+        30-metric-aliases.conf \
+        40-nonlatin.conf \
+        45-latin.conf \
+        49-sansserif.conf \
+        50-user.conf \
+        51-local.conf \
+        60-latin.conf \
+        65-fonts-persian.conf \
+        65-nonlatin.conf \
+        69-unifont.conf \
+        80-delicious.conf \
+        90-synthetic.conf ; do
+     ln -sf ../conf.avail/$fontconf . || exit 1
+   done
+   if [ ! $? = 0 ]; then
+     exit 1
+   fi
+)
+if [ ! $? = 0 ]; then
+  echo "Missing /etc/fonts/$fontconf default.  Exiting"
+  exit 1
+fi
+
+mkdir $PKG/install
+cat << EOF >> $PKG/install/doinst.sh
+#!/bin/sh
+# Update the X font indexes:
+if [ -x /usr/bin/fc-cache ]; then
+  /usr/bin/fc-cache -f
+fi
+# else we'll catch it later with setup.fontconfig :-)
+# make links:
+EOF
+cat $CWD/slack-desc > $PKG/install/slack-desc
+
+cd $PKG
+pkghelpers_fixup
+pkghelpers_makepkg

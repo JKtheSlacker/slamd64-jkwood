@@ -12,7 +12,7 @@ ntpd_start() {
 # Stop ntpd:
 ntpd_stop() {
   echo -n "Stopping NTP daemon..."
-  kill `cat /var/run/ntpd.pid`
+  kill $(cat /var/run/ntpd.pid)
   echo
   sleep 1
   rm -f /var/run/ntpd.pid
@@ -26,6 +26,15 @@ ntpd_restart() {
   ntpd_start
 }
 
+# Check if ntpd is running
+ntpd_status() {
+  if [ -e /var/run/ntpd.pid ]; then
+    echo "ntpd is running."
+  else 
+    echo "ntpd is stopped."
+  fi
+}
+
 case "$1" in
 'start')
   ntpd_start
@@ -36,6 +45,9 @@ case "$1" in
 'restart')
   ntpd_restart
   ;;
+'status')
+  ntpd_status
+  ;;
 *)
-  echo "usage $0 start|stop|restart"
+  echo "usage $0 start|stop|restart|status"
 esac

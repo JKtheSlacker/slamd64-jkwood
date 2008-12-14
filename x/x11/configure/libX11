@@ -9,4 +9,4 @@ CXXFLAGS=$SLKCFLAGS \
   --mandir=/usr/man \
   --disable-static \
   --with-xcb=yes \
-  $ARCH-$DISTRO-linux
+  --build=$ARCH-$DISTRO-linux

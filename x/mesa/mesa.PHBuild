@@ -1,0 +1,84 @@
+#!/bin/sh
+# Copyright 2006, 2007, 2008  Patrick J. Volkerding, Sebeka, MN, USA
+# All rights reserved.
+#
+# Redistribution and use of this script, with or without modification, is
+# permitted provided that the following conditions are met:
+#
+# 1. Redistributions of this script must retain the above copyright
+#    notice, this list of conditions and the following disclaimer.
+#
+#  THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR IMPLIED
+#  WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+#  MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.  IN NO
+#  EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+#  SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+#  PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+#  OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+#  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+#  OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+#  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+
+PKGNAM=mesa
+VERSION=${VERSION:-7.0.3}
+BUILD=${BUILD:-1}
+
+. /etc/pkghelpers
+pkghelpers_env
+
+if [ "$ARCH" = "i486" ]; then
+  MESAARCH=x86
+elif [ "$ARCH" = "x86_64" ]; then
+  MESAARCH=x86-64
+fi
+
+rm -rf $PKG
+mkdir -p $PKG
+
+cd $TMP
+rm -rf Mesa-${VERSION}
+tar xjvf $CWD/MesaLib-$VERSION.tar.bz2
+tar xjvf $CWD/MesaGLUT-$VERSION.tar.bz2
+tar xjvf $CWD/MesaDemos-$VERSION.tar.bz2
+cd Mesa-$VERSION
+
+# Make sure ownerships and permissions are sane:
+pkghelpers_permissions
+
+# Patch to build into "/usr":
+zcat $CWD/mesa.linux-dri-$MESAARCH.diff.gz | patch -p1 --verbose  || exit 1
+
+# Build and install:
+make -j $NUMJOBS linux-dri-$MESAARCH || exit 1
+
+# Patch to put into /tmp/package-mesa:  (sorry, I know this should use $PKG ;-)
+zcat $CWD/mesa.linux-dri-$MESAARCH-fake-destdir.diff.gz | patch -p1 --verbose  || exit 1
+
+make install || exit 1
+
+# Install some "demos":
+( cd progs/xdemos
+  make -i
+  mkdir -p $PKG/usr/bin
+  cp glthreads glxcontexts glxdemo glxgears glxgears_fbconfig glxheads \
+    glxinfo glxpbdemo glxpixmap \
+    $PKG/usr/bin
+)
+
+# Add a documentation directory:
+cd docs
+mkdir -p $PKG/usr/doc/Mesa-$VERSION
+cp -a * $PKG/usr/doc/Mesa-$VERSION
+( cd $PKG/usr/doc/Mesa-$VERSION
+  rm RELNOTES* relnotes*
+)
+cp -a RELNOTES-$VERSION relnotes-$VERSION.html relnotes.html $PKG/usr/doc/Mesa-$VERSION
+
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+
+cd $PKG
+pkghelpers_fixup
+pkghelpers_makepkg
+

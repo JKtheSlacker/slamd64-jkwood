@@ -20,9 +20,8 @@
 # ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 PKGNAM=gphoto2
-VERSION=2.4.2
+VERSION=2.4.3
 BUILD=${BUILD:-1}
-NUMJOBS=${NUMJOBS:--j5}
 
 . /etc/pkghelpers
 pkghelpers_env
@@ -48,7 +47,7 @@ CXXFLAGS="$SLKCFLAGS" \
   --enable-static=no \
   --build=$ARCH-$DISTRO-linux
 
-make $NUMJOBS || exit 1
+make -j $NUMJOBS || exit 1
 make install DESTDIR=$PKG || exit 1
 
 mkdir -p $PKG/usr/doc/$PKGNAM-$VERSION
