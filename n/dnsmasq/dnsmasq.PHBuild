@@ -1,6 +1,6 @@
 #!/bin/sh
 PKGNAM=dnsmasq
-VERSION=2.45
+VERSION=2.46
 BUILD=${BUILD:-1}
 
 . /etc/pkghelpers
@@ -17,7 +17,7 @@ pkghelpers_permissions
 
 zcat $CWD/dnsmasq.leasedir.diff.gz | patch -p1 --verbose --backup --suffix=.orig || exit 1
 
-make -j5 all-i18n PREFIX=/usr MANDIR=/usr/man || exit 1
+make -j $NUMJOBS all-i18n PREFIX=/usr MANDIR=/usr/man || exit 1
 make install-i18n PREFIX=/usr DESTDIR=$PKG MANDIR=/usr/man || exit 1
 chmod 755 $PKG/usr/sbin/dnsmasq
 
