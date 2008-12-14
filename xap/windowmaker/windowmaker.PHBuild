@@ -2,7 +2,7 @@
 
 PKGNAM=windowmaker
 SRCNAM=WindowMaker
-VERSION=${VERSION:-0.92.0}
+VERSION=${VERSION:-20060427cvs}
 BUILD=${BUILD:-4}
 
 . /etc/pkghelpers
@@ -16,24 +16,14 @@ rm -rf $SRCNAM-$VERSION
 tar xjvf $CWD/$SRCNAM-$VERSION.tar.bz2
 cd $SRCNAM-$VERSION
 
+zcat $CWD/windowmaker.no-mmx.diff.gz | patch -p1 -F 3 || exit 1
+sh autogen.sh
+
 # Make sure ownerships and permissions are sane:
-chown -R root:root .
-find . -perm 664 -exec chmod 644 {} \;
-find . -perm 600 -exec chmod 644 {} \;
-find . -perm 444 -exec chmod 644 {} \;
-find . -perm 400 -exec chmod 644 {} \;
-find . -perm 440 -exec chmod 644 {} \;
-find . -perm 777 -exec chmod 755 {} \;
-find . -perm 775 -exec chmod 755 {} \;
-find . -perm 511 -exec chmod 755 {} \;
-find . -perm 711 -exec chmod 755 {} \;
-find . -perm 555 -exec chmod 755 {} \;
+pkghelpers_permissions
 
 # This should be non-interactive where possible.
 zcat $CWD/wmaker.inst.diff.gz | patch -p1 --verbose || exit 1
-
-# Patch from Fedora
-zcat $CWD/windowmaker-gcc4-x86_64.patch.gz | patch -p0 --verbose || exit 1
 
 LINGUAS="`cd po ; /bin/ls *.po | sed 's/.po//g'`" \
 GNUSTEP_LOCAL_ROOT=/usr/lib$LIBSUFFIX/GNUstep \
@@ -42,12 +32,15 @@ NLSDIR=/usr/share/locale \
 ./configure \
   --prefix=/usr \
   --libdir=/usr/lib$LIBSUFFIX \
+  --mandir=/usr/man \
   --sysconfdir=/etc/X11 \
   --enable-gnome \
   --enable-kde \
   --enable-usermenu \
   --with-appspath=/usr/lib$LIBSUFFIX/GNUstep/Applications \
   --build=$ARCH-$DISTRO-linux
+
+make -j $NUMJOBS || exit 1
 # NLS bugs like -i
 make -i -j5 || exit 1
 
@@ -76,7 +69,7 @@ CFLAGS="$SLKCFLAGS" \
   --libdir=/usr/lib$LIBSUFFIX \
   --with-iconsdir=/usr/share/pixmaps \
   --build=$ARCH-$DISTRO-linux
-make -j5 || exit 1
+make -j $NUMJOBS || exit 1
 make install DESTDIR=$PKG || exit 1
 
 mkdir -p $PKG/etc/X11/xinit
