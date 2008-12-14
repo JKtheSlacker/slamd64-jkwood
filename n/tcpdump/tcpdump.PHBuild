@@ -1,9 +1,29 @@
 #!/bin/sh
-# Set initial variables:
+
+# Copyright 2008  Patrick J. Volkerding, Sebeka, MN, USA
+# All rights reserved.
+#
+# Redistribution and use of this script, with or without modification, is
+# permitted provided that the following conditions are met:
+#
+# 1. Redistributions of this script must retain the above copyright
+#    notice, this list of conditions and the following disclaimer.
+#
+#  THIS SOFTWARE IS PROVIDED BY THE AUTHOR ''AS IS'' AND ANY EXPRESS OR IMPLIED
+#  WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+#  MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.  IN NO
+#  EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+#  SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+#  PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+#  OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+#  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+#  OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+#  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
 PKGNAM=tcpdump
-VERSION=3.9.8
-LIBVER=0.9.8
-BUILD=1
+VERSION=4.0.0
+LIBVER=1.0.0
+BUILD=${BUILD:-1}
 
 . /etc/pkghelpers
 pkghelpers_env
@@ -25,13 +45,14 @@ CFLAGS="`getconf LFS_CFLAGS`" \
   --prefix=/usr \
 	--libdir=/usr/lib$LIBSUFFIX \
   --mandir=/usr/man \
+  --docdir=/usr/doc/libpcap-$LIBVER \
   --enable-ipv6 \
-  $ARCH-$DISTRO-linux
-make || exit 1
+  --buil=$ARCH-$DISTRO-linux
+make -j $NUMJOBS || make || exit 1
 make install DESTDIR=$PKG
 mkdir -p $PKG/usr/doc/libpcap-$LIBVER
 cp -a \
-  CHANGES CREDITS FILES INSTALL.txt LICENSE README README.aix README.linux README.tru64 SUNOS4 TODO VERSION \
+  CHANGES CREDITS FILES INSTALL.txt LICENSE README README.linux TODO VERSION \
   $PKG/usr/doc/libpcap-$LIBVER
 
 echo "+================+"
@@ -47,9 +68,10 @@ pkghelpers_permissions
   --prefix=/usr \
 	--libdir=/usr/lib$LIBSUFFIX \
   --mandir=/usr/man \
+  --docdir=/usr/doc/tcpdump-$VERSION \
   --enable-ipv6 \
-  $ARCH-$DISTRO-linux
-make || exit 1
+  --build=$ARCH-$DISTRO-linux
+make -j $NUMJOBS || make || exit 1
 make install DESTDIR=$PKG
 mkdir -p $PKG/usr/doc/tcpdump-$VERSION
 cp -a \
