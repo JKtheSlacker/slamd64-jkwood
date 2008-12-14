@@ -177,7 +177,14 @@ WPAWAIT=${WLAN_WPAWAIT[$i]:-${WPAWAIT:="60"}}
 # Mode needs to be first : some settings apply only in a specific mode!
 if [ -n "$MODE" ] ; then
 	echo "$0:  $IWCOMMAND mode $MODE" | $LOGGER
-	$IWCOMMAND mode $MODE
+        # if $IWCOMMAND fails, try taking the interface down to run it.
+        # Some drivers require this.
+	if ! $IWCOMMAND mode $MODE 2> /dev/null ; then
+		$IFCOMMAND down
+		$IWCOMMAND mode $MODE
+		$IFCOMMAND up
+		sleep 3
+        fi
 fi
 # This is a bit hackish, but should do the job right...
 if [ ! -n "$NICKNAME" ] ; then
