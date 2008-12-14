@@ -79,15 +79,13 @@ chown -R root:root .
 for file in $CWD/patches/* ; do
   ( zcat $file 2> /dev/null | patch -p0 --verbose --batch )
   done
-zcat $CWD/sh.vim.diff.gz | patch -p0 --verbose || exit 1
 
 config_vim --without-x --disable-gui
 make -j $NUMJOBS || exit 1
 make install DESTDIR=$PKG
 
-# *** Use mandir instead ***
-#rsync -lprvt $PKG/usr/share/man/ $PKG/usr/man/
-#rm -r $PKG/usr/share/man
+rsync -lprvt $PKG/usr/share/man/ $PKG/usr/man/
+rm -r $PKG/usr/share/man
 
 cp -a runtime/vimrc_example.vim runtime/vimrc.new
 
