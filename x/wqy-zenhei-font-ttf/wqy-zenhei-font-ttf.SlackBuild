@@ -36,6 +36,10 @@
 #             * Rename to wqy-zenhei-font-ttf
 # 0.4.23-1:   19/Feb/2008 by Eric Hameleers <alien@slackware.com>
 #             * New release of the font.
+# 0.6.26-0:   1/Jul/2008 by Patrick Volkerding.
+#             * Updated font.  Sub-version 0 seems to be included
+#               in the source name now, so a few lines of the
+#               build script were commented out.
 # 
 # Run 'sh wqy-zenhei-font-ttf.SlackBuild --cleanup' to build a Slackware package
 # The package (.tgz) plus descriptive .txt file are created in /tmp .
@@ -47,7 +51,7 @@
 
 PRGNAM=wqy-zenhei-font-ttf
 SRCNAM=wqy-zenhei
-VERSION=${VERSION:-0.5.23}
+VERSION=${VERSION:-0.6.26}
 SUB=${SUB:-0}
 ARCH=noarch
 BUILD=${BUILD:-1}
@@ -64,11 +68,11 @@ TMP=${TMP:-/tmp/build}
 PKG=$TMP/package-$PRGNAM
 OUTPUT=${OUTPUT:-/tmp}
 
-if [ "$SUB" = "0" ]; then
-  SOURCE="$SRCDIR/${SRCNAM}-${VERSION}.tar.bz2"
-else
+#if [ "$SUB" = "0" ]; then
+#  SOURCE="$SRCDIR/${SRCNAM}-${VERSION}.tar.bz2"
+#else
   SOURCE="$SRCDIR/${SRCNAM}-${VERSION}-${SUB}.tar.bz2"
-fi
+#fi
 
 ##
 ## --- with a little luck, you won't have to edit below this point --- ##
@@ -162,4 +166,15 @@ fi
 
 # Build the package:
 cd $PKG
-makepkg --linkadd y --chown n $OUTPUT/${PRGNAM}-${VERSION}-${ARCH}_slamd64-${BUILD}.tgz 2>&1 | tee $OUTPUT/makepkg-${PRGNAM}.log
+#if [ "$SUB" = "0" ]; then
+#  makepkg --linkadd y --chown n $OUTPUT/${PRGNAM}-${VERSION}-${ARCH}-${BUILD}.tgz
+#else
+  makepkg --linkadd y --chown n $OUTPUT/${PRGNAM}-${VERSION}_${SUB}-${ARCH}_slamd64-${BUILD}.tgz
+#fi
+
+
+# Clean up the extra stuff:
+if [ "$P1" = "--cleanup" ]; then
+  rm -rf $TMP/tmp-$PRGNAM
+  rm -rf $PKG
+fi
