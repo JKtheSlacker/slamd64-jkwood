@@ -50,7 +50,7 @@ fi
 
 mkdir -p $PKG/usr/doc/fontconfig-$VERSION
 cp -a \
-  AUTHORS COPYING INSTALL NEWS README \
+  AUTHORS COPYING* INSTALL NEWS README \
   $PKG/usr/doc/fontconfig-$VERSION
 # You can shop for this kind of stuff in the source tarball.
 rm -rf ${PKG}${FCPREFIX}/share/doc
