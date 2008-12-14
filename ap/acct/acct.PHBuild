@@ -1,56 +1,114 @@
 #!/bin/sh
-# Set initial variables:
+
+# Copyright 2006, 2008  Patrick J. Volkerding, Sebeka, MN, USA
+# All rights reserved.
+#
+# Redistribution and use of this script, with or without modification, is
+# permitted provided that the following conditions are met:
+#
+# 1. Redistributions of this script must retain the above copyright
+#    notice, this list of conditions and the following disclaimer.
+#
+#  THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR IMPLIED
+#  WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+#  MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.  IN NO
+#  EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+#  SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+#  PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+#  OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+#  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+#  OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+#  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
 PKGNAM=acct
-VERSION=6.3.2
-BUILD=2
+VERSION=6.4pre1
+BUILD=${BUILD:-1}
 
 . /etc/pkghelpers
 pkghelpers_env
 
-if [ ! -d $PKG ]; then
-  mkdir -p $PKG # place for the package to be built
+cd $TMP
+rm -rf acct-6.4-pre1
+tar xvf $CWD/${PKGNAM}-$VERSION.tar.?z* || exit 1
+cd acct-6.4-pre1 || exit 1
+zcat $CWD/acct-6.4pre1-6.diff.gz | patch -p1 || exit 1
+cat debian/patches/* | patch -p1
+zcat $CWD/acct.logdir.fhs.diff.gz | patch -p1 || exit 1
+
+# Make sure ownerships and permissions are sane:
+pkghelpers_permissions
+
+# Configure:
+CFLAGS="$SLKCFLAGS" \
+./configure \
+  --prefix= \
+  --mandir=/usr/man \
+  --infodir=/usr/info \
+  --enable-linux-multiformat \
+  --build=$ARCH-slackware-linux
+
+# Build and install:
+make || exit 1
+make install DESTDIR=$PKG || exit 1
+
+# The sysvinit package already installs a "last" program, so
+# rename this one:
+mv $PKG/bin/last $PKG/bin/last-acct
+
+# I know this man page still says "last" in it, but presumably
+# anyone who uses "man last-acct" knows enough that this will
+# not spook them:
+mv $PKG/usr/man/man1/last.1 $PKG//usr/man/man1/last-acct.1
+
+# Put some binaries in the location where they have traditionally
+# been installed:
+mkdir -p $PKG/usr/bin
+mv $PKG/bin/{ac,last-acct,lastcomm} $PKG/usr/bin
+mv $PKG/sbin/sa $PKG/usr/bin
+mkdir -p $PKG/usr/sbin
+mv $PKG/sbin/dump* $PKG/usr/sbin
+
+# A couple of manpages are not automatically installed:
+cp -a debian/manpage/*.8 $PKG/usr/man/man8
+
+# Strip binaries:
+( cd $PKG
+  find . | xargs file | grep "executable" | grep ELF | cut -f 1 -d : | xargs strip --strip-debug 2> /dev/null
+  find . | xargs file | grep "shared object" | grep ELF | cut -f 1 -d : | xargs strip --strip-debug 2> /dev/null
+)
+
+# Compress and link manpages, if any:
+if [ -d $PKG/usr/man ]; then
+  ( cd $PKG/usr/man
+    for manpagedir in $(find . -type d -name "man*") ; do
+      ( cd $manpagedir
+        for eachpage in $( find . -type l -maxdepth 1) ; do
+          ln -s $( readlink $eachpage ).gz $eachpage.gz
+          rm $eachpage
+        done
+        gzip -9 *.?
+      )
+    done
+  )
 fi
 
-cd $TMP
-tar xzvf $CWD/acct-$VERSION.tar.gz
-cd acct-$VERSION
-chown -R root.root .
-find . -perm 664 -exec chmod 644 {} \;
-CFLAGS="$SLKCFLAGS"  \
-./configure --prefix=/usr
-zcat $CWD/acct.files.diff.gz | patch -p1 --verbose --backup --suffix=.orig
-make -j12
-mkdir -p $PKG/sbin
-cat accton > $PKG/sbin/accton
-chown -R root:root $PKG/sbin
-chmod 755 $PKG/sbin/accton
-mkdir -p $PKG/usr/bin
-cat ac > $PKG/usr/bin/ac
-cat lastcomm > $PKG/usr/bin/lastcomm
-cat sa > $PKG/usr/bin/sa
-chown -R root:root $PKG/usr/bin
-chmod 755 $PKG/usr/bin/*
-mkdir -p $PKG/usr/sbin
-cat dump-acct > $PKG/usr/sbin/dump-acct
-cat dump-utmp > $PKG/usr/sbin/dump-utmp
-chown -R root:root $PKG/usr/sbin
-chmod 755 $PKG/usr/sbin/*
-mkdir -p $PKG/usr/info
-cat accounting.info | gzip -9c > $PKG/usr/info/accounting.info.gz
-mkdir -p $PKG/usr/man/man1
-cat ac.1 | gzip -9c > $PKG/usr/man/man1/ac.1.gz
-cat lastcomm.1 | gzip -9c > $PKG/usr/man/man1/lastcomm.1.gz
-mkdir -p $PKG/usr/man/man8
-cat accton.8 | gzip -9c > $PKG/usr/man/man8/accton.8.gz
-cat sa.8 | gzip -9c > $PKG/usr/man/man8/sa.8.gz
-mkdir -p $PKG/usr/doc/acct-$VERSION
+# Compress info files, if any:
+if [ -d $PKG/usr/info ]; then
+  ( cd $PKG/usr/info
+    rm -f dir
+    gzip -9 *
+  )
+fi
+
+# Add a documentation directory:
+mkdir -p $PKG/usr/doc/${PKGNAM}-$VERSION
 cp -a \
-   AUTHORS COPYING NEWS README \
-   $PKG/usr/doc/acct-$VERSION
+  AUTHORS COPYING ChangeLog INSTALL NEWS README TODO \
+  $PKG/usr/doc/${PKGNAM}-$VERSION
+
 mkdir -p $PKG/install
 cat $CWD/slack-desc > $PKG/install/slack-desc
 
-# Build the package:
 cd $PKG
 pkghelpers_fixup
 pkghelpers_makepkg

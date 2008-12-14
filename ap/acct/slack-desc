@@ -14,6 +14,6 @@ acct: process accounting, create the log file (touch /var/log/pacct), and
 acct: then use the accton command to start it (accton /var/log/pacct).
 acct: Be aware that the log file can grow to be quite large.
 acct:
-acct: The GNU process accounting utilities were written by Noel Cragg.
-acct:
-acct:
+acct: The GNU process accounting utilities were written by Noel Cragg and
+acct: the software is currently maintained by Ciaran O'Riordan,
+acct: Manuel A. Fernandez Montecelo, and Tim Schmielau.
