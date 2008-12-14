@@ -1,7 +1,28 @@
 #!/bin/sh
+
+# Copyright 2008  Patrick J. Volkerding, Sebeka, MN, USA
+# All rights reserved.
+#
+# Redistribution and use of this script, with or without modification, is
+# permitted provided that the following conditions are met:
+#
+# 1. Redistributions of this script must retain the above copyright
+#    notice, this list of conditions and the following disclaimer.
+#
+#  THIS SOFTWARE IS PROVIDED BY THE AUTHOR ''AS IS'' AND ANY EXPRESS OR IMPLIED
+#  WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+#  MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.  IN NO
+#  EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+#  SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+#  PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+#  OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+#  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+#  OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+#  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
 PKGNAM=gftp
-VERSION=2.0.18
-BUILD=2
+VERSION=2.0.19
+BUILD=1
 
 . /etc/pkghelpers
 pkghelpers_env
@@ -13,25 +34,36 @@ cd $TMP
 rm -rf gftp-$VERSION
 tar xjvf $CWD/gftp-$VERSION.tar.bz2
 cd gftp-$VERSION
-chown -R root.root .
-find . -perm 777 -exec chmod 755 {} \;
-find . -perm 664 -exec chmod 644 {} \;
+
+# Make sure ownerships and permissions are sane:
+pkghelpers_permissions
+
 CFLAGS="$SLKCFLAGS" \
 ./configure \
   --prefix=/usr \
   --sysconfdir=/etc \
   --localstatedir=/var/lib \
-  $ARCH-$DISTRO-linux
-make -j12 || exit 1
+  --mandir=/usr/man \
+  --docdir=/usr/doc/gftp-$VERSION \
+  --build=$ARCH-$DISTRO-linux
+
+make -j $NUMJOBS || make || exit 1
 make install DESTDIR=$PKG
-rm -rf $PKG/usr/share/gnome
-mkdir -p $PKG/usr/share/applications
-zcat $CWD/gftp.desktop.gz > $PKG/usr/share/applications/gftp.desktop
+
+# Put symlinks to the themable icons in place
+mkdir -p $PKG/usr/share/icons/hicolor/{scalable,16x16,22x22,24x24,32x32,48x48}/apps
+ln -s /usr/share/gftp/gftp-scalable.svg
+  $PKG/usr/share/icons/hicolor/scalable/apps/gftp.svg
+for i in 16x16 22x22 24x24 32x32 48x48 ; do
+  ln -s /usr/share/gftp/gftp-${i}.png \
+    $PKG/usr/share/icons/hicolor/${i}/apps/gftp.png
+done
+
 mkdir -p $PKG/usr/doc/gftp-$VERSION
 cp -a \
   ABOUT-NLS AUTHORS COPYING NEWS README README.html THANKS TODO \
   $PKG/usr/doc/gftp-$VERSION
-gzip -9 $PKG/usr/man/man?/*.?
+
 mkdir -p $PKG/install
 cat $CWD/slack-desc > $PKG/install/slack-desc
 
