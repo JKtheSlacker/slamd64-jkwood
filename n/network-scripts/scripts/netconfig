@@ -113,7 +113,6 @@ DEBUG_ETH_UP="no"
                                 # IWPRIV parameter (separated with the pipe (|)
                                 # character, see the example).
 ENDFILE
-chmod 644 $RC
 #
 ############################################################################
 #			  The networks file.

@@ -16,6 +16,13 @@ ip_forward_start() {
   if [ -f /proc/sys/net/ipv4/ip_forward ]; then
     echo "Activating IPv4 packet forwarding."
     echo 1 > /proc/sys/net/ipv4/ip_forward
+    # Changing /proc/sys/net/ipv4/ip_forward results in resetting all
+    # non-default ipv4 parameters for the interface as mentioned in
+    # /usr/src/linux/Documentation/networking/ip-sysctl.txt.  So, we
+    # will reapply any ipv4 sysctl parameters now:
+    if [ -r /etc/sysctl.conf ]; then
+      /bin/grep ipv4 /etc/sysctl.conf | sysctl -p - 1> /dev/null 2> /dev/null
+    fi
   fi
   # When using IPv4 packet forwarding, you will also get the
   # rp_filter, which automatically rejects incoming packets if the
@@ -38,6 +45,13 @@ ip_forward_stop() {
   if [ -f /proc/sys/net/ipv4/ip_forward ]; then
     echo "Disabling IPv4 packet forwarding."
     echo 0 > /proc/sys/net/ipv4/ip_forward
+    # Changing /proc/sys/net/ipv4/ip_forward results in resetting all
+    # non-default ipv4 parameters for the interface as mentioned in
+    # /usr/src/linux/Documentation/networking/ip-sysctl.txt.  So, we
+    # will reapply any ipv4 sysctl parameters now:
+    if [ -r /etc/sysctl.conf ]; then
+      /bin/grep ipv4 /etc/sysctl.conf | sysctl -p - 1> /dev/null 2> /dev/null
+    fi
   fi
 }
 

@@ -32,7 +32,7 @@ fi
 # If a value for IFNAME[n] is not set, we assume it is an eth'n' interface.
 # This way, the new script is compatible with older rc.inet1.conf files.
 # The IFNAME array will be used to determine which interfaces to bring up/down.
-MAXNICS=6
+MAXNICS=${MAXNICS:-6}
 i=0
 while [ $i -lt $MAXNICS ];
 do
@@ -85,7 +85,7 @@ if_up() {
   # If the interface isn't in the kernel yet (but there's an alias for it in
   # modules.conf), then it should be loaded first:
   if ! grep `echo ${1}: | cut -f 1 -d :`: /proc/net/dev 1> /dev/null ; then # no interface yet
-    if /sbin/modprobe -c | grep -w "alias ${1}" | grep -vw "alias ${1} off" > /dev/null ; then
+    if /sbin/modprobe -c | grep -v "^#" | grep -w "alias ${1}" | grep -vw "alias ${1} off" > /dev/null ; then
       echo "/etc/rc.d/rc.inet1:  /sbin/modprobe ${1}" | $LOGGER
       /sbin/modprobe ${1}
     fi
@@ -114,17 +114,21 @@ if_up() {
         # If you set a timeout, you get one, even if the kernel doesn't think that
         # your device is connected, in case /sys isn't right (which it usually isn't
         # except right after the device is loaded, when it usually is):
-        if [ "${DHCP_TIMEOUT[$i]}" = "" ]; then
-          ifconfig ${1} up && sleep 1
-          CONNSTATUS="$(cat /sys/class/net/${1}/carrier 2> /dev/null)"
-          ifconfig ${1} down
-          if [ "$CONNSTATUS" = "0" ]; then
-            # The kernel has just told us the cable isn't even plugged in, but we will
-            # give any DHCP server a short chance to reply anyway:
-            echo "No carrier detected on ${1}.  Reducing DHCP timeout to 10 seconds."
-            DHCP_TIMEOUT[$i]=10
-          fi
-        fi
+        #### (start commented out)
+        # This is deactivated for now since the kernel has been returning incorrect
+        # results concerning whether the interface carrier is detected.
+        #if [ "${DHCP_TIMEOUT[$i]}" = "" ]; then
+        #  ifconfig ${1} up && sleep 1
+        #  CONNSTATUS="$(cat /sys/class/net/${1}/carrier 2> /dev/null)"
+        #  ifconfig ${1} down
+        #  if [ "$CONNSTATUS" = "0" ]; then
+        #    # The kernel has just told us the cable isn't even plugged in, but we will
+        #    # give any DHCP server a short chance to reply anyway:
+        #    echo "No carrier detected on ${1}.  Reducing DHCP timeout to 10 seconds."
+        #    DHCP_TIMEOUT[$i]=10
+        #  fi
+        #fi
+        #### (end commented out)
         # 30 seconds should be a reasonable default DHCP timeout.  60 was too much.  :-)
         echo "/etc/rc.d/rc.inet1:  /sbin/dhcpcd -d -t ${DHCP_TIMEOUT[$i]:-30} ${DHCP_OPTIONS} ${1}" | $LOGGER
         /sbin/dhcpcd -d -t ${DHCP_TIMEOUT[$i]:-30} ${DHCP_OPTIONS} ${1}
@@ -264,11 +268,7 @@ case "$1" in
   if_down $INTERFACE
   ;;
 *) # The default is to bring up all configured interfaces:
-  lo_up
-  for i in ${IFNAME[@]} ; do
-    if_up $i
-  done
-  gateway_up
+  start
 esac
 
 # End of /etc/rc.d/rc.inet1

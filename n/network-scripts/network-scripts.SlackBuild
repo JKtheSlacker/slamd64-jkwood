@@ -1,5 +1,5 @@
 #!/bin/sh
-# Copyright 2006, 2007  Patrick J. Volkerding, Sebeka, MN, USA
+# Copyright 2006, 2007, 2008  Patrick J. Volkerding, Sebeka, MN, USA
 # All rights reserved.
 #
 # Redistribution and use of this script, with or without modification, is
@@ -21,7 +21,7 @@
 
 
 PKGNAM=network-scripts
-VERSION=${VERSION:-12.1}
+VERSION=${VERSION:-12.2}
 ARCH=${ARCH:-noarch_slamd64}
 BUILD=${BUILD:-1}
 
@@ -39,6 +39,7 @@ mkdir -p $PKG/etc/rc.d
   done
   chown root:root *
   chmod 755 rc.inet1.new rc.inet2.new
+  chmod 600 rc.inet1.conf.new
 )
 ( cd $PKG/etc
   for file in HOSTNAME host.conf hosts.allow hosts.deny hosts.equiv hosts networks nntpserver protocols resolv.conf ; do
@@ -55,6 +56,11 @@ mkdir -p $PKG/var/log/setup
 cp -a $CWD/scripts/setup.netconfig $PKG/var/log/setup
 chown root:root $PKG/var/log/setup/setup.netconfig
 chmod 755 $PKG/var/log/setup/setup.netconfig
+
+# Add manpages:
+mkdir -p $PKG/usr/man/man{5,8}
+cat $CWD/manpages/rc.inet1.conf.5 | gzip -9c > $PKG/usr/man/man5/rc.inet1.conf.5.gz
+cat $CWD/manpages/rc.inet1.8 | gzip -9c > $PKG/usr/man/man8/rc.inet1.8.gz
 
 mkdir -p $PKG/install
 zcat $CWD/doinst.sh.gz > $PKG/install/doinst.sh
