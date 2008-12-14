@@ -28,12 +28,12 @@ BUILD=1
 pkghelpers_env
 
 rm -rf $PKG
-mkdir -p $PKG
+mkdir -p $TMP $PKG
 
 cd $TMP
 rm -rf gftp-$VERSION
-tar xjvf $CWD/gftp-$VERSION.tar.bz2
-cd gftp-$VERSION
+tar xvf $CWD/gftp-$VERSION.tar.bz2 || exit 1
+cd gftp-$VERSION || exit 1
 
 # Make sure ownerships and permissions are sane:
 pkghelpers_permissions
@@ -52,7 +52,7 @@ make install DESTDIR=$PKG
 
 # Put symlinks to the themable icons in place
 mkdir -p $PKG/usr/share/icons/hicolor/{scalable,16x16,22x22,24x24,32x32,48x48}/apps
-ln -s /usr/share/gftp/gftp-scalable.svg
+ln -s /usr/share/gftp/gftp-scalable.svg 
   $PKG/usr/share/icons/hicolor/scalable/apps/gftp.svg
 for i in 16x16 22x22 24x24 32x32 48x48 ; do
   ln -s /usr/share/gftp/gftp-${i}.png \
@@ -61,7 +61,7 @@ done
 
 mkdir -p $PKG/usr/doc/gftp-$VERSION
 cp -a \
-  ABOUT-NLS AUTHORS COPYING NEWS README README.html THANKS TODO \
+  AUTHORS COPYING NEWS README README.html THANKS TODO docs/USERS-GUIDE \
   $PKG/usr/doc/gftp-$VERSION
 
 mkdir -p $PKG/install
