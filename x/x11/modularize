@@ -256,6 +256,7 @@ xgc
 xhost
 xineramaproto
 xinit
+xinput
 xkbcomp
 xkbdata
 xkbevd
