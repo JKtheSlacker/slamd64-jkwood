@@ -30,8 +30,7 @@ BUILD=${BUILD:-1}
 pkghelpers_env
 
 rm -rf $PKG
-mkdir -p $PKG
-
+mkdir -p $TMP $PKG
 cd $TMP
 tar xvf $CWD/$PKGNAM-$VERSION.tar.?z* || exit 1
 cd beecrypt-$VERSION || exit 1
@@ -51,7 +50,7 @@ CXXFLAGS="$SLKCFLAGS" \
   --with-pic \
   --build=$ARCH-$DISTRO-linux
 
-make -j6
+make -j15
 make || exit 1
 make install DESTDIR=$PKG
 
