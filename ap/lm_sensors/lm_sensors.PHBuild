@@ -22,13 +22,12 @@
 
 
 PKGNAM=lm_sensors
-PKGVER=2.10.6
-BUILD=1
+VERSION=${VERSION:-3.0.3}
+BUILD=${BUILD:-1}
 
 . /etc/pkghelpers
 
 pkghelpers_env
-
 
 rm -rf $PKG
 mkdir -p $PKG
@@ -59,18 +58,11 @@ mv $PKG/etc/sensors.conf $PKG/etc/sensors.conf.new
 # Add a documentation directory:
 mkdir -p $PKG/usr/doc/${PKGNAM}-$VERSION
 cp -a \
-  BACKGROUND BUGS CHANGES CONTRIBUTORS COPYING INSTALL QUICKSTART README* TODO lm_sensors.lsm \
+  CHANGES CONTRIBUTORS COPYING* INSTALL README* doc \
   $PKG/usr/doc/${PKGNAM}-$VERSION
-mkdir -p $PKG/usr/doc/${PKGNAM}-$VERSION/doc
-cd doc
-cp -a \
-  FAQ cvs donations fan-divisors fancontrol.txt mkpatch modules progs temperature-sensors version-2 vid \
-  $PKG/usr/doc/${PKGNAM}-$VERSION/doc
 
-cd $PKG
-pkghelpers_fixup
-mkdir -p install
-cat $CWD/slack-desc > install/slack-desc
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
 cat << EOF > install/doinst.sh
 #!/bin/sh
 config() {
@@ -84,7 +76,9 @@ config() {
   fi
   # Otherwise, we leave the .new copy for the admin to consider...
 }
-config etc/sensors.conf.new
+config etc/sensors3.conf.new
 EOF
 
+cd $PKG
+pkghelpers_fixup
 pkghelpers_makepkg

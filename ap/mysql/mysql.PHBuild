@@ -1,0 +1,106 @@
+#!/bin/sh
+# Build and install MySQL on Slackware
+# by:  David Cantrell <david@slackware.com>
+# Currently maintained by:  Patrick Volkerding <volkerdi@slackware.com>
+
+VERSION=5.0.67
+BUILD=${BUILD:-1}
+
+. /etc/pkghelpers
+pkghelpers_env
+
+rm -rf $PKG
+mkdir -p $TMP $PKG
+cd $TMP
+rm -rf mysql-$VERSION
+tar xjvf $CWD/mysql-$VERSION.tar.bz2
+cd mysql-$VERSION
+pkghelpers_permissions
+
+CFLAGS="$SLKCFLAGS" \
+CXXFLAGS="$SLKCFLAGS -felide-constructors -fno-exceptions -fno-rtti" \
+CXX=gcc \
+./configure \
+  --prefix=/usr \
+	--libdir=/usr/lib$LIBSUFFIX \
+  --with-mysqld-user=mysql \
+  --with-unix-socket-path=/var/run/mysql/mysql.sock \
+  --localstatedir=/var/lib/mysql \
+  --enable-assembler \
+  --with-raid \
+  --without-debug \
+  --enable-thread-safe-client \
+  --without-bench \
+  --with-extra-charsets=complex \
+  --with-vio \
+  --with-openssl \
+  --build=$ARCH-slackware-linux
+#
+# --without-readline
+
+make -j $NUMJOBS || make || exit
+make install DESTDIR=$PKG
+
+# Install support files
+mkdir -p $PKG/etc
+cp support-files/my-{huge,large,medium,small}.cnf $PKG/etc
+
+# Install docs
+mkdir -p $PKG/usr/doc/mysql-$VERSION/Docs
+cp -a \
+  COPYING* MIRRORS README* \
+  $PKG/usr/doc/mysql-$VERSION
+( cd Docs
+  cp -a INSTALL-BINARY *.html *.txt Flags \
+     $PKG/usr/doc/mysql-$VERSION/Docs )
+# Too large to justify since the .html version is right there:
+rm $PKG/usr/doc/mysql-$VERSION/Docs/manual.txt
+find $PKG/usr/doc/mysql-$VERSION -type f -exec chmod 0644 {} \;
+
+# This is the directory where databases are stored
+mkdir -p $PKG/var/lib/mysql
+chown mysql.mysql $PKG/var/lib/mysql
+chmod 0750 $PKG/var/lib/mysql
+
+# This is where the socket is stored
+mkdir -p $PKG/var/run/mysql
+chown mysql.mysql $PKG/var/run/mysql
+chmod 0755 $PKG/var/run/mysql
+
+# Do not include the test suite:
+rm -rf $PKG/usr/mysql-test
+
+# Add init script:
+mkdir -p $PKG/etc/rc.d
+# This is intentionally chmod 644.
+zcat $CWD/rc.mysqld.gz > $PKG/etc/rc.d/rc.mysqld.new
+
+# Install script:
+mkdir -p $PKG/install
+zcat $CWD/doinst.sh.gz > $PKG/install/doinst.sh
+cat $CWD/slack-desc > $PKG/install/slack-desc
+
+# Add some handy library symlinks:
+if [ -r $PKG/usr/lib$LIBSUFFIX/mysql/libmysqlclient.so.15 ]; then
+  ( cd $PKG/usr/lib$LIBSUFFIX
+    rm -f libmysqlclient.so libmysqlclient.so.15
+    ln -sf mysql/libmysqlclient.so .
+    ln -sf mysql/libmysqlclient.so.15 .
+  )
+else
+  exit 1
+fi
+if [ -r $PKG/usr/lib$LIBSUFFIX/mysql/libmysqlclient_r.so.15 ]; then
+  ( cd $PKG/usr/lib$LIBSUFFIX
+    rm -f libmysqlclient_r.so libmysqlclient_r.so.15
+    ln -sf mysql/libmysqlclient_r.so .
+    ln -sf mysql/libmysqlclient_r.so.15 .
+  )
+else
+  exit 1
+fi
+
+# Build package:
+cd $PKG
+pkghelpers_fixup
+pkghelpers_makepkg
