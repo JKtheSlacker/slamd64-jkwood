@@ -62,9 +62,8 @@ make -j $NUMJOBS || exit 1
 make install DESTDIR=$PKG
 
 mkdir -p $PKG/lib/udev
-mv $PKG/usr/libexec/udev/bluetooth_serial $PKG/lib/udev/bluetooth_serial
-rmdir $PKG/usr/libexec/udev
-rmdir $PKG/usr/libexec
+cp -a scripts/bluetooth_serial $PKG/lib/udev/bluetooth_serial || exit 1
+chmod 755 $PKG/lib/udev/bluetooth_serial
 
 mkdir -p $PKG/lib/udev/rules.d
 cp -a scripts/bluetooth.rules $PKG/lib/udev/rules.d/60-bluetooth.rules || exit 1
