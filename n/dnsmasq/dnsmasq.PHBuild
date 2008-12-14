@@ -27,7 +27,7 @@ mkdir -p $PKG/var/state/dnsmasq
 
 mkdir $PKG/etc
 cat dnsmasq.conf.example > $PKG/etc/dnsmasq.conf.new
-mkdir $PKG/etc/rc.d
+mkdir -p $PKG/etc/rc.d
 zcat $CWD/rc.dnsmasq.gz > $PKG/etc/rc.d/rc.dnsmasq.new
 
 mkdir -p $PKG/usr/doc/dnsmasq-$VERSION
