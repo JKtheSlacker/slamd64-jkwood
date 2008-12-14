@@ -75,6 +75,7 @@ CFLAGS="$SLKCFLAGS" \
   --with-ijs \
   --disable-compile-inits \
   --enable-dynamic \
+  --enable-cairo=no \
   --program-prefix= \
   --program-suffix= \
   --build=$ARCH-$DISTRO-linux
