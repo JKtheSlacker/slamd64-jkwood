@@ -57,7 +57,7 @@ make install
 
 # Install to the $PKG dir:
 make install \
-  INSTALLROOT=/usr \
+  INSTALLROOT=$PKG/usr \
   INSTALLDIR=$PKG/usr/bin \
   INCLUDEDIR=$PKG/usr/include \
   MANDIR=$PKG/usr/man/man1 \
@@ -80,7 +80,7 @@ tar xzf $CWD/gkrellm-countdown-$COUNTDOWN.tar.gz
 cd gkrellm-countdown
 chown -R root:root .
 make -j $NUMJOBS
-cp gkrellm-countdown.so $PKG/usr/lib64/gkrellm2/plugins
+cp gkrellm-countdown.so $PKG/usr/lib$LIBSUFFIX/gkrellm2/plugins
 mkdir -p $PKG/usr/doc/gkrellm-countdown-$COUNTDOWN
 cp -a \
   COPYING ChangeLog README \
