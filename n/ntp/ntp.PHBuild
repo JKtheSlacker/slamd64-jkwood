@@ -12,7 +12,7 @@ cd $TMP
 rm -rf ntp-${VERSION}*
 tar xjvf $CWD/ntp-${VERSION}*.tar.bz2
 cd ntp-${VERSION}*
-pkghelpers_permission
+pkghelpers_permissions
 CFLAGS="$SLKCFLAGS" \
 ./configure \
   --prefix=/usr \
@@ -25,7 +25,7 @@ CFLAGS="$SLKCFLAGS" \
   --program-suffix= \
   --build=$ARCH-$DISTRO-linux
 
-make -j $NUMJOBS || exit 1
+make -j $NUMJOBS || make || exit 1
 make install DESTDIR=$PKG || exit 1
 
 # Since the Makefile's install pays no heed to the --bindir settings,
