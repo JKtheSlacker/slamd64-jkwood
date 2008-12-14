@@ -1,7 +1,7 @@
 #!/bin/sh
 # Set initial variables:
 PKGNAM=gutenprint
-VERSION=5.0.2
+VERSION=5.2.2
 BUILD=${BUILD:-1}
 
 . /etc/pkghelpers
@@ -31,7 +31,7 @@ CFLAGS="$SLKCFLAGS" \
   --enable-escputil \
   --disable-static \
   --build=$ARCH-$DISTRO-linux
-make -j5 || exit 1
+make -j $NUMJOBS || exit 1
 make install DESTDIR=$PKG || exit 1
 
 mkdir -p $PKG/var/log/setup
@@ -41,7 +41,7 @@ chmod 755 $PKG/var/log/setup/setup.06.gutenprint
 mkdir -p $PKG/usr/doc/gutenprint-${VERSION}
 # If you want 1MB of ChangeLog, it's in the source...
 cp -a \
-  ABOUT-NLS AUTHORS COPYING INSTALL NEWS README \
+  ABOUT-NLS AUTHORS COPYING* INSTALL NEWS README* \
   $PKG/usr/doc/gutenprint-${VERSION}
   ( cd $PKG/usr/doc/gutenprint-${VERSION}
     ln -sf /usr/share/gutenprint/doc .
@@ -53,12 +53,11 @@ rm -f $PKG/usr/share/gutenprint/doc/*.pdf
 
 mkdir -p $PKG/install
 cat << EOF > $PKG/install/doinst.sh
-if [ -x usr/sbin/cups-genppd.5.0 ]; then
-  chroot . /bin/mkdir -p /usr/share/cups/model/gutenprint/5.0
-  chroot . /usr/sbin/cups-genppd.5.0 1> /dev/null 2> /dev/null
+if [ -x usr/sbin/cups-genppd.5.2 ]; then
+  chroot . /bin/mkdir -p /usr/share/cups/model/gutenprint/5.2
+  chroot . /usr/sbin/cups-genppd.5.2 1> /dev/null 2> /dev/null
 fi
 EOF
-
 cat $CWD/slack-desc > $PKG/install/slack-desc
 
 cd $PKG
