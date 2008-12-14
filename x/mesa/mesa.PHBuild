@@ -1,5 +1,5 @@
 #!/bin/sh
-# Copyright 2006, 2007  Patrick J. Volkerding, Sebeka, MN, USA
+# Copyright 2006, 2007, 2008  Patrick J. Volkerding, Sebeka, MN, USA
 # All rights reserved.
 #
 # Redistribution and use of this script, with or without modification, is
@@ -21,44 +21,20 @@
 
 
 PKGNAM=mesa
-VERSION=${VERSION:-7.0.2}
-ARCH=${ARCH:-x86_64}
+VERSION=${VERSION:-7.0.3}
 BUILD=${BUILD:-1}
-DISTRO=${DISTRO:-slamd64}
 
-if [ $DISTRO = slackware ]; then
-	PKGARCH=$ARCH
-else
-	PKGARCH=${ARCH}_${DISTRO}
+. /etc/pkghelpers
+pkghelpers_env
+
+if [ "$ARCH" = "i486" ]; then
+  MESAARCH=x86
+elif [ "$ARCH" = "x86_64" ]; then
+  MESAARCH=x86-64
 fi
 
-if [ $DISTRO = slamd64 ]; then
-	LIBSUFFIX=64
-else
-	LIBSUFFIX=
-fi
-
-CWD=$(pwd)
-if [ "$TMP" = "" ]; then
-  TMP=/tmp
-fi
-PKG=$TMP/package-mesa
 rm -rf $PKG
 mkdir -p $PKG
-
-if [ "$ARCH" = "i386" ]; then
-  SLKCFLAGS="-O2 -march=i386 -mcpu=i686"
-	MESAARCH=x86
-elif [ "$ARCH" = "i486" ]; then
-  SLKCFLAGS="-O2 -march=i486 -mtune=i686"
-	MESAARCH=x86
-elif [ "$ARCH" = "s390" ]; then
-  SLKCFLAGS="-O2"
-	MESAARCH=x86
-elif [ "$ARCH" = "x86_64" ]; then
-  SLKCFLAGS="-O2 -fPIC"
-	MESAARCH=x86-64
-fi
 
 cd $TMP
 rm -rf Mesa-${VERSION}
@@ -68,27 +44,13 @@ tar xjvf $CWD/MesaDemos-$VERSION.tar.bz2
 cd Mesa-$VERSION
 
 # Make sure ownerships and permissions are sane:
-chown -R root:root .
-find . -perm 666 -exec chmod 644 {} \;
-find . -perm 664 -exec chmod 644 {} \;
-find . -perm 600 -exec chmod 644 {} \;
-find . -perm 444 -exec chmod 644 {} \;
-find . -perm 400 -exec chmod 644 {} \;
-find . -perm 440 -exec chmod 644 {} \;
-find . -perm 777 -exec chmod 755 {} \;
-find . -perm 775 -exec chmod 755 {} \;
-find . -perm 511 -exec chmod 755 {} \;
-find . -perm 711 -exec chmod 755 {} \;
-find . -perm 555 -exec chmod 755 {} \;
+pkghelpers_permissions
 
 # Patch to build into "/usr":
 zcat $CWD/mesa.linux-dri-$MESAARCH.diff.gz | patch -p1 --verbose  || exit 1
 
-# Fix missing glw.pc in Mesa 7.0.2:
-zcat $CWD/mesa-7.0.2.no_glw_pc.diff.gz | patch -p1 --verbose  || exit 1
-
 # Build and install:
-make -j10 linux-dri-$MESAARCH || exit 1 # no -j, breaks.
+make -j $NUMJOBS linux-dri-$MESAARCH || exit 1
 
 # Patch to put into /tmp/package-mesa:  (sorry, I know this should use $PKG ;-)
 zcat $CWD/mesa.linux-dri-$MESAARCH-fake-destdir.diff.gz | patch -p1 --verbose  || exit 1
@@ -104,35 +66,6 @@ make install || exit 1
     $PKG/usr/bin
 )
 
-# Strip binaries:
-( cd $PKG
-  find . | xargs file | grep "executable" | grep ELF | cut -f 1 -d : | xargs strip --strip-unneeded 2> /dev/null
-  find . | xargs file | grep "shared object" | grep ELF | cut -f 1 -d : | xargs strip --strip-unneeded 2> /dev/null
-)
-
-# Compress and link manpages, if any:
-if [ -d $PKG/usr/man ]; then
-  ( cd $PKG/usr/man
-    for manpagedir in $(find . -type d -name "man*") ; do
-      ( cd $manpagedir
-        for eachpage in $( find . -type l -maxdepth 1) ; do
-          ln -s $( readlink $eachpage ).gz $eachpage.gz
-          rm $eachpage
-        done
-        gzip -9 *.?
-      )
-    done
-  )
-fi
-
-# Compress info files, if any:
-if [ -d $PKG/usr/info ]; then
-  ( cd $PKG/usr/info
-    rm -f dir
-    gzip -9 *
-  )
-fi
-
 # Add a documentation directory:
 cd docs
 mkdir -p $PKG/usr/doc/Mesa-$VERSION
@@ -146,5 +79,6 @@ mkdir -p $PKG/install
 cat $CWD/slack-desc > $PKG/install/slack-desc
 
 cd $PKG
-makepkg -l y -c n ../${PKGNAM}-$VERSION-$PKGARCH-$BUILD.tgz
+pkghelpers_fixup
+pkghelpers_makepkg
 
