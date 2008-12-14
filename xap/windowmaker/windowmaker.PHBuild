@@ -3,7 +3,7 @@
 PKGNAM=windowmaker
 SRCNAM=WindowMaker
 VERSION=${VERSION:-20060427cvs}
-BUILD=${BUILD:-4}
+BUILD=${BUILD:-1}
 
 . /etc/pkghelpers
 pkghelpers_env
@@ -42,10 +42,10 @@ NLSDIR=/usr/share/locale \
 
 make -j $NUMJOBS || exit 1
 # NLS bugs like -i
-make -i -j5 || exit 1
+make -i || exit 1
 
 # Change /usr/local/GNUstep to /usr/lib/GNUstep in the WMRootMenu:
-zcat $CWD/windowmaker.wmrootmenu.diff.gz | patch -p1 --verbose || exit 1
+zcat $CWD/windowmaker.wmrootmenu.diff.gz | patch -p1 --verbose || exit  1
 
 if [ "$LIBSUFFIX" != "" ]; then
   sed -i s%/usr/lib/GNUstep%/usr/lib$LIBSUFFIX/GNUstep/% WindowMaker/Defaults/WMRootMenu || exit 1
