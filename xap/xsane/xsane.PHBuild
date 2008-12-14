@@ -42,7 +42,7 @@ CFLAGS="$SLKCFLAGS" \
   --build=$ARCH-$DISTRO-linux
 
 make -j $NUMJOBS || make || exit 1
-make install prefix=$PKG/usr
+make install DESTDIR=$PKG
 
 rmdir $PKG/usr/sbin
 
@@ -50,7 +50,7 @@ mkdir -p $PKG/usr/doc/xsane-$VERSION
 cp -a \
   xsane.* \
   $PKG/usr/doc/xsane-$VERSION
-  rm -f $PKG/usr/doc/xsane-$VERSION/xsane.spec*
+rm -f $PKG/usr/doc/xsane-$VERSION/xsane.spec*
 ( cd $PKG/usr/doc/xsane-$VERSION ; ln -s /usr/share/sane/xsane/doc html )
 
 mkdir -p $PKG/install
