@@ -55,13 +55,11 @@ make install DESTDIR=$PKG || exit 1
 mkdir -p $PKG/usr/doc/ncftp-$VERSION
 cp -a doc/* $PKG/usr/doc/ncftp-$VERSION
 # Useless redundancy:
-rm -r $PKG/usr/doc/ncftp-$VERSION/man \
-      $PKG/usr/doc/ncftp-$VERSION/html
+rm -r $PKG/usr/doc/ncftp-$VERSION/{html,man}
 
 mkdir -p $PKG/install
 cat $CWD/slack-desc > $PKG/install/slack-desc
 
-# Build the package:
 cd $PKG
 pkghelpers_fixup
 pkghelpers_makepkg
