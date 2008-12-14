@@ -12,10 +12,14 @@ cd $TMP
 rm -rf rp-pppoe-$VERSION
 tar xzvf $CWD/rp-pppoe-$VERSION.tar.gz
 cd rp-pppoe-$VERSION/src
+pkghelpers_permissions
 CFLAGS=$SLKCFLAGS \
-./configure --prefix=/usr
-make -j12 || exit 1
-make install docdir=/usr/doc/rp-pppoe-$VERSION RPM_INSTALL_ROOT=$PKG install
+./configure \
+  --enable-plugin=/ppp-2.4.4 \
+  --prefix=/usr \
+  --mandir=/usr/man
+make -j $NUMJOBS || exit 1
+make install docdir=/usr/doc/rp-pppoe-$VERSION DESTDIR=$PKG install
 ( cd $PKG/etc/ppp
   for config in firewall-masq firewall-standalone pppoe-server-options pppoe.conf ; do
     mv $config ${config}.new
