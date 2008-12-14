@@ -6,7 +6,7 @@
 # customary to leave one space after the ':'.
 
         |-----handy-ruler------------------------------------------------------|
-libglade: libglade
+libglade: libglade (GLADE library)
 libglade:
 libglade: The GLADE library allows loading user interfaces which are stored
 libglade: externally into a program.  This allows the interface to be changed

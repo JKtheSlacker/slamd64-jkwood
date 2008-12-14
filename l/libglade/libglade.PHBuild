@@ -53,8 +53,11 @@ rm -f $PKG/usr/lib/libglade*.a
 
 mkdir -p $PKG/usr/doc/libglade-$VERSION
 cp -a \
-  AUTHORS COPYING NEWS README* \
+  AUTHORS COPYING* NEWS README* \
   $PKG/usr/doc/libglade-$VERSION
+( cd $PKG/usr/doc/libglade-$VERSION
+  ln -s /usr/share/gtk-doc/html/libglade html
+)
 
 mkdir -p $PKG/install
 cat $CWD/slack-desc > $PKG/install/slack-desc
