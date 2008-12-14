@@ -6,7 +6,7 @@
 # customary to leave one space after the ':'.
 
    |-----handy-ruler------------------------------------------------------|
-rpm: rpm
+rpm: rpm (RPM package format tool)
 rpm:
 rpm: RPM is a tool from Red Hat Software used to install and remove
 rpm: packages in the .rpm format.  When installing RPM packages on
