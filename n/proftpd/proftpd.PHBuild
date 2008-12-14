@@ -3,7 +3,7 @@
 PKGNAM=proftpd
 VERSION=1.3.1
 DIRVER=1.3.1
-BUILD=2
+BUILD=3
 
 . /etc/pkghelpers
 pkghelpers_env
@@ -16,18 +16,22 @@ rm -rf proftpd-$VERSION
 tar xjvf $CWD/proftpd-$VERSION.tar.bz2
 cd proftpd-$DIRVER
 
-chown -R root.root .
+zcat $CWD/proftpd.mode_t.diff.gz | patch -p1 || exit 1
+autoconf || exit 1
+
+pkghelpers_permissions
 CFLAGS="$SLKCFLAGS" \
 CXXFLAGS="$SLKCFLAGS" \
 ./configure \
   --prefix=/usr \
+  --mandir=/usr/man \
   --sysconfdir=/etc \
   --enable-autoshadow \
   --enable-ctrls \
   --enable-ipv6 \
   --localstatedir=/var/run \
   --with-modules=mod_readme:mod_ratio:mod_tls:mod_wrap:mod_ctrls_admin \
-  $ARCH-$DISTRO-linux
+  --build=$ARCH-$DISTRO-linux
 # This caused funny messages about "Quotas off" with every FTP command,
 # and mod_wrap gets a compile error:
 # --with-modules= ... mod_quota ...
@@ -36,14 +40,17 @@ make install DESTDIR=$PKG
 # With no library to link against, these are useless:
 rm -rf $PKG/usr/include
 rm -f $PKG/etc/*
+rmdir $PKG/usr/libexec 2> /dev/null
 cat $CWD/etc/proftpd.conf > $PKG/etc/proftpd.conf.new
 cat $CWD/etc/ftpusers > $PKG/etc/ftpusers.new
 mkdir -p $PKG/home/ftp
 
 mkdir -p $PKG/usr/doc/proftpd-$VERSION
-cp -a COPYING CREDITS ChangeLog INSTALL NEWS README* \
+cp -a COPYING CREDITS INSTALL NEWS README* \
   contrib/README.mod_wrap contrib/README.ratio \
   $PKG/usr/doc/proftpd-$VERSION
+head -c 93 ChangeLog > $PKG/usr/doc/proftpd-$VERSION/ChangeLog
+touch -r ChangeLog $PKG/usr/doc/proftpd-$VERSION/ChangeLog
 cp -a contrib/README $PKG/usr/doc/proftpd-$VERSION/README.contrib
 cp -a doc sample-configurations $PKG/usr/doc/proftpd-$VERSION
 # Bloat removal:
