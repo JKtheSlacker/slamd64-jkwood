@@ -6,7 +6,7 @@
 # customary to leave one space after the ':'.
 
     |-----handy-ruler------------------------------------------------------|
-curl: curl
+curl: curl (command line URL data transfer tool)
 curl:
 curl: Curl is a command line tool for transferring data specified with URL
 curl: syntax.  The command is designed to work without user interaction or
