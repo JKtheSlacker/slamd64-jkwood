@@ -16,6 +16,9 @@ rm -rf $SRCNAM-$VERSION
 tar xjvf $CWD/$SRCNAM-$VERSION.tar.bz2
 cd $SRCNAM-$VERSION
 
+zcat $CWD/windowmaker.no-mmx.diff.gz | patch -p1 -F 3 || exit 1
+sh autogen.sh
+
 # Make sure ownerships and permissions are sane:
 pkghelpers_permissions
 
@@ -29,6 +32,7 @@ NLSDIR=/usr/share/locale \
 ./configure \
   --prefix=/usr \
   --libdir=/usr/lib$LIBSUFFIX \
+  --mandir=/usr/man \
   --sysconfdir=/etc/X11 \
   --enable-gnome \
   --enable-kde \
@@ -65,7 +69,7 @@ CFLAGS="$SLKCFLAGS" \
   --libdir=/usr/lib$LIBSUFFIX \
   --with-iconsdir=/usr/share/pixmaps \
   --build=$ARCH-$DISTRO-linux
-make -j5 || exit 1
+make -j $NUMJOBS || exit 1
 make install DESTDIR=$PKG || exit 1
 
 mkdir -p $PKG/etc/X11/xinit
