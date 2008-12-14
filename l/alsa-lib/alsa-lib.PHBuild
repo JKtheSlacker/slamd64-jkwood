@@ -22,7 +22,7 @@ CFLAGS="$SLKCFLAGS" \
 make -j $NUMJOBS || exit 1
 make install DESTDIR=$PKG
 
-# TODO
+# TODO?
 # ( cd src/pcm/ext
 # make jack
 # make jack-install )
