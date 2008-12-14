@@ -11,7 +11,6 @@ VIMVER=${VERSION}
 CTAGSVER=5.7
 # This is the directory in the VIM source archive to cd into.
 DIRVER=72
-PYVER=2.5
 
 rm -rf $PKG
 mkdir -p $PKG
@@ -61,7 +60,6 @@ CFLAGS=-O2 \
   --prefix=/usr \
   --mandir=/usr/man \
   --enable-pythoninterp \
-  --with-python-config-dir=/usr/lib$LIBSUFFIX/python$PYVER/config \
   --enable-perlinterp \
   --disable-tclinterp \
   --enable-multibyte \
@@ -78,7 +76,7 @@ cd $TMP/vim$DIRVER
 chown -R root:root .
 for file in $CWD/patches/* ; do
   ( zcat $file 2> /dev/null | patch -p0 --verbose --batch )
-  done
+done
 
 config_vim --without-x --disable-gui
 make -j $NUMJOBS || exit 1
