@@ -1,49 +1,25 @@
 #!/bin/sh
-# CUPS build script by volkerdi@slackware.com.
+VERSION=1.3.9
+ARCH=x86_64
+BUILD=1
+DISTRO=${DISTRO:-slamd64}
 
-# Set initial variables:
 CWD=`pwd`
-if [ "$TMP" = "" ]; then
-  TMP=/tmp
-fi
-PKGTMP=$TMP/package-cups32
-PKG=$TMP/package-aaa_elflibs32
 
-VERSION=1.3.7
-ARCH=${ARCH:-x86_64}
-BUILD=${BUILD:-1}
-
-if [ ! -d $TMP ]; then
-  mkdir -p $TMP # location to build the source
-fi
-mkdir -p $PKG
+PKG=/tmp/package-aaa_elflibs32
+TMP=/tmp/alsa-lib32-tmp
+rm -rf $TMP
+mkdir $TMP
 
 cd $TMP
-rm -rf cups-$VERSION
-tar xjvf $CWD/cups-$VERSION-source.tar.bz2
-cd cups-$VERSION
-(
-LDFLAGS="-L/usr/lib" \
-./configure \
-	--prefix=/usr \
-	--enable-32bit \
-	--enable-64bit=no \
-	--without-dbus \
-	--without-php \
-	--without-perl \
-	--without-python \
-	--without-java \
-	--disable-pam
-make -j5 || exit 1
-for dir in cups filter; do
-	(cd $dir; make BUILDROOT=$PKGTMP install32bit)
-done
-)
 
+# Extract the stuff we want
+tar --wildcards -xvf $CWD/../s/cups32-$VERSION-${ARCH}_${DISTRO}-$BUILD.tgz usr/lib/libcups*.so.*
+
+# Recreate symlinks
+cd usr/lib
+ldconfig -n .
+
+# Copy to package directory
 mkdir -p $PKG/usr/lib
-mv $PKGTMP/usr/lib/libcups*.so.* $PKG/usr/lib
-#(
-#	cd $PKG/usr/lib
-#	ln -s libcups.so.2 libcups.so
-#	ln -s libcupsimage.so.2 libcupsimage.so
-#)
+cp -a * $PKG/usr/lib
