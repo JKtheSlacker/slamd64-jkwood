@@ -1,8 +1,9 @@
 #!/bin/sh
 # Set initial variables:
 PKGNAM=texinfo
-VERSION=${VERSION:-4.8}
-BUILD=${BUILD:-2}
+SRCVER=${VERSION:-4.13}
+PKGVER=${PKGVER:-${SRCVER}a}
+BUILD=${BUILD:-1}
 
 . /etc/pkghelpers
 pkghelpers_env
@@ -12,25 +13,38 @@ if [ ! -d $PKG ]; then
 fi
 
 cd $TMP
-tar xjvf $CWD/texinfo-$VERSION.tar.bz2
-cd texinfo-$VERSION
+tar xjvf $CWD/texinfo-$PKGVER.tar.bz2
+cd texinfo-$SRCVER
+
 CFLAGS="$SLKCFLAGS" \
-./configure --prefix=/usr
-make -j12 || exit 1
-make install DESTDIR=$PKG
+./configure \
+  --prefix=/usr \
+  --mandir=/usr/man \
+  --infodir=/usr/info \
+  --docdir=/usr/doc/texinfo-$PKGVER \
+  --build=$ARCH-$DISTRO-linux
+
+make -j $NUMJOBS
+make || exit 1
+make install DESTDIR=$PKG || exit 1
+
 # Be sure this is "fresh"
 zcat $CWD/dir.gz > $PKG/usr/info/dir
-strip $PKG/usr/bin/*
-mkdir -p $PKG/usr/doc/texinfo-$VERSION
+mv $PKG/usr/info/dir $PKG/usr/info/dir.new
+
+mkdir -p $PKG/usr/doc/texinfo-$PKGVER
 cp -a \
-  ABOUT-NLS AUTHORS COPYING COPYING.DOC INSTALL INTRODUCTION NEWS README TODO \
-  $PKG/usr/doc/texinfo-$VERSION
-chmod 644 $PKG/usr/doc/texinfo-$VERSION/*
-chown -R root.root $PKG/usr/doc/texinfo-$VERSION
+  ABOUT-NLS AUTHORS COPYING* INSTALL INTRODUCTION NEWS README* TODO \
+  $PKG/usr/doc/texinfo-$PKGVER
+chmod 644 $PKG/usr/doc/texinfo-$PKGVER/*
+chown -R root:root $PKG/usr/doc/texinfo-$PKGVER
+
 mkdir -p $PKG/install
 cat $CWD/slack-desc > $PKG/install/slack-desc
+zcat $CWD/doinst.sh.gz > $PKG/install/doinst.sh
 
 # Build the package:
 cd $PKG
 pkghelpers_fixup
+gunzip $PKG/usr/info/dir.new.gz # pkghelpers workaround
 pkghelpers_makepkg
