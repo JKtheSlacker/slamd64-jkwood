@@ -60,7 +60,7 @@ chmod 755 $PKG/var/log/setup/setup.07.update-mime-database
 
 mkdir -p $PKG/usr/doc/shared-mime-info-$VERSION
 cp -a \
-  COPYING NEWS README* \
+  COPYING* HACKING NEWS README* \
   $PKG/usr/doc/shared-mime-info-$VERSION
 chmod 644 $PKG/usr/doc/shared-mime-info-$VERSION/*
 
