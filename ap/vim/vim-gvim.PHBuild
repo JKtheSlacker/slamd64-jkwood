@@ -133,6 +133,8 @@ cp -a $CWD/gvim.desktop $PKG/usr/share/applications
 mkdir -p $PKG/usr/share/pixmaps
 cp -a $CWD/gvim.png $PKG/usr/share/pixmaps
 
+chown -R root:root $PKG/usr/share # Slamd64
+
 # Remove empty directories:
 find $PKG -type d -exec rmdir -p {} \; 2> /dev/null
 
