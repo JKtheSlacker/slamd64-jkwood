@@ -1,34 +1,18 @@
 #!/bin/sh
-# Set initial variables:
-CWD=`pwd`
-if [ "$TMP" = "" ]; then
-  TMP=/tmp
-fi
 
-VIMVER=7.1
+PKGNAM=vim
+VERSION=${VERSION:-7.2}
+BUILD=${BUILD:-1}
+
+. /etc/pkghelpers
+pkghelpers_env
+
+VIMVER=${VERSION}
 CTAGSVER=5.7
 # This is the directory in the VIM source archive to cd into.
-DIRVER=71
+DIRVER=72
 PYVER=2.5
-ARCH=${ARCH:-x86_64}
-BUILD=1
-DISTRO=${DISTRO:-slamd64}
 
-if [ $DISTRO = slackware ]; then
-	PKGARCH=$ARCH
-else
-	PKGARCH=${ARCH}_${DISTRO}
-fi
-
-if [ $DISTRO = slamd64 ]; then
-	LIBSUFFIX=64
-	SLKLDFLAGS="-L/usr/lib64"
-else
-	LIBSUFFIX=
-	SLKLDFLAGS=
-fi
-
-PKG=$TMP/package-vim
 rm -rf $PKG
 mkdir -p $PKG
 
@@ -49,7 +33,7 @@ rm -rf ctags-$CTAGSVER
 tar xzvf $CWD/ctags-$CTAGSVER.tar.gz || exit 1
 cd ctags-$CTAGSVER
 chown -R root:root .
-CFLAGS="-O2 -fPIC" \
+CFLAGS="$SLKCFLAGS" \
 ./configure \
   --prefix=/usr \
   --build=$ARCH-$DISTRO-linux
@@ -75,6 +59,7 @@ CFLAGS=-O2 \
 ./configure \
   $* \
   --prefix=/usr \
+  --mandir=/usr/man \
   --enable-pythoninterp \
   --with-python-config-dir=/usr/lib$LIBSUFFIX/python$PYVER/config \
   --enable-perlinterp \
@@ -83,7 +68,7 @@ CFLAGS=-O2 \
   --enable-cscope \
   --with-features=huge \
   --with-compiledby="<mail@fredemmott.co.uk>" \
-  --build=$ARCH-slamd64-linux
+  --build=$ARCH-$DISTRO-linux
 
   # I had been adding this, but got 100% complaints and 0% kudos:
   #  --enable-rubyinterp
@@ -97,8 +82,12 @@ for file in $CWD/patches/* ; do
 zcat $CWD/sh.vim.diff.gz | patch -p0 --verbose || exit 1
 
 config_vim --without-x --disable-gui
-make -j5 || exit 1
+make -j $NUMJOBS || exit 1
 make install DESTDIR=$PKG
+
+# *** Use mandir instead ***
+#rsync -lprvt $PKG/usr/share/man/ $PKG/usr/man/
+#rm -r $PKG/usr/share/man
 
 cp -a runtime/vimrc_example.vim runtime/vimrc.new
 
@@ -107,21 +96,6 @@ cp -a runtime/vimrc_example.vim runtime/vimrc.new
 # and I'd rather not change things unless there is a reason.
 #zcat $CWD/vim.vimrc.diff.gz | patch -p1 --verbose || exit 1
 cat runtime/vimrc.new > $PKG/usr/share/vim/vimrc.new
-
-# Fix manpage symlinks:
-if [ -d $PKG/usr/man ]; then
-  ( cd $PKG/usr/man
-    for manpagedir in $(find . -type d -name "man*") ; do
-      ( cd $manpagedir
-        for eachpage in $( find . -type l -maxdepth 1) ; do
-          ln -s $( readlink $eachpage ).gz $eachpage.gz
-          rm $eachpage
-        done
-        gzip -9 *.?
-      )
-    done
-  )
-fi
 
 # Legacy binary links:
 ( cd $PKG/usr/bin ; rm -rf ex )
@@ -162,10 +136,7 @@ config usr/share/vim/vimrc.new
 EOF
 zcat $CWD/doinst.sh.gz >> $PKG/install/doinst.sh
 
-( cd $PKG
-  find . | xargs file | grep "executable" | grep ELF | cut -f 1 -d : | xargs strip --strip-unneeded 2> /dev/null
-  find . | xargs file | grep "shared object" | grep ELF | cut -f 1 -d : | xargs strip --strip-unneeded 2> /dev/null
-)
-
+export PKGVER=$VERSION.$PATCHLEVEL
 cd $PKG
-makepkg -l y -c n $TMP/vim-$VIMVER.$PATCHLEVEL-$PKGARCH-$BUILD.tgz
+pkghelpers_fixup
+pkghelpers_makepkg
