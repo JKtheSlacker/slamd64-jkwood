@@ -1,57 +1,67 @@
 #!/bin/sh
+
+# Copyright 2008  Patrick J. Volkerding, Sebeka, MN, USA
+# All rights reserved.
+#
+# Redistribution and use of this script, with or without modification, is
+# permitted provided that the following conditions are met:
+#
+# 1. Redistributions of this script must retain the above copyright
+#    notice, this list of conditions and the following disclaimer.
+#
+#  THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR IMPLIED
+#  WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+#  MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.  IN NO
+#  EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+#  SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+#  PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+#  OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+#  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+#  OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+#  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
 PKGNAM=vsftpd
-VERSION=2.0.5
-BUILD=2
+VERSION=2.0.7
+BUILD=${BUILD:-1}
 
 . /etc/pkghelpers
 pkghelpers_env
 
 rm -rf $PKG
 mkdir -p $PKG
-cd $TMP
+cd $TMP || exit 1
 rm -rf $PKGNAM-$VERSION
-tar xzvf $CWD/$PKGNAM-$VERSION.tar.gz
-cd $PKGNAM-$VERSION
-
-# Make sure ownerships and permissions are sane:
-chown -R root:root .
-find . -perm 664 -exec chmod 644 {} \;
-find . -perm 600 -exec chmod 644 {} \;
-find . -perm 444 -exec chmod 644 {} \;
-find . -perm 400 -exec chmod 644 {} \;
-find . -perm 440 -exec chmod 644 {} \;
-find . -perm 777 -exec chmod 755 {} \;
-find . -perm 775 -exec chmod 755 {} \;
-find . -perm 511 -exec chmod 755 {} \;
-find . -perm 711 -exec chmod 755 {} \;
-find . -perm 555 -exec chmod 755 {} \;
+tar xvf $CWD/vsftpd-$VERSION.tar.?z* || exit 1
+cd $PKGNAM-$VERSION || exit 1
+pkghelpers_permissions
 
 zcat $CWD/vsftpd.builddefs.diff.gz | patch -p1 --verbose || exit 1
 zcat $CWD/vsftpd.conf.diff.gz | patch -p1 --verbose || exit 1
 
-# Patch from LFS - needed to build on kernels >= 2.6.18
-zcat $CWD/vsftpd-2.0.5-syscall.patch.gz | patch -p1 --verbose || exit 1
-
 # Without this, it builds fine as long as you have 32-bit stuff installed
 sed -i "s#lib/#lib$LIBSUFFIX/#g" vsf_findlibs.sh || exit 1
 
-make -j3 || exit 1
+make -j $NUMJOBS || exit 1
 mkdir -p $PKG/usr/sbin
 cp vsftpd $PKG/usr/sbin
 chmod 755 $PKG/usr/sbin/vsftpd
+
 mkdir -p $PKG/usr/man/man{5,8}
 cat vsftpd.conf.5 > $PKG/usr/man/man5/vsftpd.conf.5
 cat vsftpd.8 > $PKG/usr/man/man8/vsftpd.8
+
 mkdir -p $PKG/etc
 cat vsftpd.conf > $PKG/etc/vsftpd.conf.new
+
 mkdir -p $PKG/etc/logrotate.d
 zcat $CWD/vsftpd.log.gz > $PKG/etc/logrotate.d/vsftpd.new
+
 mkdir -p $PKG/usr/share/empty
 mkdir -p $PKG/home/ftp
 
 mkdir -p $PKG/usr/doc/vsftpd-$VERSION
 cp -a \
-  AUDIT BENCHMARKS BUGS COPYING COPYRIGHT Changelog EXAMPLE FAQ \
+  AUDIT BENCHMARKS BUGS COPYING* COPYRIGHT Changelog EXAMPLE FAQ \
   INSTALL LICENSE README* REFS REWARD SECURITY SIZE SPEED TODO TUNING \
   $PKG/usr/doc/vsftpd-$VERSION
 
