@@ -51,7 +51,7 @@ CXXFLAGS="$SLKCFLAGS" \
   --localstatedir=/var \
   --sysconfdir=/etc \
   --program-prefix="" \
-  --program-suffix=""
+  --program-suffix="" \
   --build=$ARCH-$DISTRO-linux
 
 make -j$NUMJOBS || exit 1
