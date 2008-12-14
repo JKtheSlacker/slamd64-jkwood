@@ -1,5 +1,5 @@
 #!/bin/sh
-# Copyright 2006, 2007  Patrick J. Volkerding, Sebeka, MN, USA
+# Copyright 2006, 2007, 2008  Patrick J. Volkerding, Sebeka, MN, USA
 # All rights reserved.
 #
 # Redistribution and use of this script, with or without modification, is
@@ -22,9 +22,8 @@
 
 PKGNAM=bind
 
-VERSION=${VERSION:-9.4.2-P1}
-PKGVER=$(echo $VERSION | tr - _)
-BUILD=1_slamd64_12.0
+VERSION=${VERSION:-9.4.2-P2}
+BUILD=${BUILD:-1}
 
 . /etc/pkghelpers
 
@@ -33,6 +32,7 @@ if [ "$TMP" = "" ]; then
 fi
 
 pkghelpers_env
+export PKGVER=$(echo $VERSION | tr - _)
 
 rm -rf $PKG
 mkdir -p $PKG
@@ -74,7 +74,7 @@ CFLAGS="$SLKCFLAGS" \
   --build=$ARCH-$DISTRO-linux || exit 1
 
 # Build and install:
-make -j7 || exit 1
+make -j $NUMJOBS || exit 1
 make install DESTDIR=$PKG || exit 1
 
 # We like symlinks.
@@ -116,8 +116,11 @@ chmod 644 $PKG/usr/doc/${PKGNAM}-$VERSION/misc/rndc.conf-sample
 mkdir -p $PKG/var/named/caching-example
 cat $CWD/caching-example/named.conf > $PKG/etc/named.conf.new
 cat $CWD/caching-example/localhost.zone > $PKG/var/named/caching-example/localhost.zone
-cat $CWD/caching-example/named.ca > $PKG/var/named/caching-example/named.ca
 cat $CWD/caching-example/named.local > $PKG/var/named/caching-example/named.local
+cat $CWD/caching-example/named.root > $PKG/var/named/caching-example/named.root
+# This name is deprecated, but having it here doesn't hurt in case
+# an old configuration file wants it:
+cat $CWD/caching-example/named.root > $PKG/var/named/caching-example/named.ca
 
 mkdir -p $PKG/install
 zcat $CWD/doinst.sh.gz > $PKG/install/doinst.sh
