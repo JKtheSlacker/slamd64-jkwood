@@ -53,7 +53,7 @@ rm -f $PKG/usr/lib$LIBSUFFIX/*.a
 rm -rf $PKG/usr/include/linux
 
 # Do the .new thing with the config file:
-mv $PKG/etc/sensors.conf $PKG/etc/sensors.conf.new
+mv $PKG/etc/sensors3.conf $PKG/etc/sensors3.conf.new
 
 # Add a documentation directory:
 mkdir -p $PKG/usr/doc/${PKGNAM}-$VERSION
@@ -63,7 +63,7 @@ cp -a \
 
 mkdir -p $PKG/install
 cat $CWD/slack-desc > $PKG/install/slack-desc
-cat << EOF > install/doinst.sh
+cat << EOF > $PKG/install/doinst.sh
 #!/bin/sh
 config() {
   NEW="\$1"
