@@ -1,13 +1,28 @@
 #!/bin/sh
 
-#######################################################################
-########################### BIG FAT REMINDER ##########################
-#######################################################################
-# If the "slang" package (slang2, as opposed to the slang1 package) is
-# installed, slrn will fail to build with a load of weird errors.
+# Copyright 2008  Patrick J. Volkerding, Sebeka, MN, USA
+# All rights reserved.
+#
+# Redistribution and use of this script, with or without modification, is
+# permitted provided that the following conditions are met:
+#
+# 1. Redistributions of this script must retain the above copyright
+#    notice, this list of conditions and the following disclaimer.
+#
+#  THIS SOFTWARE IS PROVIDED BY THE AUTHOR ''AS IS'' AND ANY EXPRESS OR IMPLIED
+#  WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+#  MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.  IN NO
+#  EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+#  SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+#  PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+#  OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+#  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+#  OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+#  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
 PKGNAM=slrn
-VERSION=0.9.8.1
-BUILD=${BUILD:-2}
+VERSION=0.9.9p1
+BUILD=${BUILD:-1}
 
 . /etc/pkghelpers
 pkghelpers_env
@@ -19,39 +34,43 @@ cd $TMP
 rm -rf slrn-$VERSION
 tar xjvf $CWD/slrn-$VERSION.tar.bz2
 cd slrn-$VERSION
-chown -R root.root .
-zcat $CWD/slrn.slrnfeat.diff.gz | patch -p1
+pkghelpers_permissions
+
 CFLAGS="$SLKCFLAGS" \
   ./configure \
   --prefix=/usr \
   --libdir=/usr/lib$LIBSUFFIX \
   --sysconfdir=/etc \
+  --mandir=/usr/man \
+  --docdir=/usr/doc/slrn-$VERSION \
+  --with-docdir=/usr/doc/slrn-$VERSION \
   --with-ssl \
   --with-slrnpull \
   --enable-setgid-code \
   --with-server-file=/etc/nntpserver \
-	--with-slang-includes=/usr/include/slang1
-make || exit 1
+  --build=$ARCH-$DISTRO-linux
+
+make -j $NUMJOBS || make || exit 1
 make install DESTDIR=$PKG
+
+# Docs go to the correct place already, but this one is big:
+rm -f $PKG/usr/doc/slrn-$VERSION/changes.txt
+
+# Handle the slrnpull stuff
 chown root.news $PKG/usr/bin/slrnpull
-mkdir -p $PKG/usr/doc
-mv $PKG/usr/share/doc/slrn $PKG/usr/doc/slrn-$VERSION
-# big
-rm -f $PKG/usr/doc/slrn-$VERSION/changes
 chmod 2750 $PKG/usr/bin/slrnpull
-mkdir -p $PKG/var/spool/slrnpull/data
-mkdir -p $PKG/var/spool/slrnpull/news
-mkdir -p $PKG/var/spool/slrnpull/out.going
-mkdir -p $PKG/var/spool/slrnpull/out.going/rejects
+mkdir -p $PKG/var/spool/slrnpull/{data,news,out.going/rejects}
 cp -a $PKG/usr/doc/slrn-$VERSION/slrnpull/slrnpull.conf $PKG/var/spool/slrnpull
 chown -R news.news $PKG/var/spool/slrnpull
-chmod 3777 $PKG/var/spool/slrnpull/out.going $PKG/var/spool/slrnpull/out.going/rejects
+chmod -R 3777 $PKG/var/spool/slrnpull/out.going
+
+# Handle the global config
 mkdir -p $PKG/etc
-cp -a $PKG/usr/doc/slrn-$VERSION/slrn.rc $PKG/etc/slrn.rc
-gzip -9 $PKG/usr/man/man1/*
-rmdir $PKG/usr/share/doc
+cp -a $PKG/usr/doc/slrn-$VERSION/slrn.rc $PKG/etc/slrn.rc.new
+
 mkdir -p $PKG/install
 cat $CWD/slack-desc > $PKG/install/slack-desc
+zcat $CWD/doinst.sh.gz > $PKG/install/doinst.sh
 
 cd $PKG
 pkghelpers_fixup
