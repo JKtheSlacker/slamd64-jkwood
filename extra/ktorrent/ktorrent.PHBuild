@@ -21,7 +21,7 @@
 
 
 PKGNAM=ktorrent
-VERSION=${VERSION:-2.2.6}
+VERSION=${VERSION:-2.2.8}
 BUILD=${BUILD:-1}
 
 . /etc/pkghelpers
@@ -49,7 +49,7 @@ CXXFLAGS="$SLKCFLAGS" \
   --build=$ARCH-$DISTRO-linux
 
 # Build and install:
-make -j1 || exit 1
+make -j $NUMJOBS || exit 1
 make install DESTDIR=$PKG || exit 1
 
 # Add a documentation directory:
