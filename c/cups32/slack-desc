@@ -1,0 +1,19 @@
+# HOW TO EDIT THIS FILE:
+# The "handy ruler" below makes it easier to edit a package description.  Line
+# up the first '|' above the ':' following the base package name, and the '|' on
+# the right side marks the last column you can put a character in.  You must make
+# exactly 11 lines for the formatting to be correct.  It's also customary to
+# leave one space after the ':'.
+
+      |-----handy-ruler------------------------------------------------------|
+cups32: CUPS (Common UNIX Printing System)
+cups32:
+cups32: The Common UNIX Printing System provides a portable printing layer for
+cups32: UNIX(R)-like operating systems. It has been developed by Easy Software
+cups32: Products to promote a standard printing solution for all UNIX vendors
+cups32: and users.  CUPS uses the Internet Printing Protocol ("IPP") as the
+cups32: basis for managing print jobs and queues.
+cups32:
+cups32: This package contains 32-bit binaries.
+cups32:
+cups32:
