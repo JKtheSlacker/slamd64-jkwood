@@ -53,7 +53,7 @@ CFLAGS="$SLKCFLAGS" \
   --with-ssl \
   --build=$ARCH-$DISTRO-linux
 
-make -j5 || make || exit 1
+make -j15 || make || exit 1
 make install DESTDIR=$PKG
 make install-docs DESTDIR=$PKG
 
@@ -62,7 +62,7 @@ rm -rf $PKG/usr/build
 
 mkdir -p $PKG/usr/doc/subversion-$VERSION
 cp -a \
-  BUGS CHANGES COMMITTERS COPYING HACKING INSTALL README TRANSLATING doc \
+  BUGS CHANGES COMMITTERS COPYING* HACKING INSTALL README TRANSLATING doc \
   $PKG/usr/doc/subversion-$VERSION
 # too big && useless for most || if you think not, can be found in the source tarball
 rm -rf $PKG/usr/doc/subversion-$VERSION/doc/tools
@@ -71,9 +71,7 @@ rm -rf $PKG/usr/doc/subversion-$VERSION/doc/tools
   tar xjf $CWD/svn-book-html.tar.bz2
   mv svn-book-html book
   cd book
-  find . -type d -exec chmod 755 {} \;
-  find . -type f -exec chmod 644 {} \;
-  chown -R root:root .
+  pkghelpers_permissions
 ) 
 
 mkdir -p $PKG/install
