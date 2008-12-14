@@ -36,7 +36,7 @@ CXXFLAGS="$SLKCFLAGS" \
 # and mod_wrap gets a compile error:
 # --with-modules= ... mod_quota ...
 make || exit 1
-make install DESTDIR=$PKG
+make install DESTDIR=$PKG || exit 1
 # With no library to link against, these are useless:
 rm -rf $PKG/usr/include
 rm -f $PKG/etc/*
@@ -44,7 +44,6 @@ rmdir $PKG/usr/libexec 2> /dev/null
 cat $CWD/etc/proftpd.conf > $PKG/etc/proftpd.conf.new
 cat $CWD/etc/ftpusers > $PKG/etc/ftpusers.new
 mkdir -p $PKG/home/ftp
-
 mkdir -p $PKG/usr/doc/proftpd-$VERSION
 cp -a COPYING CREDITS INSTALL NEWS README* \
   contrib/README.mod_wrap contrib/README.ratio \
