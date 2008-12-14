@@ -21,7 +21,8 @@
 #  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 PKGNAM=cdparanoia
-VERSION=III-10.2
+SRCVER=III-10.2
+VERSION=$(echo $SRCVER | tr - _)
 BUILD=${BUILD:-1}
 
 . /etc/pkghelpers
@@ -30,9 +31,9 @@ pkghelpers_env
 rm -rf $PKG
 mkdir -p $TMP $PKG
 cd $TMP
-rm -rf cdparanoia-${VERSION}
-tar xvf $CWD/cdparanoia-$VERSION.src.tar.gz || exit 1
-cd cdparanoia-$VERSION
+rm -rf cdparanoia-${SRCVER}
+tar xvf $CWD/cdparanoia-$SRCVER.src.tar.gz || exit 1
+cd cdparanoia-$SRCVER
 pkghelpers_permissions
 
 # Patch for changes in cdda headers:
@@ -82,7 +83,6 @@ chown -R root:root $PKG/usr/doc/cdparanoia-$VERSION
 mkdir -p $PKG/install
 cat $CWD/slack-desc > $PKG/install/slack-desc
 
-export PKGVER=$(echo $VERSION | tr - _)
 cd $PKG
 pkghelpers_fixup
 pkghelpers_makepkg
