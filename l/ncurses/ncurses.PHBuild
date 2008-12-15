@@ -7,7 +7,7 @@
 # Set initial variables:
 PKGNAM=ncurses
 VERSION=5.6
-BUILD=${BUILD:-3}
+BUILD=${BUILD:-4}
 
 . /etc/pkghelpers
 pkghelpers_env
@@ -42,6 +42,10 @@ rm -rf ncurses-$VERSION
 tar xzvf $CWD/ncurses-$VERSION.tar.gz || exit 1
 cd ncurses-$VERSION
 pkghelpers_permissions
+
+# Slamd64
+sed -i s%"{exec_prefix}/lib"%"{libdir}"% misc/ncurses-config.in || exit 1
+
 if [ ! -z "$(ls $CWD/patches/ncurses*bz2)" ]; then
   bzcat $CWD/patches/ncurses*bz2 > tmp-patch.sh
   bash tmp-patch.sh || exit 1

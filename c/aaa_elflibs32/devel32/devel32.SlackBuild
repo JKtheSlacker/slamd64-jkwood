@@ -1,7 +1,7 @@
 #!/bin/sh
-VERSION=1.0
+VERSION=12.2.0
 ARCH=x86_64
-BUILD=3
+BUILD=1
 DISTRO=${DISTRO:-slamd64}
 
 CWD=`pwd`
