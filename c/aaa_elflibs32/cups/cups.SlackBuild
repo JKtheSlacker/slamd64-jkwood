@@ -7,7 +7,7 @@ DISTRO=${DISTRO:-slamd64}
 CWD=`pwd`
 
 PKG=/tmp/package-aaa_elflibs32
-TMP=/tmp/alsa-lib32-tmp
+TMP=/tmp/cups32-tmp
 rm -rf $TMP
 mkdir $TMP
 
