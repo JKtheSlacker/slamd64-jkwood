@@ -9,8 +9,12 @@ PKG=$TMP/package-clisp
 VERSION=2.46
 DIRNAME=2.46
 ARCH=${ARCH:-x86_64}
-BUILD=${BUILD:-1}
+BUILD=${BUILD:-2}
 DISTRO=${DISTRO:-slamd64}
+
+# Bundled libraries:
+FFCALLVER=20080704cvs
+LIBSIGSEVVER=2.4
 
 if [ $DISTRO = slackware ]; then
 	PKGARCH=$ARCH
@@ -45,9 +49,9 @@ mkdir -p $PKG # place for the package to be built
 #=================================================================
 # First we need this.  It used to ship with CLISP, but no longer does.
 cd $TMP
-rm -rf libsigsegv-2.4
-tar xjvf $CWD/libsigsegv-2.4.tar.bz2 || exit 1
-cd libsigsegv-2.4
+rm -rf libsigsegv-$LIBSIGSEVVER
+tar xvf $CWD/libsigsegv-$LIBSIGSEVVER.tar.bz2 || exit 1
+cd libsigsegv-$LIBSIGSEVVER
 chown -R root:root .
 
 # Nah.
@@ -56,9 +60,9 @@ chown -R root:root .
 CFLAGS="$SLKCFLAGS" \
 ./configure \
   --prefix=/usr \
-	--libdir=/usr/lib$LIBSUFFIX \
+  --libdir=/usr/lib$LIBSUFFIX \
   --enable-static=yes
-make -j4 || exit 1
+make  || exit 1
 # Now I must install this.  Sorry, it's gotta happen.
 make install
 # Now add to the package:
@@ -69,33 +73,67 @@ strip -g $PKG/usr/lib$LIBSUFFIX/*.a
 mkdir -p $PKG/usr/doc/clisp-$VERSION/libsigsegv-2.4
 cp -a \
   AUTHORS COPYING ChangeLog NEWS PORTING README \
-  $PKG/usr/doc/clisp-$VERSION/libsigsegv-2.4
+  $PKG/usr/doc/clisp-$VERSION/libsigsegv-$LIBSIGSEVVER
+
+#=================================================================
+# Build ffcall - needed for --dynamic-ffi with clisp.
+cd $TMP
+rm -rf ffcall*
+tar xvf $CWD/ffcall-$FFCALLVER.tar.*
+cd ffcall*
+chown -R root:root .
+
+CFLAGS="$SLKCFLAGS" \
+./configure \
+  --prefix=/usr \
+  --libdir=/usr/lib$LIBSUFFIX \
+  --mandir=/usr/man \
+  --build=$ARCH-$DISTRO-linux || exit 1
+
+make || exit 1
+make install DESTDIR=$PKG
+# We need ffcall installed in order to build clisp:
+make install
+
+# Don't need this:
+rm -f $PKG/usr/lib$LIBSUFFIX/*.la
+
+# Move docs around:
+mkdir -pm755 $PKG/usr/doc/clisp-$VERSION/ffcall-$FFCALLVER
+install -vpm644 README NEWS COPYING \
+                $PKG/usr/doc/clisp-$VERSION/ffcall-$FFCALLVER
+mv -f $PKG/usr/share/html/* $PKG/usr/doc/clisp-$VERSION/ffcall-$FFCALLVER
+rmdir $PKG/usr/share/html/
+rmdir $PKG/usr/share/
 
 #=================================================================
  
 # OK, now we compile CLISP:
 cd $TMP
-rm -rf clisp-$DIRNAME
-tar xjvf $CWD/clisp-$VERSION.tar.bz2 || exit 1
+rm -rf clisp-$VERSION
+tar xvf $CWD/clisp-$VERSION.tar.bz2 || exit 1
 cd clisp-$DIRNAME || exit 1
 chown -R root:root .
 
+CFLAGS="$SLKCFLAGS" \
 ./configure \
   --prefix=/usr \
-	--libdir=/usr/lib$LIBSUFFIX \
+  --libdir=/usr/lib$LIBSUFFIX \
+  --mandir=/usr/man \
+  --docdir=/usr/doc/clisp-$VERSION \
   --with-module=clx/new-clx \
   --with-module=pcre \
   --with-module=rawsock \
   --with-module=wildcard \
   --with-module=zlib \
-  with-gcc-wall
+  --cbc with-gcc-wall \
+  --with-dynamic-ffi || exit 1
 
 cd with-gcc-wall
-
 ./makemake \
   --with-dynamic-ffi  \
   --prefix=/usr \
-	--libdir=/usr/lib$LIBSUFFIX \
+  --libdir=/usr/lib$LIBSUFFIX \
   --with-module=clx/new-clx \
   --with-module=pcre \
   --with-module=rawsock \
@@ -103,7 +141,6 @@ cd with-gcc-wall
   --with-module=zlib \
   --srcdir=../src \
   > Makefile
-
 make config.lisp
 make init
 make allc
@@ -114,14 +151,6 @@ make lispinit.mem
 make manual
 make modular
 
-# I don't know how clisp's make install manages to work on Slackware without these
-if [ $DISTRO != slackware ]; then
-  make base
-  make full
-fi
-
-# make check || exit 1
-
 make install DESTDIR=$PKG
 
 # Strip stuff:
@@ -130,7 +159,7 @@ make install DESTDIR=$PKG
   find . | xargs file | grep "shared object" | grep ELF | cut -f 1 -d : | xargs strip --strip-unneeded 2> /dev/null
 )
 
-mv $PKG/usr/share/doc/clisp/* $PKG/usr/doc/clisp-$VERSION
+#mv $PKG/usr/share/doc/clisp/* $PKG/usr/doc/clisp-$VERSION
 rm -r $PKG/usr/share/doc
 mv $PKG/usr/share/man $PKG/usr/man
 gzip -9 $PKG/usr/man/man?/*.?
