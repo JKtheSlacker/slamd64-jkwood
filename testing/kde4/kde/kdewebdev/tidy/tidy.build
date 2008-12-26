@@ -21,7 +21,7 @@
 
 
 PKGNAM=tidy
-VERSION=20080219T0523
+VERSION=20081008T2357
 ARCH=${ARCH:-x86_64}
 BUILD=${BUILD:-1}
 DISTRO=${DISTRO:-slamd64}
@@ -63,7 +63,7 @@ fi
 
 cd $TMP
 rm -rf ${PKGNAM}
-tar xjvf $CWD/${PKGNAM}-$VERSION.tar.bz2
+tar xjvf $CWD/${PKGNAM}-${VERSION}.tar.bz2
 
 cd ${PKGNAM}
 
