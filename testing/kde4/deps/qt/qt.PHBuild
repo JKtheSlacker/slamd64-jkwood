@@ -27,7 +27,7 @@
 # has at least one bugfix strongly recommended by the kde developers
 
 PKGNAM=qt
-VERSION=r869114
+VERSION=$(ls qt-r*.tar.?z* | cut -d - -f 2 | cut -f 1 -d .)
 BUILD=${BUILD:-1}
 NUMJOBS=${NUMJOBS:--j6}
 
@@ -46,10 +46,11 @@ cd qt-$VERSION || exit 1
 
 pkghelpers_permissions
 
-# Get rid of already applied patches (if any):
-if [ -r $CWD/remove-already-applied-patches.diff.gz ]; then
-  zcat $CWD/remove-already-applied-patches.diff.gz | patch -p1 --verbose || exit 1
-fi
+# Just skip the patches it complains about...  easy enough.
+## Get rid of already applied patches (if any):
+#if [ -r $CWD/remove-already-applied-patches.diff.gz ]; then
+#  zcat $CWD/remove-already-applied-patches.diff.gz | patch -p1 --verbose || exit 1
+#fi
 
 # This is only needed/wanted for qt-copy (the r###### version) that we're
 # building right now. It might require manual intervention, so don't walk
@@ -81,10 +82,9 @@ echo "yes" | ./configure \
   -nomake examples \
   -nomake demos 
 
-make $NUMJOBS
 # Sometimes a failure happens when parallelizing, so try again, making a failure
 # this time a fatal error:
-make || exit 1
+make $NUMJOBS || make || exit 1
 make install INSTALL_ROOT=$PKG || exit 1
 
 # The infamous qt -> qt-${VERSION} link that lets us cheat on the QTDIR ;-)
@@ -104,8 +104,8 @@ fi
 
 # Add profile scripts
 mkdir -p $PKG/etc/profile.d
-sed "s,usr/lib/,usr/lib$LIBSUFFIX/,g" $CWD/profile.d/qt.sh > $PKG/etc/profile.d/qt.sh
-sed "s,usr/lib/,usr/lib$LIBSUFFIX/,g" $CWD/profile.d/qt.csh > $PKG/etc/profile.d/qt.csh
+sed "s,usr/lib/,usr/lib$LIBSUFFIX/,g" $CWD/profile.d/qt4.sh > $PKG/etc/profile.d/qt4.sh
+sed "s,usr/lib/,usr/lib$LIBSUFFIX/,g" $CWD/profile.d/qt4.csh > $PKG/etc/profile.d/qt4.csh
 chmod 0755 $PKG/etc/profile.d/*
 
 # Put a ton of links to more "normal" places.  I'd just use a prefix of /usr, but it
