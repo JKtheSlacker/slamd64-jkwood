@@ -3,7 +3,7 @@
 # usually has a different version number), or by setting your own
 # environment variables.
 
-[ -z $VERSION ] && export VERSION=4.1.2
+[ -z $VERSION ] && export VERSION=4.1.3
 [ -z $BUILD ] && export BUILD=1
 
 . /etc/pkghelpers
@@ -11,6 +11,8 @@ pkghelpers_env
 
 # Use this to set the number of parallel make jobs:
 if [ -z "$NUMJOBS" ]; then
-  export NUMJOBS="-j7"
+  export NUMJOBS="7"
 fi
+
+NUMJOBS="-j"${NUMJOBS}
 

@@ -43,6 +43,7 @@ for module in \
   kdeedu \
   kdeplasma-addons \
   kdebindings \
+  konq-plugins \
   koffice \
   amarok \
   guidance-power-manager \
