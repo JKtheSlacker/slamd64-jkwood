@@ -22,7 +22,7 @@
 #  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 PKGNAM=guidance-power-manager
-VERSION=4.1.2
+VERSION=4.1.3
 BUILD=${BUILD:-1}
 
 . /etc/pkghelpers
@@ -41,7 +41,7 @@ cmake \
   -DCMAKE_INSTALL_PREFIX:PATH=/usr \
   . || exit 1
 
-make $NUMJOBS || exit 1
+make -j$NUMJOBS || exit 1
 make install DESTDIR=$PKG
 
 mkdir -p $PKG/usr/doc/$PKGNAM-$VERSION
