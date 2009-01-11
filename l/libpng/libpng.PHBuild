@@ -1,13 +1,13 @@
 #!/bin/sh
 PKGNAM=libpng
 VERSION=1.2.32
-BUILD=1
+BUILD=2
 
 . /etc/pkghelpers
 pkghelpers_env
 
 cd $TMP
-rm -rf libpng-$VERSION
+rm -rf libpng-$VERSION $PKG
 tar xjvf $CWD/libpng-$VERSION.tar.bz2
 cd libpng-$VERSION
 pkghelpers_permissions
@@ -39,6 +39,7 @@ make install prefix=/usr LIBPATH=/usr/lib$LIBSUFFIX DESTDIR=$PKG
   if [ ! -e libpng.so.0 -a -e libpng.so.3 ]; then
     ln -sf libpng.so.3 libpng.so.0
   fi
+  sed -i "s,/lib$,/lib$LIBSUFFIX," pkgconfig/*.pc
 )
 
 mkdir -p $PKG/usr/doc/libpng-$VERSION
