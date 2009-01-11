@@ -1,7 +1,7 @@
 #!/bin/sh
 # Build samba for Slamd64
 PKGNAM=samba
-VERSION=3.2.5
+VERSION=3.2.7
 BUILD=${BUILD:-1}
 
 . /etc/pkghelpers
@@ -28,6 +28,7 @@ CFLAGS="$SLKCFLAGS" ./configure \
   --enable-cups \
   --enable-static=no \
   --enable-shared=yes \
+  --mandir=/usr/man \
   --with-fhs \
   --with-acl-support=yes \
   --with-automount \
@@ -62,7 +63,7 @@ mkdir -p \
 chmod 700 $PKG/etc/samba/private
 chmod 1777 $PKG/var/spool/samba
 
-make install DESTDIR=$PKG || exit 1
+make install-everything DESTDIR=$PKG || exit 1
 
 # Install libnss_win* libraries:
 mkdir -p $PKG/lib$LIBSUFFIX
