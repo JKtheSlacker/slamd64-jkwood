@@ -1,7 +1,7 @@
 #!/bin/sh
 PKGNAM=cvs
 VERSION=1.11.23
-BUILD=1
+BUILD=2
 
 . /etc/pkghelpers
 pkghelpers_env
@@ -14,13 +14,17 @@ rm -rf cvs-$VERSION
 tar xjvf $CWD/cvs-$VERSION.tar.bz2
 cd cvs-$VERSION
 chown -R root:root .
-CFLAGS="$SLKCFLAGS" ./configure --prefix=/usr
+CFLAGS="$SLKCFLAGS" \
+./configure \
+  --prefix=/usr \
+  --mandir=/usr/man \
+  --infodir=/usr/info
 make -j12  || exit 1
 make install DESTDIR=$PKG
 ( cd doc ; make txt )
 mkdir -p $PKG/usr/doc/cvs-$VERSION
 cp -a \
-  BUGS COPYING COPYING.LIB DEVEL-CVS FAQ HACKING INSTALL MINOR-BUGS NEWS PROJECTS README TESTS TODO \
+  BUGS COPYING* DEVEL-CVS FAQ HACKING INSTALL MINOR-BUGS NEWS PROJECTS README TESTS TODO \
   $PKG/usr/doc/cvs-$VERSION
 cat doc/cvs.txt | gzip -9c > $PKG/usr/doc/cvs-$VERSION/cvs.txt.gz
 cat doc/cvsclient.txt | gzip -9c > $PKG/usr/doc/cvs-$VERSION/cvsclient.txt.gz
