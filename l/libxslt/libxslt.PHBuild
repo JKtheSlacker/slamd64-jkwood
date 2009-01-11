@@ -1,7 +1,7 @@
 #!/bin/sh
 PKGNAM=libxslt
 VERSION=1.1.24
-BUILD=1
+BUILD=2
 
 . /etc/pkghelpers
 pkghelpers_env
@@ -16,14 +16,15 @@ pkghelpers_permissions
 CFLAGS="$SLKCFLAGS" \
 ./configure \
   --prefix=/usr \
-	--libdir=/usr/lib$LIBSUFFIX \
+  --mandir=/usr/man \
+  --libdir=/usr/lib$LIBSUFFIX \
   --build=$ARCH-$DISTRO-linux
 make -j4 || exit 1
 make install DESTDIR=$PKG
 mv $PKG/usr/share/doc $PKG/usr
 mv $PKG/usr/doc/libxslt-python-$VERSION $PKG/usr/doc/libxslt-$VERSION
 cp -a \
-  AUTHORS COPYING COPYING.LIB Copyright FEATURES INSTALL IPR NEWS README TODO libxslt.spec \
+  AUTHORS COPYING* Copyright FEATURES INSTALL IPR NEWS README TODO libxslt.spec \
   $PKG/usr/doc/libxslt-$VERSION
 mkdir -p $PKG/install
 cat $CWD/slack-desc > $PKG/install/slack-desc
