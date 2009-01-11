@@ -24,7 +24,7 @@
 
 PKGNAM=rpm
 VERSION=4.4.2.3
-BUILD=1
+BUILD=2
 
 . /etc/pkghelpers
 pkghelpers_env
