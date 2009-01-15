@@ -1,9 +1,7 @@
 #!/bin/sh
-# Args:
-# $1 = slackware initrd
-# $2 = slamd64 initrd
 
-BBVER=1.4.2
+# Run this from a directory containing an exploded slackware aaa_elflibs package.
+
 CWD=$(pwd)
 
 if [ $(whoami) != "root" ]; then
