@@ -2,8 +2,9 @@
 
 # Slackware build script for boost
 
-# Copyright 2007 Eric Hameleers <alien@slackware.com>
-# Copyright 2007 Heinz Wiesinger
+# Copyright 2007, 2008 Eric Hameleers, Eindhoven, NL
+# Copyright 2007-2008 Heinz Wiesinger
+# Copyright 2008  Patrick J. Volkerding, Sebeka, MN, USA
 # All rights reserved.
 #
 # Redistribution and use of this script, with or without modification, is
@@ -27,7 +28,7 @@
 # Script modified by Robby Workman - no copyright claims or added terms
 
 PKGNAM=boost
-VERSION=1_35_0
+VERSION=1_36_0
 BUILD=${BUILD:-1}
 
 . /etc/pkghelpers
@@ -41,11 +42,13 @@ tar xvf $CWD/boost_$VERSION.tar.bz2
 cd boost_$VERSION || exit 1
 pkghelpers_permissions
 
-if [ "$ICU" = "YES" ]; then
-    do_icu="-sICU_PATH=/usr"
-else
-    do_icu=""
-fi
+# Apply Hotfixes from:
+# http://svn.boost.org/trac/boost/wiki/ReleasePractices/HotFixes
+patch -p2 -i $CWD/patches/changeset_r48141.diff
+patch -p2 -i $CWD/patches/changeset_r48192.diff
+patch -p2 -i $CWD/patches/changeset_r48374.diff
+patch -p2 -i $CWD/patches/changeset_r48377.diff
+patch -p2 -i $CWD/patches/changeset_r48462.diff
 
 # This is the python we build against:
 PYTHON_VERSION=$(python -c 'import sys; print sys.version[:3]')
@@ -61,22 +64,32 @@ BJAM=$(find tools/jam/src/ -name bjam -a -type f)
 # Create build subdirectory
 mkdir obj
 
+# Change the build options from 'minimal' to what we want, since adding
+# "-sBUILD=<optimization>speed <inlining>full <threading>single/multi
+# <link>shared <runtime-link>shared" to $BJAM command no longer seems to work.
+FLAGS="<threading>multi <threading>single <optimization>speed <inlining>full"
+sed -i "s/    <threading>multi/    $FLAGS/" Jamroot
+# Disable static libraries ( the only software that *requires* the static libs,
+# is Microsoft's CW compiler (CW or Comega is an experimental language which
+# extends C# )
+sed -i "s/<link>shared <link>static/<link>shared/" Jamroot
+
 # Next, we build boost using bjam
 $BJAM \
   release \
   "-sBUILD=<optimization>speed <inlining>full <threading>single/multi" \
   "-sNO_COMPRESSION=0" \
   "-sZLIB_INCLUDE=/usr/include" \
-  "-sZLIB_LIBPATH=/usr/lib" \
+  "-sZLIB_LIBPATH=/usr/lib$LIBSUFFIX" \
   "-sBZIP2_INCLUDE=/usr/include" \
-  "-sBZIP2_LIBPATH=/usr/lib" \
+  "-sBZIP2_LIBPATH=/usr/lib$LIBSUFFIX" \
   --toolset=gcc \
   --layout=system \
   --builddir=obj \
   --prefix=/usr \
   --libdir=/usr/lib$LIBSUFFIX \
+  --build-type=minimal \
   $PYTHON_FLAGS \
-  $do_icu \
   stage
 
 # And then install boost..
@@ -84,17 +97,20 @@ mkdir -p $PKG/usr/{lib64,include}
 
 $BJAM \
   release \
+  "-sEXPAT_INCLUDE=/usr/include" \
+  "-sEXPAT_LIBPATH=/usr/lib$LIBSUFFIX" \
   --toolset=gcc \
   --layout=system \
   --builddir=obj \
   --prefix=$PKG/usr \
   --libdir=$PKG/usr/lib$LIBSUFFIX \
+  --build-type=minimal \
   $PYTHON_FLAGS \
-  $do_icu \
   install
 
-mkdir -p $PKG/usr/doc/boost-$PKG_VERSION
-cp -a LICENSE_1_0.txt doc/html $PKG/usr/doc/boost-$PKG_VERSION
+mkdir -p $PKG/usr/doc/boost-$VERSION
+# Do not copy 44MB of developer 'doc/html' into our package...
+cp -a LICENSE_1_0.txt $PKG/usr/doc/boost-$VERSION
 find $PKG/usr/doc -type f -exec chmod 0644 {} \;
 
 mkdir -p $PKG/install
