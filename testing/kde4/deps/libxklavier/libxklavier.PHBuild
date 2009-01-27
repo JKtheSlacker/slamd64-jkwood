@@ -3,6 +3,7 @@
 # Slackware build script for libxklavier
 
 # Copyright 2007-2008  Heinz Wiesinger <hmwiesinger@gmx.at>
+# Copyright 2008  Patrick J. Volkerding, Sebeka, MN, USA
 # All rights reserved.
 #
 # Redistribution and use of this script, with or without modification, is
@@ -25,9 +26,8 @@
 # Modified by Robby Workman <rworkman at slackware.com>
 
 PKGNAM=libxklavier
-VERSION=3.5
+VERSION=3.8
 BUILD=${BUILD:-1}
-NUMJOBS=${NUMJOBS:--j6}
 
 . /etc/pkghelpers
 pkghelpers_env
@@ -50,7 +50,7 @@ CXXFLAGS="$SLKCFLAGS" \
   --disable-static \
   --build=$ARCH-$DISTRO-linux
 
-make $NUMJOBS || exit 1
+make -j $NUMJOBS || exit 1
 make install DESTDIR=$PKG || exit 1
 
 mkdir -p $PKG/usr/doc/libxklavier-$VERSION
