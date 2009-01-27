@@ -3,6 +3,7 @@
 # Slackware build script for phonon
 
 # Copyright 2008  Robby Workman, Northport, Alabama, USA
+# Copyright 2008, 2009  Patrick J. Volkerding, Sebeka, MN, USA
 # All rights reserved.
 #
 # Redistribution and use of this script, with or without modification, is
@@ -23,7 +24,7 @@
 #  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 PKGNAM=phonon
-VERSION=4.2.0
+VERSION=4.3.0
 BUILD=${BUILD:-1}
 NUMJOBS=${NUMJOBS:--j6}
 
@@ -38,13 +39,14 @@ cd phonon-$VERSION
 pkghelpers_permissions
 
 cmake \
+  -DCMAKE_BUILD_TYPE=Release \
   -DCMAKE_C_FLAGS:STRING="$SLKCFLAGS" \
   -DCMAKE_CXX_FLAGS:STRING="$SLKCFLAGS" \
   -DCMAKE_INSTALL_PREFIX=/usr \
   -DMAN_INSTALL_DIR=/usr/man \
   -DLIB_SUFFIX=$LIBSUFFIX \
   .
-make $NUMJOBS || exit 1
+make -j $NUMJOBS || make || exit 1
 make install DESTDIR=$PKG || exit 1
 
 mkdir -p $PKG/usr/doc/phonon-$VERSION
