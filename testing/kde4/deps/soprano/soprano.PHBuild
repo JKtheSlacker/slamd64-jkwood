@@ -3,6 +3,7 @@
 # Slackware build script for soprano
 
 # Copyright 2007-2008 Robby Workman, Northport, Alabama, USA
+# Copyright 2008, 2009  Patrick J. Volkerding, Sebeka, MN, USA
 # All rights reserved.
 
 # Redistribution and use of this script, with or without modification, is
@@ -23,9 +24,8 @@
 # ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 PKGNAM=soprano
-VERSION=2.1.1
+VERSION=2.1.67
 BUILD=${BUILD:-1}
-NUMJOBS=${NUMJOBS:--j6}
 
 . /etc/pkghelpers
 pkghelpers_env
@@ -40,18 +40,21 @@ pkghelpers_permissions
 
 mkdir -p build
 cd build
+  QTDIR=/usr/lib$LIBSUFFIX/qt \
+  PATH=$QTDIR/bin:$PATH \
   cmake \
     -DCMAKE_C_FLAGS:STRING="$SLKCFLAGS" \
     -DCMAKE_CXX_FLAGS:STRING="$SLKCFLAGS" \
     -DCMAKE_INSTALL_PREFIX=/usr \
     -DLIB_SUFFIX=$LIBSUFFIX \
     ..
-   make $NUMJOBS || exit 1
+   make -j $NUMJOBS || make || exit 1
    make install DESTDIR=$PKG || exit 1
 cd -
 
 mkdir -p $PKG/usr/doc/soprano-$VERSION
-cp -a AUTHORS COPYING* ChangeLog INSTALL README TODO \
+cp -a \
+  AUTHORS COPYING* ChangeLog INSTALL README TODO \
   $PKG/usr/doc/soprano-$VERSION
 
 mkdir -p $PKG/install
