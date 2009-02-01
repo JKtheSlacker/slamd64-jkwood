@@ -50,7 +50,7 @@ if [ ! -r /usr/lib$LIBSUFFIX/mysql/libmysqld.a ]; then
       --with-pic \
       --with-openssl \
       --build=$ARCH-$DISTRO-linux
-      make || exit 1
+      make $NUMJOBS || make || exit 1
       mkdir -p /usr/lib$LIBSUFFIX/mysql
       cp libmysqld/libmysqld.a /usr/lib$LIBSUFFIX/mysql   
     fi
@@ -81,8 +81,9 @@ cd build
   cmake \
     -DCMAKE_C_FLAGS:STRING="$SLKCFLAGS" \
     -DCMAKE_CXX_FLAGS:STRING="$SLKCFLAGS" \
+    -DCMAKE_BUILD_TYPE=Release \
     -DCMAKE_INSTALL_PREFIX=/usr \
-    -DLIB_SUFFIX=64 \
+    -DLIB_SUFFIX=$LIBSUFFIX \
     -DMAN_INSTALL_DIR=/usr/man \
     -DSYSCONF_INSTALL_DIR=/etc/kde \
     ..
