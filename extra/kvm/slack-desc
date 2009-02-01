@@ -7,5 +7,5 @@ kvm: Using KVM, one can run multiple virtual machines running unmodified Linux
 kvm: or Windows images. Each virtual machine has private virtualized hardware:
 kvm: a network card, disk, graphics adapter, etc.
 kvm: 
-kvm: This package only contains the modified QEMU; the kernel module are
-kvm: included with recent kernels.
+kvm: Example udev rules are included in /usr/share/doc/kvm-$VERSION/.
+kvm: 

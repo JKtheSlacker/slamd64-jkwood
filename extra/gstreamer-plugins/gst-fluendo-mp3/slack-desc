@@ -1,0 +1,11 @@
+gst-fluendo-mp3: gst-fluendo-mp3 (GStreamer MP3 Decoder Plugin)
+gst-fluendo-mp3: 
+gst-fluendo-mp3: Base code is from the ISO MPEG dist10 reference package, which
+gst-fluendo-mp3: is freely reusable, under the MIT license.
+gst-fluendo-mp3: 
+gst-fluendo-mp3: Contact Fluendo at info@fluendo.com if you are interested in
+gst-fluendo-mp3: using this software in conjunction with a commerical product
+gst-fluendo-mp3: which includes needing a mp3 patent license and we will give
+gst-fluendo-mp3: you an offer. If you have your own mp3 patent license you are
+gst-fluendo-mp3: free to use this code under the terms of the MIT software
+gst-fluendo-mp3: license without taking advantage of Fluendo's services.

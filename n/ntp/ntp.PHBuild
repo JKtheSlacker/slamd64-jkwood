@@ -1,6 +1,6 @@
 #!/bin/sh
 PKGNAM=ntp
-VERSION=4.2.4p5
+VERSION=4.2.4p6
 BUILD=${BUILD:-1}
 
 . /etc/pkghelpers

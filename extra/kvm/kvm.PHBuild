@@ -1,6 +1,6 @@
 #!/bin/sh
 PKGNAM=kvm
-VERSION=57
+VERSION=78
 BUILD=1
 
 . /etc/pkghelpers
@@ -11,12 +11,17 @@ tar xfv $CWD/$PKGNAM-$VERSION.tar.gz || exit 1
 cd $PKGNAM-$VERSION
 ./configure \
 	--prefix=/usr \
-	--with-patched-kernel \
-	--enable-alsa \
-	--disable-gcc-check
+	--with-patched-kernel
 make -j5 || exit 1
 
 make install DESTDIR=$PKG
+mv $PKG/usr/share/doc/qemu $PKG/usr/share/doc/$PKGNAM-$VERSION
+(
+	cd qemu
+	install -m644 COPYING* README* LICENSE $PKG/usr/share/doc/$PKGNAM-$VERSION
+)
+mkdir -p $PKG/usr/share/doc/$PKGNAM-$VERSION/udev-rules/
+install -m644 scripts/*kvm*.rules $PKG/usr/share/doc/$PKGNAM-$VERSION/udev-rules/
 
 cd $PKG
 mv usr/share/man usr/man

@@ -1,0 +1,11 @@
+gst-plugins-good: gst-plugins-good (Good and free gstreaemr plugins)
+gst-plugins-good: This module contains a set of plug-ins that we consider to
+gst-plugins-good: have good quality code, correct functionality, our preferred
+gst-plugins-good: license (LGPL for the plug-in code, LGPL or LGPL-compatible
+gst-plugins-good: for the supporting library).
+gst-plugins-good: 
+gst-plugins-good: This package includes the wavpack, flac, png, and taglib plugins,
+gst-plugins-good: among others.
+gst-plugins-good: 
+gst-plugins-good: 
+gst-plugins-good: 
