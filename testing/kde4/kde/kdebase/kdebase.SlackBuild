@@ -14,6 +14,11 @@ if [ -r ./local.options ]; then
   . ./local.options
 fi
 
+# Avoid a version number in .la files:
+if [ -d /usr/lib$LIBSUFFIX/qt ]; then
+  QTDIR=/usr/lib$LIBSUFFIX/qt
+fi
+
 rm -rf $PKG
 mkdir -p $PKG/usr
 cd $TMP
@@ -32,6 +37,7 @@ cd build
   cmake \
     -DCMAKE_C_FLAGS:STRING="$SLKCFLAGS" \
     -DCMAKE_CXX_FLAGS:STRING="$SLKCFLAGS" \
+    -DCMAKE_BUILD_TYPE=Release \
     -DCMAKE_INSTALL_PREFIX=/usr \
     -DMAN_INSTALL_DIR=/usr/man \
     -DSYSCONF_INSTALL_DIR=/etc/kde \
@@ -47,8 +53,10 @@ fi
 
 # Add profile scripts
 mkdir -p $PKG/etc/profile.d
-cat $CWD/profile.d/kde.sh > $PKG/etc/profile.d/kde.sh.new
-cat $CWD/profile.d/kde.csh > $PKG/etc/profile.d/kde.csh.new
+cat $CWD/profile.d/kde.sh | sed -e "s#/lib/#/lib$LIBSUFFIX/#" \
+  > $PKG/etc/profile.d/kde.sh
+cat $CWD/profile.d/kde.csh | sed -e "s#/lib/#/lib$LIBSUFFIX/#" \
+  > $PKG/etc/profile.d/kde.csh
 chmod 0755 $PKG/etc/profile.d/*
 
 # "konsole -ls" is no longer valid syntax for konsole, even though it's

@@ -15,8 +15,8 @@ if [ -r ./local.options ]; then
 fi
 
 # Avoid a version number in .la files:
-if [ -d /usr/lib/qt ]; then
-  QTDIR=/usr/lib/qt
+if [ -d /usr/lib$LIBSUFFIX/qt ]; then
+  QTDIR=/usr/lib$LIBSUFFIX/qt
 fi
 
 rm -rf $PKG
@@ -25,9 +25,6 @@ cd $TMP
 echo "Building kdepim-$VERSION.tar.bz2..."
 tar xvf $CWD/../src/kdepim-$VERSION.tar.bz2 || exit 1
 cd kdepim-$VERSION
-
-zcat $CWD/kdepim.kmfoldermaildir.cpp.diff.gz | patch -p1 --verbose || exit 1
-
 chown -R root:root .
 find . \
  \( -perm 777 -o -perm 775 -o -perm 711 -o -perm 555 -o -perm 511 \) \
@@ -40,6 +37,7 @@ cd build
   cmake \
     -DCMAKE_C_FLAGS:STRING="$SLKCFLAGS" \
     -DCMAKE_CXX_FLAGS:STRING="$SLKCFLAGS" \
+    -DCMAKE_BUILD_TYPE=Release \
     -DCMAKE_INSTALL_PREFIX=/usr \
     -DMAN_INSTALL_DIR=/usr/man \
     -DSYSCONF_INSTALL_DIR=/etc/kde \

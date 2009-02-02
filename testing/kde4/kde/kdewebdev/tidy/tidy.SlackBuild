@@ -76,7 +76,7 @@ CFLAGS="$SLKCFLAGS" \
   $ARCH-$DISTRO-linux
 
 # Build and install:
-make -j6 || exit 1
+make -j6 || make || exit 1
 make install DESTDIR=$PKG || exit 1
 
 # Strip binaries:
