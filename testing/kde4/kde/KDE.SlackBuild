@@ -10,18 +10,13 @@
 # Set the config option variables if they are not already set:
 [ -r ./KDE.options ] && . ./KDE.options
 
+# This avoids compiling a version number into KDE's .la files:
+QTDIR=/usr/lib$LIBSUFFIX/qt ; export QTDIR
+
 # Get the kde environment variables
-[ -d kdebase ] && . ./kdebase/profile.d/kde.sh
+./kdebase/profile.d/kde.sh
 
-# These are not shipped with kde 4.1.0, and the upstream maintainer
-# requests that we not ship packages of the latest development releases
-# with 4.1.0, so we won't.
-#  kdevplatform \
-#  kdevelop \
-
-# Yes, we know kdebase-workspace is built twice.  kdebase needs the
-#   plasma bits from it, and then we build it again for good measure...
-for module in \
+KDEMODS=" \
   kdelibs \
   kdepimlibs \
   kdebase-workspace \
@@ -38,16 +33,33 @@ for module in \
   kdetoys \
   kdegraphics \
   kdesdk \
-  kdewebdev \
   kdepim \
   kdeedu \
   kdeplasma-addons \
   kdebindings \
+  kdewebdev \
+  kdevplatform \
+  kdevelop \
+  konq-plugins \
   koffice \
   amarok \
   guidance-power-manager \
   kaudiocreator \
-  ktorrent ;
+  ktorrent \
+  skanlite \
+  k3b"
+
+# Allow for specification of individual packages to be built:
+if [ -z "$1" ]; then
+  MODQUEUE=$KDEMODS
+else
+  MODQUEUE=$*
+fi
+
+# Yes, we know kdebase-workspace is built twice.  kdebase needs the
+#   plasma bits from it, and then we build it again for good measure...
+for module in \
+  $MODQUEUE ;
 do
   cd $module
   ./$module.SlackBuild

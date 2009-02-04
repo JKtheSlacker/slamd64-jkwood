@@ -1,9 +1,8 @@
 #!/bin/sh
-
 # Slackware build script for clucene
 
 # Copyright 2007  Heinz Wiesinger <hmwiesinger@gmx.at>
-# Copyright 2008  Patrick J. Volkerding, Sebeka, MN, USA
+# Copyright 2008, 2009  Patrick J. Volkerding, Sebeka, MN, USA
 # All rights reserved.
 #
 # Redistribution and use of this script, with or without modification, is
@@ -27,9 +26,8 @@
 # No added terms or copyright claims
 
 PKGNAM=clucene
-VERSION=0.9.21
+VERSION=0.9.21b
 BUILD=${BUILD:-1}
-NUMJOBS=${NUMJOBS:--j6}
 
 . /etc/pkghelpers
 pkghelpers_env
@@ -40,8 +38,7 @@ cd $TMP
 rm -rf clucene-core-$VERSION
 tar xvf $CWD/clucene-core-$VERSION.tar.bz2 || exit 1
 cd clucene-core-$VERSION || exit 1
-chown -R root:root .
-chmod -R u+w,go+r-w,a-s .
+pkghelpers_permissions
 
 CFLAGS="$SLKCFLAGS" \
 CXXFLAGS="$SLKCFLAGS" \
@@ -53,12 +50,14 @@ CXXFLAGS="$SLKCFLAGS" \
   --disable-static \
   --build=$ARCH-$DISTRO-linux
 
-make $NUMJOBS || exit 1
+make -j $NUMJOBS || make || exit 1
 make install DESTDIR=$PKG || exit 1
 
 mkdir -p $PKG/usr/doc/clucene-$VERSION
-cp -a APACHE.license AUTHORS COPYING* HACKING INSTALL \
-  LGPL.license NEWS README REQUESTS $PKG/usr/doc/clucene-$VERSION
+cp -a \
+  APACHE.license AUTHORS COPYING* HACKING INSTALL \
+  LGPL.license NEWS README REQUESTS \
+  $PKG/usr/doc/clucene-$VERSION
 
 mkdir -p $PKG/install
 cat $CWD/slack-desc > $PKG/install/slack-desc

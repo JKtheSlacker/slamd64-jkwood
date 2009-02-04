@@ -22,11 +22,24 @@
 #  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 PKGNAM=guidance-power-manager
-VERSION=4.1.2
-BUILD=${BUILD:-1}
 
-. /etc/pkghelpers
-pkghelpers_env
+# Set the config option variables if they are not already set:
+if [ -r ../KDE.options ]; then
+  . ../KDE.options
+fi
+
+# The global options may be overridden here (if needed):
+if [ -r ./local.options ]; then
+  . ./local.options
+fi
+
+# Avoid a version number in .la files:
+if [ -d /usr/lib$LIBSUFFIX/qt ]; then
+  QTDIR=/usr/lib$LIBSUFFIX/qt
+fi
+
+rm -rf $PKG
+mkdir -p $TMP $PKG
 
 cd $TMP || exit 1
 rm -rf $PKGNAM-$VERSION
@@ -34,15 +47,21 @@ tar xvf $CWD/../src/extragear/$PKGNAM-$VERSION.tar.bz2 || exit 1
 cd $PKGNAM-$VERSION || exit 1
 pkghelpers_permissions
 
-cmake \
-  -DCMAKE_C_FLAGS:STRING="$SLKCFLAGS -L/usr/lib$LIBSUFFIX" \
-  -DCMAKE_CXX_FLAGS:STRING="$SLKCFLAGS -L/usr/lib$LIBSUFFIX" \
-  -DLIB_SUFFIX=$LIBSUFFIX \
-  -DCMAKE_INSTALL_PREFIX:PATH=/usr \
-  . || exit 1
-
-make $NUMJOBS || exit 1
-make install DESTDIR=$PKG
+mkdir -p build
+cd build
+  LDFLAGS="-L/usr/lib$LIBSUFFIX" \
+  cmake \
+    -DCMAKE_C_FLAGS:STRING="$SLKCFLAGS" \
+    -DCMAKE_CXX_FLAGS:STRING="$SLKCFLAGS" \
+    -DCMAKE_BUILD_TYPE=Release \
+    -DCMAKE_INSTALL_PREFIX:PATH=/usr \
+    -DMAN_INSTALL_DIR=/usr/man \
+    -DSYSCONF_INSTALL_DIR=/etc/kde \
+    -DLIB_SUFFIX=$LIBSUFFIX \
+    ..
+  make $NUMJOBS || exit 1
+  make install DESTDIR=$PKG || exit 1
+cd -
 
 mkdir -p $PKG/usr/doc/$PKGNAM-$VERSION
 cp -a README $PKG/usr/doc/$PKGNAM-$VERSION

@@ -14,6 +14,11 @@ if [ -r ./local.options ]; then
   . ./local.options
 fi
 
+# Avoid a version number in .la files:
+if [ -d /usr/lib$LIBSUFFIX/qt ]; then
+  QTDIR=/usr/lib$LIBSUFFIX/qt
+fi
+
 rm -rf $PKG
 mkdir -p $TMP $PKG
 cd $TMP
@@ -32,6 +37,7 @@ cd build
   cmake \
     -DCMAKE_C_FLAGS:STRING="$SLKCFLAGS" \
     -DCMAKE_CXX_FLAGS:STRING="$SLKCFLAGS" \
+    -DCMAKE_BUILD_TYPE=Release \
     -DCMAKE_INSTALL_PREFIX=/usr \
     -DMAN_INSTALL_DIR=/usr/man \
     -DLIB_SUFFIX=$LIBSUFFIX \

@@ -14,14 +14,17 @@ if [ -r ./local.options ]; then
   . ./local.options
 fi
 
+# Avoid a version number in .la files:
+if [ -d /usr/lib$LIBSUFFIX/qt ]; then
+  QTDIR=/usr/lib$LIBSUFFIX/qt
+fi
+
 rm -rf $PKG
 mkdir -p $PKG/usr
 cd $TMP
 echo "Building kdeutils-$VERSION.tar.bz2..."
 tar xvf $CWD/../src/kdeutils-$VERSION.tar.bz2 || exit 1
 cd kdeutils-$VERSION
-
-zcat $CWD/kdeutils.no.ninja.tricks.diff.gz | patch -p1 || exit 1
 
 chown -R root:root .
 find . \
@@ -35,6 +38,7 @@ cd build
   cmake \
     -DCMAKE_C_FLAGS:STRING="$SLKCFLAGS" \
     -DCMAKE_CXX_FLAGS:STRING="$SLKCFLAGS" \
+    -DCMAKE_BUILD_TYPE=Release \
     -DCMAKE_INSTALL_PREFIX=/usr \
     -DMAN_INSTALL_DIR=/usr/man \
     -DSYSCONF_INSTALL_DIR=/etc/kde \

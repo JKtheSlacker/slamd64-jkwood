@@ -3,6 +3,7 @@
 # Slackware build script for SIP
 
 # Copyright 2008  Aleksandar Samardzic <asamardzic@gmail.com>
+# Copyright 2008  Patrick J. Volkerding, Sebeka, MN, USA
 # All rights reserved.
 #
 # Redistribution and use of this script, with or without modification, is
@@ -25,12 +26,14 @@
 # Modified by Robby Workman <rworkman@slackware.com>
 
 PKGNAM=sip
-VERSION=${VERSION:-4.7.7}
+VERSION=${VERSION:-4.7.9}
 BUILD=${BUILD:-1}
-NUMJOBS=${NUMJOBS:--j6}
 
 . /etc/pkghelpers
 pkghelpers_env
+
+PYTHONVER=$(python -V 2>&1 | cut -f 2 -d' ' | cut -f 1-2 -d.)
+PYTHONLIB=$( python -c 'from distutils.sysconfig import get_python_lib; print get_python_lib()' )
 
 rm -rf $PKG
 mkdir -p $TMP $PKG $OUTPUT
@@ -41,16 +44,18 @@ cd sip-$VERSION
 
 python configure.py \
   -b "/usr/bin" \
-  -d "/usr/lib$LIBSUFFIX/python2.5/site-packages" \
-  -e "/usr/include/python2.5" \
+  -d "$PYTHONLIB" \
+  -e "/usr/include/python$PYTHONVER" \
   CFLAGS="$SLKCFLAGS" \
   CXXFLAGS="$SLKCFLAGS"
 
-make $NUMJOBS || exit 1
+make -j $NUMJOBS || make || exit 1
 make install DESTDIR=$PKG || exit 1
 
 mkdir -p $PKG/usr/doc/sip-$VERSION
-cp -a LICENSE COPYING* NEWS README TODO doc/* $PKG/usr/doc/sip-$VERSION
+cp -a \
+  LICENSE COPYING* NEWS README TODO doc/* \
+  $PKG/usr/doc/sip-$VERSION
 chown -R root:root $PKG/usr/doc
 
 mkdir -p $PKG/install

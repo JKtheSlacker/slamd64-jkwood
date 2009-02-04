@@ -14,13 +14,17 @@ if [ -r ./local.options ]; then
   . ./local.options
 fi
 
+# Avoid a version number in .la files:
+if [ -d /usr/lib$LIBSUFFIX/qt ]; then
+  QTDIR=/usr/lib$LIBSUFFIX/qt
+fi
+
 rm -rf $PKG
 mkdir -p $PKG/usr
 cd $TMP
 echo "Building kdepimlibs-$VERSION.tar.bz2..."
 tar xvf $CWD/../src/kdepimlibs-$VERSION.tar.bz2 || exit 1
 cd kdepimlibs-$VERSION
-
 chown -R root:root .
 find . \
  \( -perm 777 -o -perm 775 -o -perm 711 -o -perm 555 -o -perm 511 \) \
