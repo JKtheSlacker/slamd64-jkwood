@@ -22,20 +22,20 @@
 # ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #  This script should build any of the language packs if run with (for example):
-#    PKGLANG=de ./kde-l10n.SlackBuild
+#    PKGLANG=de ./koffice-l10n.SlackBuild
 #  You should be able to build all of them with something like this:
-#    for i in $(cat languages) ; do PKGLANG=$i ./kde-l10n.SlackBuild ; done
+#    for i in $(cat languages) ; do PKGLANG=$i ./koffice-l10n.SlackBuild ; done
 # If ./languages is missing and this script is called without options, the
 # default is to create an up-to-date ./languages list and build all the
 # language packs.
 
 if [ ! -r ./languages ]; then
-  for file in kde-l10n*bz2 ; do
+  for file in koffice-l10n*bz2 ; do
     echo $file | cut -f 3 -d - >> ./languages
   done
 fi
 
-[ -z $VERSION ] && export VERSION=4.2.0
+[ -z $VERSION ] && export VERSION=1.9.98.5
 [ -z $ARCH ] && export ARCH=noarch_slamd64
 [ -z $BUILD ] && export BUILD=1
 
@@ -65,7 +65,7 @@ mkdir -p $TMP $PKG
 cd $TMP
 rm -rf $PKGNAM-$VERSION 
 tar xvf $CWD/$PKGNAM-$VERSION.tar.bz2 || exit 1
-cd $PKGNAM-$VERSION
+cd $PKGNAM-$VERSION || exit 1
 chown -R root:root .
 find . \
  \( -perm 777 -o -perm 775 -o -perm 711 -o -perm 555 -o -perm 511 \) \
@@ -77,6 +77,7 @@ cd build
   cmake \
     -DCMAKE_C_FLAGS:STRING="$SLKCFLAGS" \
     -DCMAKE_CXX_FLAGS:STRING="$SLKCFLAGS" \
+    -DCMAKE_BUILD_TYPE=Release \
     -DCMAKE_INSTALL_PREFIX=/usr \
     -DMAN_INSTALL_DIR=/usr/man \
     -DSYSCONF_INSTALL_DIR=/etc/kde \
@@ -89,22 +90,22 @@ cd -
   find . | xargs file | grep "shared object" | grep ELF | cut -f 1 -d : | xargs strip --strip-unneeded 2> /dev/null
 )
 mkdir -p $PKG/install
-cat $CWD/slack-desc/slack-desc.kde-l10n-$PKGLANG > $PKG/install/slack-desc
+cat $CWD/slack-desc/slack-desc.koffice-l10n-$PKGLANG > $PKG/install/slack-desc
 cd $PKG
 /sbin/makepkg -l y -c n $TMP/$PKGNAM-$VERSION-$ARCH-$BUILD.tgz
 }
 
 if [ -z $PKGLANG ]; then
   for PKGLANG in $(cat languages) ; do
-    PKGNAM=kde-l10n-$PKGLANG
-    PKG=$TMP/package-kde-l10n-$PKGLANG
+    PKGNAM=koffice-l10n-$PKGLANG
+    PKG=$TMP/package-koffice-l10n-$PKGLANG
     # The global options may be overridden here (if needed):
     [ -r ./local.options/$PKGLANG ] && . ./local.options/$PKGLANG
     make_language_pack;
   done
 else
-  PKGNAM=kde-l10n-$PKGLANG
-  PKG=$TMP/package-kde-l10n-$PKGLANG
+  PKGNAM=koffice-l10n-$PKGLANG
+  PKG=$TMP/package-koffice-l10n-$PKGLANG
   # The global options may be overridden here (if needed):
   [ -r ./local.options/$PKGLANG ] && . ./local.options/$PKGLANG
   make_language_pack;
