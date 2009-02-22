@@ -9,7 +9,7 @@
 # XXX XXX XXX XXX
 
 PKGNAM=mozilla-firefox
-VERSION=${VERSION:-3.0.5}
+VERSION=${VERSION:-3.0.6}
 BUILD=${BUILD:-1}
 
 . /etc/pkghelpers
@@ -72,6 +72,8 @@ make install DESTDIR=$PKG
 ( cd $PKG/usr/bin
   chown -R root:root .
 )
+
+rm -rf $PKG/usr/share/idl $PKG/usr/include
 
 mkdir -p $PKG/usr/lib64/mozilla/plugins
 mkdir -p $PKG/usr/share/applications
