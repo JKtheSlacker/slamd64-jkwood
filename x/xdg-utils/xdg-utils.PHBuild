@@ -5,7 +5,8 @@
 
 PKGNAM=xdg-utils
 VERSION=1.0.2
-BUILD=${BUILD:-1}
+CVS=20090202cvs
+BUILD=${BUILD:-2}
 
 . /etc/pkghelpers
 pkghelpers_env
