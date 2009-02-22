@@ -1,7 +1,7 @@
 #!/bin/sh
 PKGNAM=libpng
-VERSION=1.2.32
-BUILD=2
+VERSION=1.2.35
+BUILD=1
 
 . /etc/pkghelpers
 pkghelpers_env
