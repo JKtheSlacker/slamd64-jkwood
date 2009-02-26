@@ -5,7 +5,7 @@ PKG=$TMP/package-arts
 
 VERSION=${VERSION:-1.5.10}
 ARCH=${ARCH:-x86_64}
-BUILD=${BUILD:-opt1}
+BUILD=${BUILD:-opt2}
 
 rm -rf $PKG
 mkdir -p $PKG/opt/kde3
@@ -28,6 +28,7 @@ CFLAGS=$CPUOPT \
 CXXFLAGS=$CPUOPT \
 ./configure \
   --prefix=/opt/kde3 \
+  --libdir=/opt/kde3/lib \
   --sysconfdir=/opt/kde3/etc \
   --with-xinerama \
   --disable-debug \

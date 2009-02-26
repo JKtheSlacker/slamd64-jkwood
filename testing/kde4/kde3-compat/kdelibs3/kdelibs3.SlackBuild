@@ -35,6 +35,7 @@ CFLAGS=$CPUOPT \
 CXXFLAGS=$CPUOPT \
 ./configure \
   --prefix=/opt/kde3 \
+  --libdir=/opt/kde3/lib \
   --sysconfdir=/opt/kde3/etc \
   --with-ssl-dir=/usr \
   --with-xinerama \
