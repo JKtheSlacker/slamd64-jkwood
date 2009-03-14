@@ -25,7 +25,7 @@
 # Modified by Robby Workman <rworkman@slackware.com>
 
 PKGNAM=libarchive
-VERSION=2.5.5
+VERSION=2.6.2
 BUILD=${BUILD:-1}
 NUMJOBS=${NUMJOBS:--j6}
 
