@@ -23,7 +23,7 @@
 # ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 PKGNAM=eigen2
-VERSION=r900905
+VERSION=r922425
 BUILD=${BUILD:-1}
 
 . /etc/pkghelpers
@@ -39,19 +39,20 @@ pkghelpers_permissions
 
 mkdir -p build
 cd build
-  QTDIR=/usr/lib/qt \
+  QTDIR=/usr/lib$LIBSUFFIX/qt \
   PATH=$QTDIR/bin:$PATH \
   cmake \
     -DCMAKE_C_FLAGS:STRING="$SLKCFLAGS" \
     -DCMAKE_CXX_FLAGS:STRING="$SLKCFLAGS" \
     -DCMAKE_INSTALL_PREFIX=/usr \
+    -DLIB_SUFFIX=$LIBSUFFIX \
     ..
    make || exit 1
    make install DESTDIR=$PKG || exit 1
 cd -
 
 mkdir -p $PKG/usr/doc/eigen2-$VERSION
-cp -a INSTALL LICENSE README TODO $PKG/usr/doc/eigen2-$VERSION
+cp -a COPYING* $PKG/usr/doc/eigen2-$VERSION
 
 mkdir -p $PKG/install
 cat $CWD/slack-desc > $PKG/install/slack-desc
