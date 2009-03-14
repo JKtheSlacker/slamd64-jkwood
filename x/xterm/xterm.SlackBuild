@@ -21,7 +21,7 @@
 
 
 PKGNAM=xterm
-VERSION=${VERSION:-232}
+VERSION=${VERSION:-241}
 ARCH=${ARCH:-x86_64}
 BUILD=${BUILD:-1}
 DISTRO=${DISTRO:-slamd64}
@@ -82,7 +82,7 @@ CFLAGS="$SLKCFLAGS" \
   --with-utempter \
   --enable-luit \
   --enable-wide-chars \
-  $ARCH-slackware-linux
+  $ARCH-slamd64-linux
 
 # Build and install:
 make -j4 || exit 1
