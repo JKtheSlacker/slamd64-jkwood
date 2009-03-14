@@ -3,7 +3,7 @@
 # usually has a different version number), or by setting your own
 # environment variables.
 
-[ -z $VERSION ] && export VERSION=4.2.0
+[ -z $VERSION ] && export VERSION=4.2.1
 [ -z $BUILD ] && export BUILD=1
 
 . /etc/pkghelpers
