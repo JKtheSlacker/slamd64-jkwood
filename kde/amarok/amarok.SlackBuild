@@ -21,7 +21,7 @@ fi
 
 # If there's no libmysqld.a, we have to build it:
 if [ ! -r /usr/lib$LIBSUFFIX/mysql/libmysqld.a ]; then
-  MYSQL="$CWD/../../../../../source/ap/mysql/mysql*.tar.bz2"
+  MYSQL="$CWD/../../ap/mysql/mysql*.tar.bz2"
   if [ ! -e $MYSQL ]; then
     if [ -e $CWD/mysql*.tar.?z* ]; then
       MYSQL="$CWD/mysql*.tar.?z*"
